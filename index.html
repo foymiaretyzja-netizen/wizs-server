@@ -5,31 +5,46 @@
     <title>Wizs | Live Chat</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; }
+        :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; --gray: #333; }
         body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding-bottom: 120px; overflow-x: hidden; }
         
-        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 10px; border-radius: 30px; z-index: 9999; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 9999; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .status-top { display: flex; align-items: center; gap: 10px; }
         #status-circle { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); transition: 0.3s; }
         
-        header { text-align: center; padding: 60px 10px 20px; }
+        /* Progress Bar Styles */
+        #loading-container { width: 80%; display: none; flex-direction: column; align-items: center; }
+        #progress-bg { width: 100%; height: 6px; background: var(--gray); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        #progress-fill { width: 0%; height: 100%; background: var(--blue); transition: width 1s linear; }
+        #timer-text { font-size: 10px; margin-top: 4px; color: #888; }
+
+        header { text-align: center; padding: 80px 10px 20px; }
         .logo { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
 
         #feed { max-width: 500px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 10px; border-left: 4px solid var(--u-color); animation: fadeIn 0.3s ease-out; word-wrap: break-word; }
+        .msg { background: var(--card); padding: 15px; border-radius: 10px; border-left: 4px solid var(--u-color); animation: fadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) both; word-wrap: break-word; }
         .u-name { font-size: 0.8rem; font-weight: bold; color: var(--u-color); margin-bottom: 4px; }
         
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.9); padding: 20px; border-top: 1px solid #222; box-sizing: border-box; backdrop-filter: blur(10px); }
         input { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 15px; color: white; border-radius: 8px; outline: none; font-size: 16px; transition: 0.2s; }
-        input:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(0,242,254,0.2); }
+        input:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--red); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .cooldown-anim { animation: shake 0.2s ease-in-out 2; }
     </style>
 </head>
 <body>
 
 <div id="status-bar">
-    <div id="status-circle"></div>
-    <span id="stat-text">Connecting to Wizs...</span>
+    <div class="status-top">
+        <div id="status-circle"></div>
+        <span id="stat-text">Connecting to Wizs...</span>
+    </div>
+    <div id="loading-container">
+        <div id="progress-bg"><div id="progress-fill"></div></div>
+        <span id="timer-text">Waking server: 60s</span>
+    </div>
 </div>
 
 <header><div class="logo">Wizs</div></header>
@@ -40,54 +55,92 @@
 </div>
 
 <script>
-    // 1. Setup Identity
     const myName = "Wiz-" + Math.floor(Math.random()*999);
     const myColor = `hsl(${Math.random() * 360}, 75%, 65%)`;
-
-    // 2. Connect (Automatic same-origin connection)
     const socket = io(); 
 
     const statusCircle = document.getElementById('status-circle');
     const statusText = document.getElementById('stat-text');
-    const feed = document.getElementById('feed');
+    const loadingContainer = document.getElementById('loading-container');
+    const progressFill = document.getElementById('progress-fill');
+    const timerText = document.getElementById('timer-text');
     const input = document.getElementById('wizsInput');
+    
+    let canSend = true;
+    let countdownActive = true;
+    let timeLeft = 60;
 
-    // 3. Connection Events
+    // --- WAKE UP LOGIC ---
+    const wakeTimer = setInterval(() => {
+        if (!countdownActive) return;
+        
+        timeLeft--;
+        const progress = ((60 - timeLeft) / 60) * 100;
+        progressFill.style.width = progress + "%";
+        timerText.innerText = `Waking server: ${timeLeft}s`;
+
+        loadingContainer.style.display = 'flex';
+
+        if (timeLeft <= 0) {
+            clearInterval(wakeTimer);
+            if (statusText.innerText !== "Servers ready!") {
+                statusText.innerText = "Server are loading momentarily.";
+            }
+        }
+    }, 1000);
+
     socket.on('connect', () => {
+        countdownActive = false;
+        clearInterval(wakeTimer);
+        loadingContainer.style.display = 'none';
         statusCircle.style.background = "var(--green)";
         statusCircle.style.boxShadow = "0 0 8px var(--green)";
-        statusText.innerText = "Wizs: Connected & Live";
-        console.log("Connected as:", myName);
+        statusText.innerText = "Servers ready!";
     });
 
     socket.on('disconnect', () => {
         statusCircle.style.background = "var(--red)";
-        statusCircle.style.boxShadow = "0 0 8px var(--red)";
         statusText.innerText = "Wizs: Disconnected";
     });
 
-    // 4. Handle Incoming Messages
     socket.on('receive-msg', (data) => {
         const div = document.createElement('div');
         div.className = 'msg';
         div.style.setProperty('--u-color', data.color);
         div.innerHTML = `<div class="u-name">${data.name}</div><div>${data.text}</div>`;
-        feed.appendChild(div);
-        
-        // Auto-scroll to bottom
+        document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // 5. Sending Messages
+    // --- SENDING + COOLDOWN ---
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && input.value.trim() !== "") {
-            const messageData = { 
-                name: myName, 
-                color: myColor, 
-                text: input.value 
-            };
-            socket.emit('send-msg', messageData);
-            input.value = '';
+        if (e.key === 'Enter') {
+            if (!canSend) {
+                input.classList.add('cooldown-anim');
+                setTimeout(() => input.classList.remove('cooldown-anim'), 400);
+                return;
+            }
+
+            if (input.value.trim() !== "") {
+                const messageData = { name: myName, color: myColor, text: input.value };
+                socket.emit('send-msg', messageData);
+                input.value = '';
+
+                // Start Cooldown
+                canSend = false;
+                const originalStatus = statusText.innerText;
+                statusText.innerText = "Cooldown!";
+                statusText.style.color = "var(--red)";
+                input.disabled = true;
+
+                setTimeout(() => {
+                    canSend = true;
+                    statusText.innerText = originalStatus;
+                    statusText.style.color = "white";
+                    input.disabled = false;
+                    input.focus();
+                }, 1200);
+            }
         }
     });
 </script>
