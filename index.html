@@ -6,32 +6,33 @@
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; --gray: #333; }
-        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding-bottom: 120px; overflow-x: hidden; }
+        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding-bottom: 150px; overflow-x: hidden; }
         
-        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 9999; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* Status Bar */
+        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 9999; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #222; }
         .status-top { display: flex; align-items: center; gap: 10px; }
         #status-circle { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); transition: 0.3s; }
         
-        /* Progress Bar Styles */
-        #loading-container { width: 80%; display: none; flex-direction: column; align-items: center; }
-        #progress-bg { width: 100%; height: 6px; background: var(--gray); border-radius: 3px; overflow: hidden; margin-top: 5px; }
-        #progress-fill { width: 0%; height: 100%; background: var(--blue); transition: width 1s linear; }
-        #timer-text { font-size: 10px; margin-top: 4px; color: #888; }
-
         header { text-align: center; padding: 80px 10px 20px; }
         .logo { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
 
+        /* Feed & Messages */
         #feed { max-width: 500px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 10px; border-left: 4px solid var(--u-color); animation: fadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) both; word-wrap: break-word; }
-        .u-name { font-size: 0.8rem; font-weight: bold; color: var(--u-color); margin-bottom: 4px; }
+        .msg { background: var(--card); padding: 15px; border-radius: 10px; border-left: 4px solid var(--u-color); cursor: pointer; transition: 0.2s; position: relative; animation: fadeIn 0.3s ease-out; }
+        .msg:hover { background: #222; }
+        .msg.is-reply-to-me { border: 2px solid var(--blue); box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); }
         
-        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.9); padding: 20px; border-top: 1px solid #222; box-sizing: border-box; backdrop-filter: blur(10px); }
-        input { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 15px; color: white; border-radius: 8px; outline: none; font-size: 16px; transition: 0.2s; }
-        input:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--red); }
+        .u-name { font-size: 0.8rem; font-weight: bold; color: var(--u-color); margin-bottom: 4px; }
+        .reply-tag { font-size: 0.7rem; color: #888; margin-bottom: 4px; display: block; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        .cooldown-anim { animation: shake 0.2s ease-in-out 2; }
+        /* Input & Reply UI */
+        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px 20px; border-top: 1px solid #222; box-sizing: border-box; backdrop-filter: blur(10px); }
+        #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; }
+        #cancel-reply { cursor: pointer; color: var(--red); font-weight: bold; }
+        
+        input { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 15px; color: white; border-radius: 8px; outline: none; font-size: 16px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -41,17 +42,17 @@
         <div id="status-circle"></div>
         <span id="stat-text">Connecting to Wizs...</span>
     </div>
-    <div id="loading-container">
-        <div id="progress-bg"><div id="progress-fill"></div></div>
-        <span id="timer-text">Waking server: 60s</span>
-    </div>
 </div>
 
 <header><div class="logo">Wizs</div></header>
 <div id="feed"></div>
 
 <div class="input-wrap">
-    <input type="text" id="wizsInput" placeholder="Type a message..." maxlength="250" autocomplete="off">
+    <div id="reply-preview">
+        <span id="reply-text">Replying to...</span>
+        <span id="cancel-reply">×</span>
+    </div>
+    <input type="text" id="wizsInput" placeholder="Type a message (Click a message to reply)..." maxlength="250" autocomplete="off">
 </div>
 
 <script>
@@ -59,88 +60,77 @@
     const myColor = `hsl(${Math.random() * 360}, 75%, 65%)`;
     const socket = io(); 
 
-    const statusCircle = document.getElementById('status-circle');
-    const statusText = document.getElementById('stat-text');
-    const loadingContainer = document.getElementById('loading-container');
-    const progressFill = document.getElementById('progress-fill');
-    const timerText = document.getElementById('timer-text');
-    const input = document.getElementById('wizsInput');
-    
+    let selectedReply = null;
     let canSend = true;
-    let countdownActive = true;
-    let timeLeft = 60;
 
-    // --- WAKE UP LOGIC ---
-    const wakeTimer = setInterval(() => {
-        if (!countdownActive) return;
-        
-        timeLeft--;
-        const progress = ((60 - timeLeft) / 60) * 100;
-        progressFill.style.width = progress + "%";
-        timerText.innerText = `Waking server: ${timeLeft}s`;
+    const input = document.getElementById('wizsInput');
+    const replyPreview = document.getElementById('reply-preview');
+    const replyText = document.getElementById('reply-text');
 
-        loadingContainer.style.display = 'flex';
-
-        if (timeLeft <= 0) {
-            clearInterval(wakeTimer);
-            if (statusText.innerText !== "Servers ready!") {
-                statusText.innerText = "Server are loading momentarily.";
-            }
-        }
-    }, 1000);
-
+    // --- CONNECTION ---
     socket.on('connect', () => {
-        countdownActive = false;
-        clearInterval(wakeTimer);
-        loadingContainer.style.display = 'none';
-        statusCircle.style.background = "var(--green)";
-        statusCircle.style.boxShadow = "0 0 8px var(--green)";
-        statusText.innerText = "Servers ready!";
+        document.getElementById('status-circle').style.background = "var(--green)";
+        document.getElementById('status-circle').style.boxShadow = "0 0 8px var(--green)";
+        document.getElementById('stat-text').innerText = "Servers ready!";
     });
 
-    socket.on('disconnect', () => {
-        statusCircle.style.background = "var(--red)";
-        statusText.innerText = "Wizs: Disconnected";
-    });
-
+    // --- RECEIVING ---
     socket.on('receive-msg', (data) => {
         const div = document.createElement('div');
         div.className = 'msg';
+        
+        // Highlight if someone @replied you
+        if (data.replyTo === myName) {
+            div.classList.add('is-reply-to-me');
+        }
+
         div.style.setProperty('--u-color', data.color);
-        div.innerHTML = `<div class="u-name">${data.name}</div><div>${data.text}</div>`;
+        
+        let replyHTML = data.replyTo ? `<span class="reply-tag">@${data.replyTo}</span>` : '';
+        div.innerHTML = `${replyHTML}<div class="u-name">${data.name}</div><div>${data.text}</div>`;
+        
+        // Click to reply logic
+        div.onclick = () => {
+            selectedReply = data.name;
+            replyPreview.style.display = 'flex';
+            replyText.innerText = `Replying to @${data.name}`;
+            input.focus();
+        };
+
         document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // --- SENDING + COOLDOWN ---
+    // --- SENDING ---
+    document.getElementById('cancel-reply').onclick = () => {
+        selectedReply = null;
+        replyPreview.style.display = 'none';
+    };
+
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            if (!canSend) {
-                input.classList.add('cooldown-anim');
-                setTimeout(() => input.classList.remove('cooldown-anim'), 400);
-                return;
-            }
+        if (e.key === 'Enter' && input.value.trim() !== "" && canSend) {
+            const messageData = { 
+                name: myName, 
+                color: myColor, 
+                text: input.value,
+                replyTo: selectedReply // Sends the @name
+            };
+            
+            socket.emit('send-msg', messageData);
+            
+            // Reset input and reply
+            input.value = '';
+            selectedReply = null;
+            replyPreview.style.display = 'none';
 
-            if (input.value.trim() !== "") {
-                const messageData = { name: myName, color: myColor, text: input.value };
-                socket.emit('send-msg', messageData);
-                input.value = '';
-
-                // Start Cooldown
-                canSend = false;
-                const originalStatus = statusText.innerText;
-                statusText.innerText = "Cooldown!";
-                statusText.style.color = "var(--red)";
-                input.disabled = true;
-
-                setTimeout(() => {
-                    canSend = true;
-                    statusText.innerText = originalStatus;
-                    statusText.style.color = "white";
-                    input.disabled = false;
-                    input.focus();
-                }, 1200);
-            }
+            // 1.2s Cooldown
+            canSend = false;
+            input.disabled = true;
+            setTimeout(() => { 
+                canSend = true; 
+                input.disabled = false; 
+                input.focus(); 
+            }, 1200);
         }
     });
 </script>
