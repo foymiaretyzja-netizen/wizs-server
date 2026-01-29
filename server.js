@@ -2,24 +2,32 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
+
+// Middleware
 app.use(cors());
+
+// Serve the index.html file when someone visits the site
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allows your Neocities/Render site to connect
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
 
-// The "Brain" of the chat
+// Chat Logic
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('A user connected: ' + socket.id);
 
-    // When someone sends a message, "shout" it to everyone else
     socket.on('send-msg', (data) => {
+        // Broadcast the message to everyone connected
         io.emit('receive-msg', data);
     });
 
