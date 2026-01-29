@@ -7,29 +7,40 @@ const path = require('path');
 const app = express();
 app.use(cors());
 
-// Serve the index.html file to the browser
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+    cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+// --- TIMER LOGIC ---
+let timeLeft = 900; 
+let timerStarted = false;
 
-    // Handles messages and reply data
+function startRoomTimer() {
+    if (timerStarted) return;
+    timerStarted = true;
+    const interval = setInterval(() => {
+        timeLeft--;
+        io.emit('timer-update', timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            timeLeft = 900;
+            timerStarted = false;
+            io.emit('room-reset'); // Tells everyone to lock up
+        }
+    }, 1000);
+}
+
+io.on('connection', (socket) => {
+    startRoomTimer(); 
+    socket.emit('timer-update', timeLeft);
+
     socket.on('send-msg', (data) => {
         io.emit('receive-msg', data);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
     });
 });
 
