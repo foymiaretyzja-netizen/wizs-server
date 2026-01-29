@@ -7,7 +7,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 
-// This serves your index.html file to the browser
+// Serve the index.html file to the browser
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -23,7 +23,7 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // This handles messages AND the new reply data
+    // Handles messages and reply data
     socket.on('send-msg', (data) => {
         io.emit('receive-msg', data);
     });
