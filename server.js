@@ -5,11 +5,9 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-
-// Middleware
 app.use(cors());
 
-// Serve the index.html file when someone visits the site
+// This serves your index.html file to the browser
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -22,12 +20,11 @@ const io = new Server(server, {
     }
 });
 
-// Chat Logic
 io.on('connection', (socket) => {
-    console.log('A user connected: ' + socket.id);
+    console.log('User connected:', socket.id);
 
+    // This handles messages AND the new reply data
     socket.on('send-msg', (data) => {
-        // Broadcast the message to everyone connected
         io.emit('receive-msg', data);
     });
 
