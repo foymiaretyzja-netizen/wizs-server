@@ -37,8 +37,8 @@
         .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; display: block; background: #000; }
         .unblurred { filter: blur(0) !important; }
 
-        /* Replies */
-        .was-replied-to { border: 1px solid var(--mint) !important; }
+        /* Notifications & Replies */
+        .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.1); }
         .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
         .is-reply-to-me { background: #1a1f24; border-right: 3px solid var(--blue); }
 
@@ -49,6 +49,8 @@
         input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
     </style>
 </head>
 <body>
@@ -56,7 +58,7 @@
 <div id="welcomeModal" class="modal" style="display: flex;">
     <div class="modal-content">
         <h2 style="color:var(--blue)">Welcome to WIZs</h2>
-        <p>Anonymous chatting. Full wipe every 15 mins.</p>
+        <p>Anonymous chatting. No logs. No trace.<br>Automatic wipe every 15 minutes.</p>
         <button class="modal-btn" onclick="initAudio(); closeModal('welcomeModal')">Begin Chatting</button>
     </div>
 </div>
@@ -72,12 +74,14 @@
 
 <div id="settingsModal" class="modal">
     <div class="modal-content">
-        <h3>Settings</h3>
-        <input type="text" id="newNick" placeholder="Change nickname..." maxlength="15" style="width:90%; padding:10px; background:#222; color:white; border:1px solid #444; border-radius:8px;">
-        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 15px 0;"></div>
+        <h3>User Settings</h3>
+        <input type="text" id="newNick" placeholder="Change nickname..." maxlength="15" style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+        <p style="font-size:12px; margin-top:10px;">Name Color:</p>
+        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
+        <p style="font-size:12px; margin-top:15px;">Block Users:</p>
         <div id="userListContainer"></div>
-        <button class="modal-btn" onclick="unblockAll()" style="background:var(--red); color:white;">Unblock All</button>
-        <button class="modal-btn" onclick="saveSettings()">Save</button>
+        <button class="modal-btn" style="background:var(--red); color:white;" onclick="unblockAll()">Unblock All</button>
+        <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
     </div>
 </div>
 
@@ -85,9 +89,8 @@
     <div class="bar-left"><i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i> <span id="reset-timer" style="font-size: 11px; margin-left: 10px;">15:00</span></div>
     <div class="bar-center">WIZs</div>
     <div class="bar-right">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=header" target="_blank" class="report-link">Report</a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=header" target="_blank" class="report-link">Report issues</a>
         <span id="count-display" style="font-size:10px; color:var(--blue);">0 Online</span>
-        <i class="fa-solid fa-star star-btn" onclick="document.getElementById('ratingModal').style.display='flex'"></i>
     </div>
 </div>
 
@@ -98,7 +101,7 @@
     <div class="input-controls">
         <label style="cursor:pointer; color:var(--blue); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden accept="image/*,video/*"></label>
         <span onclick="openGIFs()" style="cursor:pointer; color:var(--mint); font-weight:bold; font-size:14px;">GIF</span>
-        <input type="text" id="wizsInput" placeholder="Message or YouTube link..." autocomplete="off">
+        <input type="text" id="wizsInput" placeholder="Message, Tenor, or YouTube link..." autocomplete="off">
     </div>
 </div>
 
@@ -134,16 +137,14 @@
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = favicon.href;
+        img.src = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png";
         img.onload = () => {
             ctx.drawImage(img, 0, 0, 32, 32);
             ctx.beginPath();
-            ctx.arc(24, 8, 7, 0, 2 * Math.PI);
+            ctx.arc(24, 8, 8, 0, 2 * Math.PI);
             ctx.fillStyle = "#ff4d4d";
             ctx.fill();
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
             favicon.href = canvas.toDataURL('image/png');
             document.title = "( ! ) WIZs | New Reply";
         };
@@ -154,7 +155,7 @@
         document.title = "WIZs | Anonymous Chat";
     };
 
-    // --- TENOR GIFS ---
+    // --- TENOR GIF SYSTEM ---
     async function fetchGIFs(q) {
         const url = `https://tenor.googleapis.com/v2/search?q=${q}&key=LIVNE7WABNEL&limit=12&client_key=wizs_v3`;
         try {
@@ -168,12 +169,12 @@
                 };
                 container.appendChild(img);
             });
-        } catch (e) { console.log(e); }
+        } catch (e) { console.error(e); }
     }
     function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; fetchGIFs("trending"); }
     document.getElementById('gifSearchInput').oninput = (e) => fetchGIFs(e.target.value || "trending");
 
-    // --- MULTIMEDIA ---
+    // --- MULTIMEDIA (Blur/Audio Toggle) ---
     window.toggleMedia = (el) => {
         const isBlurred = !el.classList.contains('unblurred');
         if (isBlurred) {
@@ -190,7 +191,7 @@
         btn.innerHTML = v.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
     };
 
-    // --- SOCKETS ---
+    // --- MESSAGE RECEIVER & RESOLVERS ---
     socket.on('assign-id', id => myId = id);
     socket.on('user-count', c => document.getElementById('count-display').innerText = `${c} Online`);
     socket.on('timer-update', s => {
@@ -206,16 +207,14 @@
         const div = document.createElement('div');
         div.className = 'msg'; div.id = data.msgId; div.style.setProperty('--u-color', data.color);
         
-        // TRIGGER NOTIFICATIONS FOR REPLIES
+        // Tab Notification Trigger
         if (data.replyTo && data.replyTo.name === myName) {
             div.classList.add('is-reply-to-me');
-            if (document.hidden || !document.hasFocus()) {
-                playBeep();
-                drawNotificationBadge();
-            }
+            if (document.hidden || !document.hasFocus()) { playBeep(); drawNotificationBadge(); }
         }
 
         let mediaHtml = '';
+        // Direct Uploads
         if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
         if (data.video) {
             const vidId = "v-" + data.msgId;
@@ -225,9 +224,19 @@
             </div>`;
         }
 
+        // YouTube Resolver
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vid = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vid) mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+        }
+
+        // --- NEW TENOR RESOLVER ---
+        if (data.text.includes('tenor.com')) {
+            const tenorMatch = data.text.match(/tenor\.com\/(?:view\/.*-)?(?:.*-)?(\d+)/) || data.text.match(/tenor\.com\/([\w\d]+)\.gif/);
+            if (tenorMatch) {
+                const tenorId = tenorMatch[1];
+                mediaHtml += `<img src="https://media.tenor.com/${tenorId}/tenor.gif" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+            }
         }
 
         let replyHeader = data.replyTo ? `<div style="font-size:11px; color:#666; font-style:italic;">Replying to @${data.replyTo.name}</div>` : '';
@@ -243,6 +252,7 @@
         div.onclick = () => {
             selectedReply = { name: data.name, msgId: data.msgId };
             document.getElementById('reply-preview').style.display = 'flex';
+            document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
             document.getElementById('wizsInput').focus();
         };
 
@@ -250,9 +260,11 @@
         window.scrollTo(0, document.body.scrollHeight);
     });
 
+    // --- INPUT ACTIONS ---
     document.getElementById('wizsInput').onkeydown = e => {
         if (e.key === 'Enter' && e.target.value.trim()) {
-            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: "m-"+Date.now() });
+            const id = "m-" + Date.now();
+            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: id });
             e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
         }
     };
@@ -266,7 +278,7 @@
         reader.readAsDataURL(file);
     };
 
-    // --- SETTINGS & HELPERS ---
+    // --- SETTINGS LOGIC ---
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     colors.forEach(c => {
         const d = document.createElement('div'); d.style.background = c; d.style.height = '20px'; d.style.borderRadius = '4px'; d.style.cursor = 'pointer';
@@ -283,6 +295,7 @@
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
+    function unblockAll() { blockedIds.clear(); openSettings(); }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
 </script>
