@@ -5,23 +5,42 @@
     <title id="page-title">WIZs | Anonymous Chat</title>
     <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/512/3659/3659744.png">
     <script src="/socket.io/socket.io.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --mint: #7bed9f; --red: #ff4d4d; --yellow: #f1c40f; --gray: #333; }
         body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; overflow-x: hidden; }
 
         /* --- STATUS BAR --- */
-        #status-bar { position: fixed; top: 0; left: 0; width: 100%; background: #111; padding: 10px 20px; z-index: 999; border-bottom: 1px solid #222; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-sizing: border-box; }
+        #status-bar { position: fixed; top: 0; left: 0; width: 100%; background: #111; padding: 10px 20px; z-index: 2000; border-bottom: 1px solid #222; display: grid; grid-template-columns: auto 1fr auto; align-items: center; box-sizing: border-box; gap: 15px; }
         .bar-left { display: flex; align-items: center; gap: 15px; }
         .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px rgba(0,242,254,0.3); text-align: center; }
         .bar-right { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
-        .gear-btn, .star-btn { cursor: pointer; color: #888; transition: 0.2s; font-size: 16px; }
+        
+        .icon-btn { cursor: pointer; color: #888; transition: 0.2s; font-size: 16px; }
+        .icon-btn:hover { color: white; transform: scale(1.1); }
         .report-link { color: #555; text-decoration: none; font-size: 10px; border: 1px solid #222; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
+        /* --- STATUS DOTS --- */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; transition: all 0.3s ease; }
+        .status-green { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
+        .status-orange { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+        .status-red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+        /* --- MEDIA SIDEBAR --- */
+        #media-sidebar { position: fixed; top: 50px; left: 0; width: 320px; height: calc(100% - 50px); background: #0f0f0f; border-right: 1px solid #333; z-index: 1999; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 15px; overflow-y: auto; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        #media-sidebar.active { transform: translateX(0); }
+        .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .sidebar-item { width: 100%; border-radius: 6px; border: 1px solid #333; background: #000; aspect-ratio: 1/1; object-fit: cover; }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
         /* --- MODALS --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid var(--gray); }
+        .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid var(--gray); position: relative; }
         .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+
+        /* Change Log Specifics */
+        .changelog-text { text-align: left; font-family: 'Consolas', monospace; font-size: 13px; color: #ccc; line-height: 1.5; margin: 15px 0; background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333; }
+        .version-tag { color: var(--mint); font-weight: bold; }
 
         /* --- GIF PICKER --- */
         #gif-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 15px; padding: 5px; }
@@ -43,7 +62,7 @@
         .is-reply-to-me { background: #1a1f24; border-right: 3px solid var(--blue); }
 
         /* --- INPUT --- */
-        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); }
+        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); z-index: 2000; }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
         input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
@@ -55,20 +74,32 @@
 </head>
 <body>
 
+<div id="media-sidebar">
+    <div class="sidebar-header">
+        <span style="font-weight:bold; color:var(--blue)">Media Gallery</span>
+        <span onclick="toggleSidebar()" style="cursor:pointer; color:#666">✕</span>
+    </div>
+    <div class="media-grid" id="sidebar-content"></div>
+</div>
+
+<div id="changelogModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
+        <p style="color:var(--blue); font-weight:bold; font-size:14px;">You are LIVE on the current version. (V.3.3) on WIZs servers.</p>
+        <div class="changelog-text">
+            <span class="version-tag">V.3.3 (1/29/2026)</span><br>
+            adds user customizations - blocking users - media upload (video files, youtube video links, Gifs (unstable.)) - refined reply system - new View all media button and changelogs!<br><br>
+            <span style="color:#666">V.3.3 adds quality of life and much much more! last public version (V.1.2) was bare and simple.</span>
+        </div>
+        <button class="modal-btn" onclick="closeModal('changelogModal')">close</button>
+    </div>
+</div>
+
 <div id="welcomeModal" class="modal" style="display: flex;">
     <div class="modal-content">
         <h2 style="color:var(--blue)">Welcome to WIZs</h2>
         <p>Anonymous chatting. No logs. No trace.<br>Automatic wipe every 15 minutes.</p>
         <button class="modal-btn" onclick="initAudio(); closeModal('welcomeModal')">Begin Chatting</button>
-    </div>
-</div>
-
-<div id="gifModal" class="modal">
-    <div class="modal-content">
-        <h3>Tenor GIF Search</h3>
-        <input type="text" id="gifSearchInput" placeholder="Search for GIFs..." style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
-        <div id="gif-results"></div>
-        <button class="modal-btn" style="background:#333; color:white;" onclick="closeModal('gifModal')">Close</button>
     </div>
 </div>
 
@@ -85,12 +116,29 @@
     </div>
 </div>
 
+<div id="gifModal" class="modal">
+    <div class="modal-content">
+        <h3>Tenor GIF Search</h3>
+        <input type="text" id="gifSearchInput" placeholder="Search for GIFs..." style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+        <div id="gif-results"></div>
+        <button class="modal-btn" style="background:#333; color:white;" onclick="closeModal('gifModal')">Close</button>
+    </div>
+</div>
+
 <div id="status-bar">
-    <div class="bar-left"><i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i> <span id="reset-timer" style="font-size: 11px; margin-left: 10px;">15:00</span></div>
+    <div class="bar-left">
+        <i class="fa-solid fa-gear icon-btn" onclick="openSettings()" title="Settings"></i>
+        <i class="fa-solid fa-photo-film icon-btn" onclick="toggleSidebar()" title="Media Gallery"></i>
+        <i class="fa-solid fa-terminal icon-btn" onclick="document.getElementById('changelogModal').style.display='flex'" title="Changelogs"></i>
+        <span id="reset-timer" style="font-size: 11px; margin-left: 5px; color:#555;">15:00</span>
+    </div>
     <div class="bar-center">WIZs</div>
     <div class="bar-right">
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=header" target="_blank" class="report-link">Report issues</a>
-        <span id="count-display" style="font-size:10px; color:var(--blue);">0 Online</span>
+        <div style="display:flex; align-items:center; gap:5px;">
+            <span id="connection-dot" class="status-dot status-orange" title="Connecting..."></span>
+            <span id="count-display" style="font-size:10px; color:var(--blue);">0 Online</span>
+        </div>
     </div>
 </div>
 
@@ -115,13 +163,18 @@
     let discoveredUsers = {}; 
     let audioCtx = null;
 
-    // --- NOTIFICATION ENGINE ---
+    // --- CONNECTION STATUS DOT ---
+    const dot = document.getElementById('connection-dot');
+    socket.on('connect', () => { dot.className = 'status-dot status-green'; dot.title = "Connected"; });
+    socket.on('disconnect', () => { dot.className = 'status-dot status-red'; dot.title = "Disconnected"; });
+    socket.on('connect_error', () => { dot.className = 'status-dot status-orange'; dot.title = "Connection Issues"; });
+    socket.on('reconnect_attempt', () => { dot.className = 'status-dot status-orange'; dot.title = "Reconnecting..."; });
+
+    // --- AUDIO & NOTIFICATIONS ---
     function initAudio() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    
     function playBeep() {
         if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.type = "sine"; osc.frequency.setValueAtTime(550, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
@@ -129,31 +182,19 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }
-
     function drawNotificationBadge() {
-        const favicon = document.getElementById('favicon');
-        const canvas = document.createElement('canvas');
-        canvas.width = 32; canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png";
+        const favicon = document.getElementById('favicon'); const canvas = document.createElement('canvas');
+        canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d');
+        const img = new Image(); img.crossOrigin = "anonymous"; img.src = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png";
         img.onload = () => {
-            ctx.drawImage(img, 0, 0, 32, 32);
-            ctx.beginPath();
-            ctx.arc(24, 8, 8, 0, 2 * Math.PI);
-            ctx.fillStyle = "#ff4d4d";
-            ctx.fill();
-            ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
-            favicon.href = canvas.toDataURL('image/png');
-            document.title = "( ! ) WIZs | New Reply";
+            ctx.drawImage(img, 0, 0, 32, 32); ctx.beginPath(); ctx.arc(24, 8, 8, 0, 2 * Math.PI); ctx.fillStyle = "#ff4d4d"; ctx.fill();
+            favicon.href = canvas.toDataURL('image/png'); document.title = "( ! ) WIZs | New Reply";
         };
     }
+    window.onfocus = () => { document.getElementById('favicon').href = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png"; document.title = "WIZs | Anonymous Chat"; };
 
-    window.onfocus = () => {
-        document.getElementById('favicon').href = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png";
-        document.title = "WIZs | Anonymous Chat";
-    };
+    // --- SIDEBAR TOGGLE ---
+    function toggleSidebar() { document.getElementById('media-sidebar').classList.toggle('active'); }
 
     // --- TENOR GIF SYSTEM ---
     async function fetchGIFs(q) {
@@ -174,124 +215,80 @@
     function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; fetchGIFs("trending"); }
     document.getElementById('gifSearchInput').oninput = (e) => fetchGIFs(e.target.value || "trending");
 
-    // --- MULTIMEDIA (Blur/Audio Toggle) ---
+    // --- BLUR & MUTE LOGIC ---
     window.toggleMedia = (el) => {
         const isBlurred = !el.classList.contains('unblurred');
-        if (isBlurred) {
-            el.classList.add('unblurred');
-            if (el.tagName === 'VIDEO') el.play();
-        } else {
-            el.classList.remove('unblurred');
-            if (el.tagName === 'VIDEO') { el.pause(); el.muted = true; }
-        }
+        if (isBlurred) { el.classList.add('unblurred'); if (el.tagName === 'VIDEO') el.play(); } 
+        else { el.classList.remove('unblurred'); if (el.tagName === 'VIDEO') { el.pause(); el.muted = true; } }
     };
     window.toggleMute = (btn, vidId) => {
-        const v = document.getElementById(vidId);
-        v.muted = !v.muted;
+        const v = document.getElementById(vidId); v.muted = !v.muted;
         btn.innerHTML = v.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
     };
 
-    // --- MESSAGE RECEIVER & RESOLVERS ---
+    // --- SOCKET LOGIC ---
     socket.on('assign-id', id => myId = id);
     socket.on('user-count', c => document.getElementById('count-display').innerText = `${c} Online`);
-    socket.on('timer-update', s => {
-        const m = Math.floor(s/60); const sec = s%60;
-        document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`;
-    });
+    socket.on('timer-update', s => { const m = Math.floor(s/60); const sec = s%60; document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`; });
     socket.on('room-reset', () => location.reload());
 
     socket.on('receive-msg', data => {
         if (data.userId !== myId && !discoveredUsers[data.userId]) discoveredUsers[data.userId] = data.name;
         if (blockedIds.has(data.userId)) return;
 
-        const div = document.createElement('div');
-        div.className = 'msg'; div.id = data.msgId; div.style.setProperty('--u-color', data.color);
-        
-        // Tab Notification Trigger
+        const div = document.createElement('div'); div.className = 'msg'; div.id = data.msgId; div.style.setProperty('--u-color', data.color);
         if (data.replyTo && data.replyTo.name === myName) {
             div.classList.add('is-reply-to-me');
             if (document.hidden || !document.hasFocus()) { playBeep(); drawNotificationBadge(); }
         }
 
-        let mediaHtml = '';
-        // Direct Uploads
-        if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+        let mediaHtml = ''; let sidebarHtml = '';
+        if (data.image) {
+            mediaHtml = `<img src="${data.image}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+            sidebarHtml = `<img src="${data.image}" class="sidebar-item" title="By ${data.name}">`;
+        }
         if (data.video) {
             const vidId = "v-" + data.msgId;
-            mediaHtml = `<div class="vid-container">
-                <video id="${vidId}" src="${data.video}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)" loop muted></video>
-                <button class="mute-btn" onclick="event.stopPropagation(); toggleMute(this, '${vidId}')"><i class="fa-solid fa-volume-xmark"></i></button>
-            </div>`;
+            mediaHtml = `<div class="vid-container"><video id="${vidId}" src="${data.video}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)" loop muted></video><button class="mute-btn" onclick="event.stopPropagation(); toggleMute(this, '${vidId}')"><i class="fa-solid fa-volume-xmark"></i></button></div>`;
+            sidebarHtml = `<video src="${data.video}" class="sidebar-item" controls muted title="By ${data.name}"></video>`;
         }
-
-        // YouTube Resolver
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vid = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
-            if (vid) mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+            if (vid) {
+                mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+                sidebarHtml = `<iframe class="sidebar-item" src="https://www.youtube.com/embed/${vid}" frameborder="0"></iframe>`;
+            }
         }
-
-        // --- NEW TENOR RESOLVER ---
         if (data.text.includes('tenor.com')) {
             const tenorMatch = data.text.match(/tenor\.com\/(?:view\/.*-)?(?:.*-)?(\d+)/) || data.text.match(/tenor\.com\/([\w\d]+)\.gif/);
             if (tenorMatch) {
-                const tenorId = tenorMatch[1];
-                mediaHtml += `<img src="https://media.tenor.com/${tenorId}/tenor.gif" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+                const url = `https://media.tenor.com/${tenorMatch[1]}/tenor.gif`;
+                mediaHtml += `<img src="${url}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+                sidebarHtml = `<img src="${url}" class="sidebar-item" title="By ${data.name}">`;
             }
         }
+
+        if (sidebarHtml) { const i = document.createElement('div'); i.innerHTML = sidebarHtml; document.getElementById('sidebar-content').prepend(i); }
 
         let replyHeader = data.replyTo ? `<div style="font-size:11px; color:#666; font-style:italic;">Replying to @${data.replyTo.name}</div>` : '';
         if (data.replyTo) {
             const orig = document.getElementById(data.replyTo.msgId);
-            if (orig && !orig.querySelector('.reply-notif-tag')) {
-                const t = document.createElement('span'); t.className = 'reply-notif-tag';
-                t.innerText = `💬 ${data.name} replied.`; orig.appendChild(t);
-            }
+            if (orig && !orig.querySelector('.reply-notif-tag')) { const t = document.createElement('span'); t.className = 'reply-notif-tag'; t.innerText = `💬 ${data.name} replied.`; orig.appendChild(t); }
         }
 
         div.innerHTML = `${replyHeader}<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${mediaHtml}`;
-        div.onclick = () => {
-            selectedReply = { name: data.name, msgId: data.msgId };
-            document.getElementById('reply-preview').style.display = 'flex';
-            document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
-            document.getElementById('wizsInput').focus();
-        };
-
-        document.getElementById('feed').appendChild(div);
-        window.scrollTo(0, document.body.scrollHeight);
+        div.onclick = () => { selectedReply = { name: data.name, msgId: data.msgId }; document.getElementById('reply-preview').style.display = 'flex'; document.getElementById('reply-text').innerText = `Replying to @${data.name}`; document.getElementById('wizsInput').focus(); };
+        document.getElementById('feed').appendChild(div); window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // --- INPUT ACTIONS ---
-    document.getElementById('wizsInput').onkeydown = e => {
-        if (e.key === 'Enter' && e.target.value.trim()) {
-            const id = "m-" + Date.now();
-            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: id });
-            e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
-        }
-    };
+    document.getElementById('wizsInput').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: "m-"+Date.now() }); e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; }};
+    document.getElementById('mediaInput').onchange = e => { const f = e.target.files[0]; const r = new FileReader(); r.onload = () => { const t = f.type.startsWith('video') ? 'video' : 'image'; socket.emit('send-msg', { name: myName, color: myColor, text: `[Shared ${t}]`, [t]: r.result, msgId: "u-"+Date.now(), replyTo: selectedReply }); }; r.readAsDataURL(f); };
 
-    document.getElementById('mediaInput').onchange = e => {
-        const file = e.target.files[0]; const reader = new FileReader();
-        reader.onload = () => {
-            const type = file.type.startsWith('video') ? 'video' : 'image';
-            socket.emit('send-msg', { name: myName, color: myColor, text: `[Shared ${type}]`, [type]: reader.result, msgId: "u-"+Date.now(), replyTo: selectedReply });
-        };
-        reader.readAsDataURL(file);
-    };
-
-    // --- SETTINGS LOGIC ---
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
-    colors.forEach(c => {
-        const d = document.createElement('div'); d.style.background = c; d.style.height = '20px'; d.style.borderRadius = '4px'; d.style.cursor = 'pointer';
-        d.onclick = () => myColor = c; document.getElementById('colorPicker').appendChild(d);
-    });
+    colors.forEach(c => { const d = document.createElement('div'); d.style.background = c; d.style.height = '20px'; d.style.borderRadius = '4px'; d.style.cursor = 'pointer'; d.onclick = () => myColor = c; document.getElementById('colorPicker').appendChild(d); });
     function openSettings() {
         const c = document.getElementById('userListContainer'); c.innerHTML = '';
-        Object.keys(discoveredUsers).forEach(id => {
-            const i = document.createElement('div'); i.className = 'user-item';
-            i.innerHTML = `<span>${discoveredUsers[id]}</span> <span style="color:var(--red)">${blockedIds.has(id)?'Blocked':'Block'}</span>`;
-            i.onclick = () => { blockedIds.has(id)?blockedIds.delete(id):blockedIds.add(id); openSettings(); };
-            c.appendChild(i);
-        });
+        Object.keys(discoveredUsers).forEach(id => { const i = document.createElement('div'); i.className = 'user-item'; i.innerHTML = `<span>${discoveredUsers[id]}</span> <span style="color:var(--red)">${blockedIds.has(id)?'Blocked':'Block'}</span>`; i.onclick = () => { blockedIds.has(id)?blockedIds.delete(id):blockedIds.add(id); openSettings(); }; c.appendChild(i); });
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
