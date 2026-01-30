@@ -52,27 +52,22 @@
         .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
 
         /* --- ALERTS & NOTIFICATIONS --- */
-        #invite-toast { 
+        .toast-notify { 
             display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); 
-            background: rgba(255, 77, 77, 0.2); border: 1px solid var(--red); color: #ffcccc; 
             padding: 10px 20px; border-radius: 25px; font-size: 12px; z-index: 1900; 
-            align-items: center; gap: 10px; backdrop-filter: blur(5px);
+            align-items: center; gap: 10px; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease;
         }
+        #invite-toast { background: rgba(255, 77, 77, 0.2); border: 1px solid var(--red); color: #ffcccc; }
+        #verified-toast { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #ccffcc; }
+
+        @keyframes fadeIn { from{opacity:0; transform:translate(-50%, -10px);} to{opacity:1; transform:translate(-50%, 0);} }
 
         /* --- FEED & MEDIA --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { background: var(--card); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUpFade 0.3s ease; cursor: pointer; border: 1px solid transparent; word-wrap: break-word; }
-        
-        /* Highlight when mentioned/replied to */
         .msg.mentioned { border-color: var(--yellow); box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
 
-        /* REPLY PREVIEW INSIDE MSG */
-        .reply-context {
-            font-size: 11px; color: #888; margin-bottom: 8px; padding-left: 8px; border-left: 2px solid #555;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .reply-context i { font-size: 9px; }
-
+        .reply-context { font-size: 11px; color: #888; margin-bottom: 8px; padding-left: 8px; border-left: 2px solid #555; display: flex; align-items: center; gap: 5px; }
         .vid-container { position: relative; width: 100%; margin-top: 10px; border-radius: 8px; overflow: hidden; background: #000; }
         .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; display: block; background: #000; max-height: 300px; object-fit: contain; }
         .unblurred { filter: blur(0) !important; }
@@ -82,12 +77,11 @@
         /* --- RAINBOW ADMIN FX --- */
         @keyframes rainbowShine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
-        .rainbow-text {
-            background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
-            background-size: 400% 400%;
+        .owner-name {
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
             -webkit-background-clip: text;
+            background-clip: text;
             color: transparent;
-            animation: rainbowShine 4s ease infinite;
             font-weight: 900;
         }
 
@@ -99,34 +93,21 @@
             animation: rainbowShine 5s linear infinite;
             pointer-events: none; z-index: 0;
         }
-        .rainbow-box > * { position: relative; z-index: 1; } /* Ensure text sits on top */
+        .rainbow-box > * { position: relative; z-index: 1; }
 
         /* --- REACTIONS --- */
         .reaction-bar { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
         .reaction-pill { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 12px; padding: 2px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
         .reaction-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
-        .reaction-count { color: var(--accent); font-weight: bold; }
 
         /* --- CONTEXT MENU --- */
         #context-menu { position: fixed; display: none; background: var(--card); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .emoji-opt { cursor: pointer; font-size: 20px; padding: 5px; border-radius: 4px; text-align: center; }
         .emoji-opt:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
 
-        /* --- TYPING INDICATOR --- */
-        #typing-indicator { position: fixed; bottom: 75px; left: 20px; font-size: 12px; color: var(--accent); display: none; align-items: center; gap: 2px; z-index: 1999; }
-        .dot { width: 3px; height: 3px; background: var(--accent); border-radius: 50%; animation: blink 1.4s infinite both; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
-
-        /* --- INPUT AREA & REPLY BAR --- */
+        /* --- INPUT --- */
         .input-wrapper-outer { position: fixed; bottom: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; }
-        
-        #reply-bar { 
-            display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; 
-            border-top: 1px solid var(--accent); align-items: center; justify-content: space-between; 
-        }
-        
+        #reply-bar { display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--accent); align-items: center; justify-content: space-between; }
         .input-wrap { background: var(--card); padding: 15px 20px; border-top: 1px solid #333; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
         #wizsInput { flex-grow: 1; margin-bottom: 0; border: 1px solid #444; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; color: white; outline: none; }
@@ -147,11 +128,12 @@
 
         #media-sidebar { position: fixed; top: 50px; left: 0; width: 320px; height: calc(100% - 50px); background: #0f0f0f; border-right: 1px solid #333; z-index: 1999; transform: translateX(-100%); padding: 15px; overflow-y: auto; }
         #media-sidebar.active { transform: translateX(0); }
-        
+        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid #333; margin-bottom:10px; cursor:pointer; opacity:0.7; }
+        .sidebar-thumb:hover { opacity:1; border-color:var(--accent); }
+
         .user-item { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; color: #ccc; text-align: left; }
         #userListContainer { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
 
-        /* Admin Checkbox */
         .admin-check-container { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
         .admin-label { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; color: var(--accent); cursor: pointer; }
     </style>
@@ -198,10 +180,15 @@
     <button class="modal-btn" style="font-size:10px; padding:5px 10px;" onclick="endTutorial()">Finish</button>
 </div>
 
-<div id="invite-toast">
+<div id="invite-toast" class="toast-notify">
     <i class="fa-solid fa-user-group"></i> 
     <span>It's quiet... Invite friends via link to chat!</span>
     <i class="fa-solid fa-xmark" style="cursor:pointer; margin-left:10px;" onclick="document.getElementById('invite-toast').style.display='none'"></i>
+</div>
+
+<div id="verified-toast" class="toast-notify">
+    <i class="fa-solid fa-circle-check"></i> 
+    <span>Verified: Welcome Owner</span>
 </div>
 
 <div id="status-bar">
@@ -220,7 +207,7 @@
 
 <div id="media-sidebar"><div class="media-grid" id="sidebar-content"></div></div>
 <div id="feed"></div>
-<div id="typing-indicator"><span id="typer-name">Someone</span> is typing<div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+<div id="typing-indicator" style="display:none; bottom:75px; left:20px; position:fixed; color:var(--accent); font-size:12px;"><span id="typer-name">Someone</span> is typing...</div>
 
 <div class="input-wrapper-outer">
     <div id="reply-bar">
@@ -231,7 +218,7 @@
         <div class="input-controls">
             <label style="cursor:pointer; color:var(--accent); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden accept="image/*,video/*"></label>
             <span onclick="openGIFs()" style="cursor:pointer; color:var(--mint); font-weight:bold;">GIF</span>
-            <input type="text" id="wizsInput" placeholder="Message... (Left-Click a msg to reply)" autocomplete="off">
+            <input type="text" id="wizsInput" placeholder="Message... (Left-Click to reply)" autocomplete="off">
         </div>
     </div>
 </div>
@@ -254,6 +241,7 @@
         </select>
         
         <div id="admin-controls" class="admin-check-container">
+            <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
             <label class="admin-label">
                 <input type="checkbox" id="rainbow-toggle"> 🌈 Enable Admin Rainbow FX
             </label>
@@ -270,12 +258,11 @@
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.3.7</p>
+        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.3.8</p>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
-            <span style="color:var(--mint)">> Added Reply System (Click Msg)</span><br>
-            <span style="color:var(--mint)">> Added @Mention Highlighting</span><br>
-            <span style="color:var(--yellow)">> Added Admin Rainbow FX</span><br>
-            <span style="color:var(--mint)">> Restored Core Features</span>
+            <span style="color:var(--mint)">> Added "Verified" Toast</span><br>
+            <span style="color:var(--mint)">> Added Owner Rainbow Name</span><br>
+            <span style="color:var(--mint)">> Added YT Links to Sidebar</span>
         </div>
         <button class="modal-btn" onclick="document.getElementById('changelogModal').style.display='none'">Close</button>
     </div>
@@ -298,8 +285,8 @@
     let typingTimeout;
     let blockedIds = new Set();
     let discoveredUsers = {}; 
-    let activeReply = null; // Stores {id, name, text}
-    let isAdminRainbow = false; // Toggle state
+    let activeReply = null; 
+    let isAdminRainbow = false; 
 
     // --- 1. INTRO & SETUP ---
     window.onload = () => {
@@ -330,7 +317,6 @@
         document.getElementById('intro-overlay').style.display = 'none';
         document.getElementById('arrow-guide').style.display = 'none';
         document.getElementById('introLogo').style.display = 'none';
-        initAudio();
     }
 
     // --- 2. SETTINGS & ADMIN LOGIC ---
@@ -343,22 +329,55 @@
 
     function syncSettings() {
         const nick = document.getElementById('tut-nick').value;
-        if(nick) myName = nick;
+        if(nick) checkAdminName(nick); else myName = nick || myName;
         myColor = document.getElementById('tut-color').value;
     }
 
     function openMainSettings() {
-        document.getElementById('main-nick').value = myName;
+        // Show current name (if it's "WIZs Owner", show "Admin1" in input so they know)
+        document.getElementById('main-nick').value = (myName === "WIZs Owner") ? "Admin1" : myName;
         document.getElementById('main-color').value = myColor;
 
-        // Admin Check
-        if(myName === "Admin1") {
+        // Admin Visibility
+        if(myName === "WIZs Owner" || myName === "Admin1") {
             document.getElementById('admin-controls').style.display = "block";
             document.getElementById('rainbow-toggle').checked = isAdminRainbow;
         } else {
             document.getElementById('admin-controls').style.display = "none";
         }
         
+        renderBlockList();
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function saveMainSettings() {
+        const inputName = document.getElementById('main-nick').value;
+        checkAdminName(inputName);
+        myColor = document.getElementById('main-color').value;
+        
+        if(myName === "WIZs Owner") {
+            isAdminRainbow = document.getElementById('rainbow-toggle').checked;
+        } else {
+            isAdminRainbow = false; 
+        }
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function checkAdminName(name) {
+        if(name === "Admin1") {
+            if(myName !== "WIZs Owner") { // Only show toast if not already owner
+                const t = document.getElementById('verified-toast');
+                t.style.display = 'flex';
+                setTimeout(() => t.style.display = 'none', 3000);
+            }
+            myName = "WIZs Owner";
+            isAdminRainbow = true; // Auto-enable rainbow on first login
+        } else {
+            myName = name || "Wiz-" + Math.floor(Math.random()*999);
+        }
+    }
+
+    function renderBlockList() {
         const list = document.getElementById('userListContainer');
         list.innerHTML = '';
         Object.keys(discoveredUsers).forEach(uid => {
@@ -369,22 +388,10 @@
             item.innerHTML = `<span>${discoveredUsers[uid]}</span> <span style="color:${isBlocked?'var(--red)':'#888'}; font-weight:bold;">${isBlocked?'Unblock':'Block'}</span>`;
             item.onclick = () => {
                 if(isBlocked) blockedIds.delete(uid); else blockedIds.add(uid);
-                openMainSettings();
+                renderBlockList();
             };
             list.appendChild(item);
         });
-        document.getElementById('settingsModal').style.display = 'flex';
-    }
-
-    function saveMainSettings() {
-        myName = document.getElementById('main-nick').value || myName;
-        myColor = document.getElementById('main-color').value;
-        if(myName === "Admin1") {
-            isAdminRainbow = document.getElementById('rainbow-toggle').checked;
-        } else {
-            isAdminRainbow = false; // Disable if name changed away from Admin1
-        }
-        document.getElementById('settingsModal').style.display = 'none';
     }
 
     // --- 3. REPLY SYSTEM ---
@@ -409,15 +416,15 @@
             color: myColor, 
             text: text, 
             msgId: 'm-'+Date.now(),
-            reply: activeReply, // Attach reply context
-            rainbowMode: isAdminRainbow // Attach admin flag
+            reply: activeReply,
+            rainbowMode: isAdminRainbow
         };
 
         if(mediaData) payload[mediaType] = mediaData;
         socket.emit('send-msg', payload);
         
         document.getElementById('wizsInput').value = ''; 
-        cancelReply(); // Clear reply after sending
+        cancelReply(); 
     }
 
     socket.on('receive-msg', data => {
@@ -433,38 +440,41 @@
         let replyHtml = '';
         if (data.reply) {
             replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${data.reply.text}</div>`;
-            // Check for mention highlighting
-            if (data.reply.name === myName) {
-                div.classList.add('mentioned');
-            }
+            if (data.reply.name === myName) div.classList.add('mentioned');
         }
 
         // --- ADMIN RENDER ---
         let nameClass = '';
-        if (data.rainbowMode) {
+        if (data.name === "WIZs Owner" && data.rainbowMode) {
             div.classList.add('rainbow-box');
-            nameClass = 'rainbow-text';
+            nameClass = 'owner-name';
         }
 
         // --- MEDIA ---
         let mediaHtml = '';
         if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="toggleMedia(this)">`;
         if (data.video) mediaHtml = `<div class="vid-container"><video src="${data.video}" class="media-msg" onclick="toggleMedia(this)" loop muted></video></div>`;
+        
+        // --- YOUTUBE PARSING ---
+        let ytThumb = null;
         if (data.text && (data.text.includes('youtube.com') || data.text.includes('youtu.be'))) {
             const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
-            if (vidId) mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+            if (vidId) {
+                mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+                ytThumb = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+                // Add click to open listener for sidebar thumb
+                addToSidebar(ytThumb, `https://www.youtube.com/watch?v=${vidId}`, true);
+            }
         }
+        
+        // Add standard media to sidebar
         if (data.image || data.video) {
-             const sItem = document.createElement('div'); 
-             sItem.innerHTML = `<img src="${data.image || 'https://via.placeholder.com/100?text=Video'}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border:1px solid #333;">`;
-             document.getElementById('sidebar-content').prepend(sItem);
+             addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
         }
 
         div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${data.text || ''}</div>${mediaHtml}`;
         
-        // --- CLICK TO REPLY ---
         div.onclick = (e) => {
-            // Ignore if clicking media or context menu actions
             if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || e.target.closest('.reaction-bar')) return;
             initReply(data.msgId, data.name, data.text || '[Media]');
         };
@@ -472,6 +482,18 @@
         document.getElementById('feed').appendChild(div); 
         window.scrollTo(0, document.body.scrollHeight);
     });
+
+    function addToSidebar(imgSrc, linkUrl, isYT) {
+        const sItem = document.createElement('img');
+        sItem.className = 'sidebar-thumb';
+        sItem.src = imgSrc;
+        if(isYT && linkUrl) {
+            sItem.onclick = () => window.open(linkUrl, '_blank');
+        } else {
+            sItem.onclick = () => { /* Maybe scroll to message later */ };
+        }
+        document.getElementById('sidebar-content').prepend(sItem);
+    }
 
     // --- 5. EVENTS & UTILS ---
     const dot = document.getElementById('connection-dot');
@@ -560,7 +582,6 @@
     function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; }
     window.toggleMedia = (el) => { if(el.classList.contains('unblurred')) { el.classList.remove('unblurred'); if(el.tagName==='VIDEO') el.pause(); } else { el.classList.add('unblurred'); if(el.tagName==='VIDEO') el.play(); } };
     function toggleSidebar() { document.getElementById('media-sidebar').classList.toggle('active'); }
-    function initAudio() {}
 </script>
 </body>
 </html>
