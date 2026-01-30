@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIZs | v3.1 Ultimate Master</title>
+    <title id="page-title">WIZs | Anonymous Chat</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/512/3659/3659744.png">
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -21,8 +22,6 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid var(--gray); }
         .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
-        .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
 
         /* --- GIF PICKER --- */
         #gif-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 15px; padding: 5px; }
@@ -31,9 +30,7 @@
         /* --- FEED & MESSAGES --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; }
-        .rating-notif { background: rgba(241, 196, 15, 0.05); border: 1px dashed var(--yellow); color: var(--yellow); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 10px; }
         
-        /* Media Container & Blur */
         .vid-container { position: relative; width: 100%; margin-top: 10px; border-radius: 8px; overflow: hidden; background: #000; }
         .mute-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; z-index: 10; font-size: 12px; visibility: hidden; }
         .unblurred + .mute-btn { visibility: visible; }
@@ -41,16 +38,15 @@
         .unblurred { filter: blur(0) !important; }
 
         /* Replies */
-        .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.1); }
+        .was-replied-to { border: 1px solid var(--mint) !important; }
         .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
         .is-reply-to-me { background: #1a1f24; border-right: 3px solid var(--blue); }
-        .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; font-style: italic; }
 
         /* --- INPUT --- */
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
-        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
+        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -60,8 +56,8 @@
 <div id="welcomeModal" class="modal" style="display: flex;">
     <div class="modal-content">
         <h2 style="color:var(--blue)">Welcome to WIZs</h2>
-        <p style="font-size:14px">Anonymous chatting. No data saved.<br>Full wipe every 15 minutes.</p>
-        <button class="modal-btn" onclick="closeModal('welcomeModal')">Begin Chatting</button>
+        <p>Anonymous chatting. Full wipe every 15 mins.</p>
+        <button class="modal-btn" onclick="initAudio(); closeModal('welcomeModal')">Begin Chatting</button>
     </div>
 </div>
 
@@ -76,36 +72,20 @@
 
 <div id="settingsModal" class="modal">
     <div class="modal-content">
-        <h3>User Settings</h3>
-        <input type="text" id="newNick" placeholder="Change nickname..." maxlength="15" style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
-        <p style="font-size:12px; margin-top:10px;">Name Color:</p>
-        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
-        <p style="font-size:12px; margin-top:15px;">Block Users:</p>
+        <h3>Settings</h3>
+        <input type="text" id="newNick" placeholder="Change nickname..." maxlength="15" style="width:90%; padding:10px; background:#222; color:white; border:1px solid #444; border-radius:8px;">
+        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 15px 0;"></div>
         <div id="userListContainer"></div>
-        <button class="modal-btn" style="background:var(--red); color:white; margin-right:5px;" onclick="unblockAll()">Unblock All</button>
-        <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
-    </div>
-</div>
-
-<div id="ratingModal" class="modal">
-    <div class="modal-content">
-        <h3>Enjoying WIZs?</h3>
-        <p>Rate us 1-5 stars</p>
-        <div style="font-size: 2rem; margin: 15px 0;">
-            <span onclick="submitRating(5)" style="cursor:pointer">⭐⭐⭐⭐⭐</span>
-        </div>
-        <button class="modal-btn" style="background:#333; color:white;" onclick="closeModal('ratingModal')">Cancel</button>
+        <button class="modal-btn" onclick="unblockAll()" style="background:var(--red); color:white;">Unblock All</button>
+        <button class="modal-btn" onclick="saveSettings()">Save</button>
     </div>
 </div>
 
 <div id="status-bar">
-    <div class="bar-left">
-        <i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i>
-        <span id="reset-timer" style="font-size: 11px; margin-left: 10px;">15:00</span>
-    </div>
+    <div class="bar-left"><i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i> <span id="reset-timer" style="font-size: 11px; margin-left: 10px;">15:00</span></div>
     <div class="bar-center">WIZs</div>
     <div class="bar-right">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=header" target="_blank" class="report-link">Report issues</a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=header" target="_blank" class="report-link">Report</a>
         <span id="count-display" style="font-size:10px; color:var(--blue);">0 Online</span>
         <i class="fa-solid fa-star star-btn" onclick="document.getElementById('ratingModal').style.display='flex'"></i>
     </div>
@@ -118,7 +98,7 @@
     <div class="input-controls">
         <label style="cursor:pointer; color:var(--blue); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden accept="image/*,video/*"></label>
         <span onclick="openGIFs()" style="cursor:pointer; color:var(--mint); font-weight:bold; font-size:14px;">GIF</span>
-        <input type="text" id="wizsInput" placeholder="Type a message or paste YT link..." autocomplete="off">
+        <input type="text" id="wizsInput" placeholder="Message or YouTube link..." autocomplete="off">
     </div>
 </div>
 
@@ -130,34 +110,70 @@
     let selectedReply = null; 
     let blockedIds = new Set();
     let discoveredUsers = {}; 
-    let mediaCooldown = false;
+    let audioCtx = null;
 
-    // --- TENOR GIF SYSTEM ---
-    async function fetchGIFs(query) {
-        const apiKey = "LIVNE7WABNEL"; // v2 API compatible key
-        const url = `https://tenor.googleapis.com/v2/search?q=${query}&key=${apiKey}&limit=12&client_key=wizs_v3`;
-        const container = document.getElementById('gif-results');
+    // --- NOTIFICATION ENGINE ---
+    function initAudio() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    
+    function playBeep() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine"; osc.frequency.setValueAtTime(550, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function drawNotificationBadge() {
+        const favicon = document.getElementById('favicon');
+        const canvas = document.createElement('canvas');
+        canvas.width = 32; canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = favicon.href;
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, 32, 32);
+            ctx.beginPath();
+            ctx.arc(24, 8, 7, 0, 2 * Math.PI);
+            ctx.fillStyle = "#ff4d4d";
+            ctx.fill();
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            favicon.href = canvas.toDataURL('image/png');
+            document.title = "( ! ) WIZs | New Reply";
+        };
+    }
+
+    window.onfocus = () => {
+        document.getElementById('favicon').href = "https://cdn-icons-png.flaticon.com/512/3659/3659744.png";
+        document.title = "WIZs | Anonymous Chat";
+    };
+
+    // --- TENOR GIFS ---
+    async function fetchGIFs(q) {
+        const url = `https://tenor.googleapis.com/v2/search?q=${q}&key=LIVNE7WABNEL&limit=12&client_key=wizs_v3`;
         try {
-            const res = await fetch(url);
-            const data = await res.json();
-            container.innerHTML = '';
+            const res = await fetch(url); const data = await res.json();
+            const container = document.getElementById('gif-results'); container.innerHTML = '';
             data.results.forEach(gif => {
-                const img = document.createElement('img');
-                img.src = gif.media_formats.tinygif.url;
-                img.className = 'tenor-gif';
+                const img = document.createElement('img'); img.src = gif.media_formats.tinygif.url; img.className = 'tenor-gif';
                 img.onclick = () => {
-                    const id = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2,5);
-                    socket.emit('send-msg', { name: myName, color: myColor, text: "[GIF]", image: gif.media_formats.gif.url, msgId: id, replyTo: selectedReply });
+                    socket.emit('send-msg', { name: myName, color: myColor, text: "[GIF]", image: gif.media_formats.gif.url, msgId: "g-"+Date.now(), replyTo: selectedReply });
                     closeModal('gifModal');
                 };
                 container.appendChild(img);
             });
-        } catch (e) { container.innerHTML = '<p>Search failed.</p>'; }
+        } catch (e) { console.log(e); }
     }
     function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; fetchGIFs("trending"); }
     document.getElementById('gifSearchInput').oninput = (e) => fetchGIFs(e.target.value || "trending");
 
-    // --- MULTIMEDIA SYSTEM (Blur/Audio) ---
+    // --- MULTIMEDIA ---
     window.toggleMedia = (el) => {
         const isBlurred = !el.classList.contains('unblurred');
         if (isBlurred) {
@@ -174,7 +190,7 @@
         btn.innerHTML = v.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
     };
 
-    // --- SOCKET LISTENERS ---
+    // --- SOCKETS ---
     socket.on('assign-id', id => myId = id);
     socket.on('user-count', c => document.getElementById('count-display').innerText = `${c} Online`);
     socket.on('timer-update', s => {
@@ -182,12 +198,6 @@
         document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`;
     });
     socket.on('room-reset', () => location.reload());
-    socket.on('receive-rating', data => {
-        const div = document.createElement('div'); div.className = 'rating-notif';
-        div.innerText = `⭐ ${data.name} Rated WIZs with ${data.stars}/5 Stars.`;
-        document.getElementById('feed').appendChild(div);
-        window.scrollTo(0, document.body.scrollHeight);
-    });
 
     socket.on('receive-msg', data => {
         if (data.userId !== myId && !discoveredUsers[data.userId]) discoveredUsers[data.userId] = data.name;
@@ -195,7 +205,15 @@
 
         const div = document.createElement('div');
         div.className = 'msg'; div.id = data.msgId; div.style.setProperty('--u-color', data.color);
-        if (data.replyTo && data.replyTo.name === myName) div.classList.add('is-reply-to-me');
+        
+        // TRIGGER NOTIFICATIONS FOR REPLIES
+        if (data.replyTo && data.replyTo.name === myName) {
+            div.classList.add('is-reply-to-me');
+            if (document.hidden || !document.hasFocus()) {
+                playBeep();
+                drawNotificationBadge();
+            }
+        }
 
         let mediaHtml = '';
         if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
@@ -207,21 +225,17 @@
             </div>`;
         }
 
-        // --- YOUTUBE LINK SUPPORT ---
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vid = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vid) mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
         }
 
-        let replyHeader = data.replyTo ? `<span class="reply-tag">Replying to @${data.replyTo.name}</span>` : '';
+        let replyHeader = data.replyTo ? `<div style="font-size:11px; color:#666; font-style:italic;">Replying to @${data.replyTo.name}</div>` : '';
         if (data.replyTo) {
             const orig = document.getElementById(data.replyTo.msgId);
-            if (orig) {
-                orig.classList.add('was-replied-to');
-                if (!orig.querySelector('.reply-notif-tag')) {
-                    const t = document.createElement('span'); t.className = 'reply-notif-tag';
-                    t.innerText = `💬 ${data.name} replied to this.`; orig.appendChild(t);
-                }
+            if (orig && !orig.querySelector('.reply-notif-tag')) {
+                const t = document.createElement('span'); t.className = 'reply-notif-tag';
+                t.innerText = `💬 ${data.name} replied.`; orig.appendChild(t);
             }
         }
 
@@ -229,7 +243,6 @@
         div.onclick = () => {
             selectedReply = { name: data.name, msgId: data.msgId };
             document.getElementById('reply-preview').style.display = 'flex';
-            document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
             document.getElementById('wizsInput').focus();
         };
 
@@ -237,33 +250,27 @@
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // --- INPUT HANDLERS ---
     document.getElementById('wizsInput').onkeydown = e => {
         if (e.key === 'Enter' && e.target.value.trim()) {
-            const id = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2,7);
-            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: id });
+            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: "m-"+Date.now() });
             e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
         }
     };
 
     document.getElementById('mediaInput').onchange = e => {
-        if (mediaCooldown) return alert("Wait 1 min.");
         const file = e.target.files[0]; const reader = new FileReader();
         reader.onload = () => {
-            const id = "msg-" + Date.now();
             const type = file.type.startsWith('video') ? 'video' : 'image';
-            socket.emit('send-msg', { name: myName, color: myColor, text: `[Shared ${type}]`, [type]: reader.result, msgId: id, replyTo: selectedReply });
-            mediaCooldown = true; setTimeout(() => mediaCooldown = false, 60000);
+            socket.emit('send-msg', { name: myName, color: myColor, text: `[Shared ${type}]`, [type]: reader.result, msgId: "u-"+Date.now(), replyTo: selectedReply });
         };
         reader.readAsDataURL(file);
     };
 
-    // --- SETTINGS & COLORS ---
+    // --- SETTINGS & HELPERS ---
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
-    const p = document.getElementById('colorPicker');
     colors.forEach(c => {
         const d = document.createElement('div'); d.style.background = c; d.style.height = '20px'; d.style.borderRadius = '4px'; d.style.cursor = 'pointer';
-        d.onclick = () => myColor = c; p.appendChild(d);
+        d.onclick = () => myColor = c; document.getElementById('colorPicker').appendChild(d);
     });
     function openSettings() {
         const c = document.getElementById('userListContainer'); c.innerHTML = '';
@@ -276,9 +283,7 @@
         document.getElementById('settingsModal').style.display = 'flex';
     }
     function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
-    function unblockAll() { blockedIds.clear(); openSettings(); }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function submitRating(n) { socket.emit('send-rating', { name: myName, stars: n }); closeModal('ratingModal'); }
     document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
 </script>
 </body>
