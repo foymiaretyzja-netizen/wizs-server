@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">WIZs | Anonymous Chat</title>
-    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/512/3659/3659744.png">
+    
+    <link id="favicon" rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AEeFSwz1y4JqwAAA4ZJREFUeNrt3L1rFFEcxfFzJ0YlglYiCClsC0XsBUEQwf9A0CKNvSI2gijYCFqI2IlYCDYWaWwFEVQsBUEiCGIhiY2FBE1iY6F4X8zG3Zyd3Z2d3f28A4+F3b333P3NfXdm7806lUrlV+2i20ClUqmn1d0G/o21wBHgCDANjAOTwDgwwf8eAsPAEDAIDAMDwG3gJ3C7y8D9Br4Br4F3wDvgPfAOeAO8Bj4CV4HrwIBuU7NWAyeAE8Bp4DRwGjgNnAJGA6+9DfwAPgOfgE/AR+AT8BH4AlwH7ut2tWItcAE4D1wALgIXgQvAOaAfWAr87iPwCfgAfAA+AO+Bd8A74A3wBrgJ3NStaYU+4ApwFbgKXAWuAleA0U7e/APwGngNvAZeAa+AV8BL4CXwEngB3AR+6ja2YhQ4C9wAbgI3gRvAWeC0R9//BfwLXgAvgefAc+A58Ax4BjwDngHPgWfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+AZ8Ax4BjwDngHPgGfAM+C/t/4Cj41y0d+e3uMAAAAASUVORK5CYII=">
+
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,15 +16,29 @@
             --mint: #7bed9f; --red: #ff4d4d; --yellow: #f1c40f; 
         }
         * { box-sizing: border-box; transition: all 0.3s ease; }
-        body { background: var(--bg); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; overflow-x: hidden; opacity: 0; animation: fadeInBody 1s forwards; }
+        
+        body { 
+            background: var(--bg); color: var(--text-main); 
+            font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; 
+            overflow-x: hidden; opacity: 0; animation: fadeInBody 1s forwards; 
+        }
 
         @keyframes fadeInBody { to { opacity: 1; } }
+
+        /* --- BACKGROUND FX LAYER --- */
+        #bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none; 
+        }
+
         @keyframes drift { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
+        
         .astrolight-fx {
             background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
             background-size: 50px 50px, 30px 30px;
             background-position: 0 0, 15px 15px;
             animation: drift 60s linear infinite;
+            opacity: 0.6;
         }
 
         /* --- CINEMATIC INTRO --- */
@@ -63,7 +79,7 @@
         @keyframes fadeIn { from{opacity:0; transform:translate(-50%, -10px);} to{opacity:1; transform:translate(-50%, 0);} }
 
         /* --- FEED & MEDIA --- */
-        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1; position: relative; }
         .msg { background: var(--card); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUpFade 0.3s ease; cursor: pointer; border: 1px solid transparent; word-wrap: break-word; }
         .msg.mentioned { border-color: var(--yellow); box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
 
@@ -136,9 +152,15 @@
 
         .admin-check-container { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
         .admin-label { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; color: var(--accent); cursor: pointer; }
+        
+        /* Checkbox Style */
+        .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:#ccc; }
+        .check-box-wrapper input { width:auto; margin:0; }
     </style>
 </head>
 <body id="mainBody" onclick="hideContextMenu()">
+
+<div id="bg-layer"></div>
 
 <div id="intro-overlay">
     <div class="intro-logo" id="introLogo">WIZs</div>
@@ -168,6 +190,11 @@
                 <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight</option> <option value="candy">CandyPink</option>
                 <option value="astrolight">✨ Astrolight</option>
             </select>
+            
+            <label class="check-box-wrapper">
+                 <input type="checkbox" id="tut-filter"> Censor hate/speech & curse words?
+            </label>
+
             <div style="margin-top:10px; font-size:13px;">Preview: <span id="tut-preview" style="font-weight:bold; color:#00f2fe">Username</span></div>
             <button class="modal-btn" onclick="syncSettings(); nextStep(3)">Next (2/3)</button>
         </div>
@@ -245,6 +272,10 @@
             <option value="astrolight">✨ Astrolight</option>
         </select>
         
+        <label class="check-box-wrapper">
+             <input type="checkbox" id="main-filter"> Censor hate/speech & curse words?
+        </label>
+        
         <div id="admin-controls" class="admin-check-container">
             <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
             <label class="admin-label">
@@ -263,12 +294,11 @@
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.3.9</p>
+        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.6.0</p>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
-            <span style="color:var(--mint)">> Added Theme Selector to Main Settings</span><br>
-            <span style="color:var(--mint)">> Added "Verified" Toast</span><br>
-            <span style="color:var(--mint)">> Added Owner Rainbow Name</span><br>
-            <span style="color:var(--mint)">> Added YT Links to Sidebar</span>
+            <span style="color:var(--mint)">> Updated Favicon (Embedded)</span><br>
+            <span style="color:var(--mint)">> Added Content Filter Checkbox</span><br>
+            <span style="color:var(--mint)">> Fixed Astrolight Glitch</span>
         </div>
         <button class="modal-btn" onclick="document.getElementById('changelogModal').style.display='none'">Close</button>
     </div>
@@ -280,6 +310,10 @@
         <div id="gif-results" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:10px; max-height:200px; overflow-y:auto;"></div>
         <button class="modal-btn" onclick="document.getElementById('gifModal').style.display='none'">Close</button>
     </div>
+</div>
+
+<div style="display: none;">
+    <a target="_blank" href="https://icons8.com/icon/VNL6N4xa9RDR/w">W</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
 </div>
 
 <script>
@@ -294,6 +328,7 @@
     let activeReply = null; 
     let isAdminRainbow = false; 
     let currentTheme = 'default';
+    let filterEnabled = false;
 
     // --- 1. INTRO & SETUP ---
     window.onload = () => {
@@ -338,12 +373,14 @@
         const nick = document.getElementById('tut-nick').value;
         if(nick) checkAdminName(nick); else myName = nick || myName;
         myColor = document.getElementById('tut-color').value;
+        filterEnabled = document.getElementById('tut-filter').checked;
     }
 
     function openMainSettings() {
         document.getElementById('main-nick').value = (myName === "WIZs Owner") ? "Admin1" : myName;
         document.getElementById('main-color').value = myColor;
         document.getElementById('main-theme').value = currentTheme;
+        document.getElementById('main-filter').checked = filterEnabled;
 
         // Admin Visibility
         if(myName === "WIZs Owner" || myName === "Admin1") {
@@ -361,6 +398,7 @@
         const inputName = document.getElementById('main-nick').value;
         checkAdminName(inputName);
         myColor = document.getElementById('main-color').value;
+        filterEnabled = document.getElementById('main-filter').checked;
         
         if(myName === "WIZs Owner") {
             isAdminRainbow = document.getElementById('rainbow-toggle').checked;
@@ -372,13 +410,13 @@
 
     function checkAdminName(name) {
         if(name === "Admin1") {
-            if(myName !== "WIZs Owner") { // Only show toast if not already owner
+            if(myName !== "WIZs Owner") { 
                 const t = document.getElementById('verified-toast');
                 t.style.display = 'flex';
                 setTimeout(() => t.style.display = 'none', 3000);
             }
             myName = "WIZs Owner";
-            isAdminRainbow = true; // Auto-enable rainbow on first login
+            isAdminRainbow = true; 
         } else {
             myName = name || "Wiz-" + Math.floor(Math.random()*999);
         }
@@ -403,7 +441,7 @@
 
     // --- 3. REPLY SYSTEM ---
     function initReply(msgId, name, text) {
-        activeReply = { id: msgId, name: name, text: text.substring(0, 30) + (text.length>30 ? '...' : '') };
+        activeReply = { id: msgId, name: name, text: cleanText(text).substring(0, 30) + (text.length>30 ? '...' : '') };
         document.getElementById('reply-bar').style.display = 'flex';
         document.getElementById('reply-target-name').innerText = name;
         document.getElementById('wizsInput').focus();
@@ -414,7 +452,19 @@
         document.getElementById('reply-bar').style.display = 'none';
     }
 
-    // --- 4. MESSAGING ---
+    // --- 4. FILTERING ---
+    function cleanText(text) {
+        if(!filterEnabled || !text) return text;
+        const filterList = ["fuck", "shit", "bitch", "ass", "dick", "cunt", "whore", "fag", "nigger", "slut", "bastard"]; 
+        let clean = text;
+        filterList.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            clean = clean.replace(regex, '*'.repeat(word.length));
+        });
+        return clean;
+    }
+
+    // --- 5. MESSAGING ---
     function sendMsg(text, mediaData = null, mediaType = null) {
         if(!text && !mediaData) return;
         
@@ -443,10 +493,15 @@
         div.id = data.msgId; 
         div.style.setProperty('--u-color', data.color);
 
+        // FILTER TEXT BEFORE RENDER
+        const safeText = cleanText(data.text);
+        let safeReplyText = "";
+
         // --- REPLY RENDER ---
         let replyHtml = '';
         if (data.reply) {
-            replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${data.reply.text}</div>`;
+            safeReplyText = cleanText(data.reply.text);
+            replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${safeReplyText}</div>`;
             if (data.reply.name === myName) div.classList.add('mentioned');
         }
 
@@ -477,11 +532,11 @@
              addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
         }
 
-        div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${data.text || ''}</div>${mediaHtml}`;
+        div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${safeText || ''}</div>${mediaHtml}`;
         
         div.onclick = (e) => {
             if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || e.target.closest('.reaction-bar')) return;
-            initReply(data.msgId, data.name, data.text || '[Media]');
+            initReply(data.msgId, data.name, safeText || '[Media]');
         };
 
         document.getElementById('feed').appendChild(div); 
@@ -500,7 +555,7 @@
         document.getElementById('sidebar-content').prepend(sItem);
     }
 
-    // --- 5. EVENTS & UTILS ---
+    // --- 6. EVENTS & UTILS ---
     const dot = document.getElementById('connection-dot');
     socket.on('connect', () => { dot.className = 'status-dot status-green'; });
     socket.on('disconnect', () => { dot.className = 'status-dot status-red'; });
@@ -564,12 +619,20 @@
         candy: { bg: "#2e0b1f", card: "#4d1233", accent: "#ff6b81" },
         astrolight: { bg: "#150a26", card: "#241240", accent: "#dfa8ff" }
     };
+
     function applyTheme(n) {
         currentTheme = n;
         const t = themes[n] || themes.default;
         const r = document.documentElement.style;
-        r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--accent', t.accent);
-        document.getElementById('mainBody').className = (n === 'astrolight') ? 'astrolight-fx' : '';
+        r.setProperty('--bg', t.bg); 
+        r.setProperty('--card', t.card); 
+        r.setProperty('--accent', t.accent);
+        const bgLayer = document.getElementById('bg-layer');
+        if(n === 'astrolight') {
+            bgLayer.className = 'astrolight-fx';
+        } else {
+            bgLayer.className = '';
+        }
     }
     
     async function fetchGIFs(q) {
