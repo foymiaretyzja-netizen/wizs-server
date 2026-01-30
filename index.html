@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIZs | v2.6 Official</title>
+    <title>WIZs | v2.9 Final</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -12,11 +12,11 @@
         /* --- STATUS BAR --- */
         #status-bar { position: fixed; top: 0; left: 0; width: 100%; background: #111; padding: 10px 20px; z-index: 999; border-bottom: 1px solid #222; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-sizing: border-box; }
         .bar-left { display: flex; align-items: center; gap: 15px; }
-        .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px rgba(0,242,254,0.3); }
+        .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px rgba(0,242,254,0.3); text-align: center; }
         .bar-right { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
         .gear-btn, .star-btn { cursor: pointer; color: #888; transition: 0.2s; font-size: 16px; }
         .star-btn:hover { color: var(--yellow); }
-        .report-link { color: #555; text-decoration: none; font-size: 10px; border: 1px solid #222; padding: 2px 6px; border-radius: 4px; }
+        .report-link { color: #555; text-decoration: none; font-size: 10px; border: 1px solid #222; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
         /* --- MODALS --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
@@ -24,23 +24,29 @@
         .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
         .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
+        #gif-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 300px; overflow-y: auto; margin-top: 15px; }
+        .tenor-gif { width: 100%; border-radius: 8px; cursor: pointer; }
 
-        /* --- MESSAGES & THREADING --- */
+        /* --- FEED & MESSAGES --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; transition: border 0.3s; }
-        .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.2); }
-        .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
-        .msg-blocked { height: 12px; opacity: 0.1; background: #444; border-radius: 6px; }
+        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; transition: 0.2s; }
         .rating-notif { background: rgba(241, 196, 15, 0.05); border: 1px dashed var(--yellow); color: var(--yellow); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 10px; }
-        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(25px); transition: 0.4s; margin-top: 10px; }
-        .img-msg:active { filter: blur(0); }
-        .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; font-style: italic; }
-        .is-reply-to-me { background: #1a1f24; border-right: 2px solid var(--blue); }
+        
+        /* Multimedia Styles */
+        .media-msg { max-width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; margin-top: 10px; display: block; background: #000; cursor: pointer; }
+        .unblurred { filter: blur(0) !important; }
 
-        /* --- INPUT AREA --- */
+        /* Reply Styles */
+        .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.1); }
+        .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
+        .is-reply-to-me { background: #1a1f24; border-right: 3px solid var(--blue); }
+        .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; font-style: italic; }
+
+        /* --- INPUT --- */
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
+        .input-controls { display: flex; gap: 12px; align-items: center; }
+        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -55,13 +61,22 @@
     </div>
 </div>
 
+<div id="gifModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <h3>Tenor GIFs</h3>
+        <input type="text" id="gifSearchInput" placeholder="Search GIFs..." style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+        <div id="gif-results"></div>
+        <button class="modal-btn" style="background:#333; color:white;" onclick="closeModal('gifModal')">Close</button>
+    </div>
+</div>
+
 <div id="settingsModal" class="modal">
     <div class="modal-content">
         <h3>User Settings</h3>
         <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
         <p style="font-size:12px; margin-top:10px;">Pick Name Color:</p>
         <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
-        <p style="font-size:12px; margin-top:15px;">Click to Block Users:</p>
+        <p style="font-size:12px; margin-top:15px;">Manage Blocks:</p>
         <div id="userListContainer"></div>
         <button class="modal-btn" style="background:var(--red); color:white; margin-right:5px;" onclick="unblockAll()">Unblock All</button>
         <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
@@ -107,8 +122,9 @@
 
 <div class="input-wrap">
     <div id="reply-preview"><span id="reply-text">Replying...</span><span id="cancel-reply" style="cursor:pointer; color:var(--red)">×</span></div>
-    <div style="display:flex; gap:10px; align-items:center;">
-        <label style="cursor:pointer; color:var(--blue); font-size:22px;"><i class="fa-solid fa-image"></i><input type="file" id="imgInput" hidden accept="image/*"></label>
+    <div class="input-controls">
+        <label style="cursor:pointer; color:var(--blue); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden accept="image/*,video/*"></label>
+        <span onclick="openGIFs()" style="cursor:pointer; color:var(--mint); font-weight:bold; font-size:14px; padding: 0 5px;">GIF</span>
         <input type="text" id="wizsInput" placeholder="Type a message or paste YT link..." autocomplete="off">
     </div>
 </div>
@@ -121,17 +137,51 @@
     let selectedReply = null; 
     let blockedIds = new Set();
     let discoveredUsers = {}; 
-    let imgCooldown = false;
+    let mediaCooldown = false;
 
-    // COLORS SETUP
+    // --- COLOR SYSTEM ---
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     const picker = document.getElementById('colorPicker');
     colors.forEach(c => {
-        const div = document.createElement('div');
-        div.style.background = c; div.style.height = '22px'; div.style.cursor = 'pointer'; div.style.borderRadius = '5px';
-        div.onclick = () => myColor = c; picker.appendChild(div);
+        const d = document.createElement('div');
+        d.style.background = c; d.style.height = '22px'; d.style.cursor = 'pointer'; d.style.borderRadius = '5px';
+        d.onclick = () => myColor = c; picker.appendChild(d);
     });
 
+    // --- TENOR GIF SYSTEM ---
+    const TENOR_KEY = "LIVNE7WABNEL"; 
+    async function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; fetchGIFs("trending"); }
+    document.getElementById('gifSearchInput').oninput = (e) => fetchGIFs(e.target.value || "trending");
+    async function fetchGIFs(query) {
+        const url = `https://tenor.googleapis.com/v2/search?q=${query}&key=${TENOR_KEY}&limit=12`;
+        try {
+            const res = await fetch(url); const data = await res.json();
+            const container = document.getElementById('gif-results'); container.innerHTML = '';
+            data.results.forEach(gif => {
+                const img = document.createElement('img'); img.src = gif.media_formats.tinygif.url; img.className = 'tenor-gif';
+                img.onclick = () => sendGIF(gif.media_formats.gif.url); container.appendChild(img);
+            });
+        } catch (e) { console.error(e); }
+    }
+    function sendGIF(url) {
+        const id = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+        socket.emit('send-msg', { name: myName, color: myColor, text: "[GIF]", image: url, msgId: id, replyTo: selectedReply });
+        closeModal('gifModal');
+    }
+
+    // --- MULTIMEDIA BLUR/PLAY TOGGLE ---
+    window.toggleMedia = (el) => {
+        const isBlurred = !el.classList.contains('unblurred');
+        if (isBlurred) {
+            el.classList.add('unblurred');
+            if (el.tagName === 'VIDEO') el.play();
+        } else {
+            el.classList.remove('unblurred');
+            if (el.tagName === 'VIDEO') el.pause();
+        }
+    };
+
+    // --- SOCKET LISTENERS (All Present) ---
     socket.on('assign-id', id => myId = id);
     socket.on('user-count', count => {
         document.getElementById('count-display').innerText = `${count} Online`;
@@ -142,53 +192,48 @@
         document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`;
     });
     socket.on('room-reset', () => location.reload());
-
     socket.on('receive-rating', data => {
-        const div = document.createElement('div');
-        div.className = 'rating-notif';
+        const div = document.createElement('div'); div.className = 'rating-notif';
         div.innerText = `⭐ ${data.name} Rated WIZs with ${data.stars}/5 Stars.`;
         document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // MESSAGE HANDLER
     socket.on('receive-msg', data => {
-        if (data.userId !== myId && !discoveredUsers[data.userId]) { discoveredUsers[data.userId] = data.name; }
+        if (data.userId !== myId && !discoveredUsers[data.userId]) discoveredUsers[data.userId] = data.name;
         if (blockedIds.has(data.userId)) {
-            const b = document.createElement('div'); b.className = 'msg msg-blocked';
+            const b = document.createElement('div'); b.className = 'msg' + ' msg-blocked';
+            b.style.height = '12px'; b.style.opacity = '0.1'; b.style.background = '#444';
             document.getElementById('feed').appendChild(b); return;
         }
 
         const div = document.createElement('div');
-        div.className = 'msg';
-        div.id = data.msgId; // Syncing Global ID
-        div.style.setProperty('--u-color', data.color);
+        div.className = 'msg'; div.id = data.msgId; div.style.setProperty('--u-color', data.color);
         if (data.replyTo && data.replyTo.name === myName) div.classList.add('is-reply-to-me');
 
-        let media = '';
-        if (data.image) media = `<img src="${data.image}" class="img-msg">`;
+        let mediaHtml = '';
+        if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)">`;
+        if (data.video) mediaHtml = `<video src="${data.video}" class="media-msg" onclick="event.stopPropagation(); toggleMedia(this)" loop muted></video>`;
+        
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vid = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
-            if (vid) media += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+            if (vid) mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
         }
 
-        let replyHtml = "";
+        let replyHeader = data.replyTo ? `<span class="reply-tag">Replying to @${data.replyTo.name}</span>` : '';
         if (data.replyTo) {
-            replyHtml = `<span class="reply-tag">Replying to @${data.replyTo.name}</span>`;
-            const original = document.getElementById(data.replyTo.msgId);
-            if (original) {
-                original.classList.add('was-replied-to');
-                if (!original.querySelector('.reply-notif-tag')) {
-                    const tag = document.createElement('span');
-                    tag.className = 'reply-notif-tag';
-                    tag.innerText = `💬 ${data.name} replied to this.`;
-                    original.appendChild(tag);
+            const orig = document.getElementById(data.replyTo.msgId);
+            if (orig) {
+                orig.classList.add('was-replied-to');
+                if (!orig.querySelector('.reply-notif-tag')) {
+                    const t = document.createElement('span'); t.className = 'reply-notif-tag';
+                    t.innerText = `💬 ${data.name} replied to this.`;
+                    orig.appendChild(t);
                 }
             }
         }
 
-        div.innerHTML = replyHtml + `<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>` + media;
-        
+        div.innerHTML = `${replyHeader}<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${mediaHtml}`;
         div.onclick = () => {
             selectedReply = { name: data.name, msgId: data.msgId };
             document.getElementById('reply-preview').style.display = 'flex';
@@ -200,46 +245,42 @@
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    // FUNCTIONS
-    function submitRating(n) { socket.emit('send-rating', { name: myName, stars: n }); closeModal('ratingModal'); }
-    function unblockAll() { blockedIds.clear(); updateBlockList(); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function openSettings() { updateBlockList(); document.getElementById('settingsModal').style.display = 'flex'; }
-    function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
-
-    function updateBlockList() {
-        const c = document.getElementById('userListContainer'); c.innerHTML = '';
-        Object.keys(discoveredUsers).forEach(id => {
-            const i = document.createElement('div'); i.className = 'user-item';
-            i.innerHTML = `<span>${discoveredUsers[id]}</span> <span style="color:var(--red)">${blockedIds.has(id)?'Blocked':'Block'}</span>`;
-            i.onclick = () => { blockedIds.has(id)?blockedIds.delete(id):blockedIds.add(id); updateBlockList(); };
-            c.appendChild(i);
-        });
-    }
-
+    // --- INPUT & UTILITY ---
     document.getElementById('wizsInput').onkeydown = e => {
         if (e.key === 'Enter' && e.target.value.trim()) {
-            const uniqueMsgId = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
-            socket.emit('send-msg', { 
-                name: myName, color: myColor, text: e.target.value, 
-                replyTo: selectedReply, msgId: uniqueMsgId 
-            });
+            const id = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: id });
             e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
         }
     };
 
-    document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
-
-    document.getElementById('imgInput').onchange = e => {
-        if (imgCooldown) { alert("Please wait 1 minute."); return; }
-        const reader = new FileReader();
+    document.getElementById('mediaInput').onchange = e => {
+        if (mediaCooldown) return alert("Wait 1 minute between uploads.");
+        const file = e.target.files[0]; const reader = new FileReader();
+        const id = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
         reader.onload = () => {
-            const uniqueMsgId = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
-            socket.emit('send-msg', { name: myName, color: myColor, text: "[Photo Shared]", image: reader.result, msgId: uniqueMsgId });
-            imgCooldown = true; setTimeout(() => imgCooldown = false, 60000);
+            const payload = { name: myName, color: myColor, text: `[Shared ${file.type.split('/')[0]}]`, msgId: id, replyTo: selectedReply };
+            if (file.type.startsWith('video')) payload.video = reader.result; else payload.image = reader.result;
+            socket.emit('send-msg', payload); mediaCooldown = true; setTimeout(() => mediaCooldown = false, 60000);
         };
-        reader.readAsDataURL(e.target.files[0]);
+        reader.readAsDataURL(file);
     };
+
+    function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
+    function openSettings() { 
+        const c = document.getElementById('userListContainer'); c.innerHTML = '';
+        Object.keys(discoveredUsers).forEach(id => {
+            const i = document.createElement('div'); i.className = 'user-item';
+            i.innerHTML = `<span>${discoveredUsers[id]}</span> <span style="color:var(--red)">${blockedIds.has(id)?'Blocked':'Block'}</span>`;
+            i.onclick = () => { blockedIds.has(id)?blockedIds.delete(id):blockedIds.add(id); openSettings(); };
+            c.appendChild(i);
+        });
+        document.getElementById('settingsModal').style.display = 'flex'; 
+    }
+    function unblockAll() { blockedIds.clear(); openSettings(); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function submitRating(n) { socket.emit('send-rating', { name: myName, stars: n }); closeModal('ratingModal'); }
+    document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
 </script>
 </body>
 </html>
