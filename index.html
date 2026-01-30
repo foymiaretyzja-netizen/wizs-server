@@ -2,49 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIZs | Ultimate</title>
+    <title>WIZs | v2.5</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; --yellow: #f1c40f; --gray: #333; }
+        :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --mint: #7bed9f; --red: #ff4d4d; --yellow: #f1c40f; --gray: #333; }
         body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; overflow-x: hidden; }
 
-        /* Status Bar Layout */
+        /* --- STATUS BAR --- */
         #status-bar { position: fixed; top: 0; left: 0; width: 100%; background: #111; padding: 10px 20px; z-index: 999; border-bottom: 1px solid #222; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; box-sizing: border-box; }
         .bar-left { display: flex; align-items: center; gap: 15px; }
         .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--blue); text-shadow: 0 0 10px rgba(0,242,254,0.3); }
         .bar-right { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
-        
         .gear-btn, .star-btn { cursor: pointer; color: #888; transition: 0.2s; font-size: 16px; }
         .star-btn:hover { color: var(--yellow); }
         .report-link { color: #555; text-decoration: none; font-size: 10px; border: 1px solid #222; padding: 2px 6px; border-radius: 4px; }
-        .report-link:hover { color: var(--red); border-color: var(--red); }
 
-        /* Modals */
-        .modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); display: none; }
+        /* --- MODALS --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 400px; width: 85%; text-align: center; border: 1px solid var(--gray); }
         .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-
-        /* Settings Specifics */
         #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
         .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
 
-        /* Feed & Messages */
+        /* --- MESSAGES & THREADING --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; }
-        .msg.is-reply-to-me { border: 2px solid var(--blue); box-shadow: 0 0 15px rgba(0,242,254,0.2); }
-        .msg-blocked { height: 12px; opacity: 0.2; background: #444; border-radius: 6px; }
-        .rating-notif { background: rgba(241, 196, 15, 0.05); border: 1px dashed var(--yellow); color: var(--yellow); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; }
+        .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.2); }
+        .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
+        .msg-blocked { height: 12px; opacity: 0.1; background: #444; border-radius: 6px; }
+        .rating-notif { background: rgba(241, 196, 15, 0.05); border: 1px dashed var(--yellow); color: var(--yellow); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 10px; }
         
-        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(25px); transition: 0.4s; margin-top: 10px; cursor: pointer; }
+        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(25px); transition: 0.4s; margin-top: 10px; }
         .img-msg:active { filter: blur(0); }
         .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; }
 
-        /* Input Area */
+        /* --- INPUT --- */
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .controls { display: flex; gap: 12px; align-items: center; }
-        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
+        input[type="text"] { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -97,7 +93,7 @@
 <div id="status-bar">
     <div class="bar-left">
         <i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i>
-        <span id="reset-timer">15:00</span>
+        <span id="reset-timer" style="font-size: 11px;">15:00</span>
     </div>
     <div class="bar-center">WIZs</div>
     <div class="bar-right">
@@ -111,9 +107,9 @@
 
 <div class="input-wrap">
     <div id="reply-preview"><span id="reply-text">Replying...</span><span id="cancel-reply" style="cursor:pointer; color:var(--red)">×</span></div>
-    <div class="controls">
+    <div style="display:flex; gap:10px; align-items:center;">
         <label style="cursor:pointer; color:var(--blue); font-size:22px;"><i class="fa-solid fa-image"></i><input type="file" id="imgInput" hidden accept="image/*"></label>
-        <input type="text" id="wizsInput" placeholder="Type a message..." autocomplete="off">
+        <input type="text" id="wizsInput" placeholder="Type a message or paste YT link..." autocomplete="off">
     </div>
 </div>
 
@@ -122,12 +118,12 @@
     let myName = "Wiz-" + Math.floor(Math.random()*999);
     let myColor = "#00f2fe";
     let myId = "";
-    let selectedReply = null;
+    let selectedReply = null; 
     let blockedIds = new Set();
     let discoveredUsers = {}; 
     let imgCooldown = false;
 
-    // Colors
+    // SETUP COLORS
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     const picker = document.getElementById('colorPicker');
     colors.forEach(c => {
@@ -152,35 +148,49 @@
         div.className = 'rating-notif';
         div.innerText = `⭐ ${data.name} Rated WIZs with ${data.stars}/5 Stars.`;
         document.getElementById('feed').appendChild(div);
+        window.scrollTo(0, document.body.scrollHeight);
     });
 
     socket.on('receive-msg', data => {
-        if (data.userId !== myId && !discoveredUsers[data.userId]) {
-            discoveredUsers[data.userId] = data.name;
-        }
-
+        if (data.userId !== myId && !discoveredUsers[data.userId]) { discoveredUsers[data.userId] = data.name; }
         if (blockedIds.has(data.userId)) {
             const b = document.createElement('div'); b.className = 'msg msg-blocked';
-            document.getElementById('feed').appendChild(b);
-            return;
+            document.getElementById('feed').appendChild(b); return;
         }
 
+        const msgId = "msg-" + Math.random().toString(36).substring(2, 9);
         const div = document.createElement('div');
-        div.className = 'msg' + (data.replyTo === myName ? ' is-reply-to-me' : '');
+        div.className = 'msg';
+        div.id = msgId;
         div.style.setProperty('--u-color', data.color);
         
         let media = '';
-        if (data.image) media = `<img src="${data.image}" class="img-msg" title="Hold to view">`;
+        if (data.image) media = `<img src="${data.image}" class="img-msg">`;
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vid = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vid) media += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
         }
 
-        div.innerHTML = (data.replyTo ? `<span class="reply-tag">@${data.replyTo}</span>` : '') + 
-                        `<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${media}`;
+        let replyHtml = "";
+        if (data.replyTo) {
+            replyHtml = `<span class="reply-tag">Replying to @${data.replyTo.name}</span>`;
+            const original = document.getElementById(data.replyTo.msgId);
+            if (original) {
+                original.classList.add('was-replied-to');
+                if (!original.querySelector('.reply-notif-tag')) {
+                    const tag = document.createElement('span');
+                    tag.className = 'reply-notif-tag';
+                    tag.innerText = `💬 @${data.name} replied to this. Click to see reply.`;
+                    original.appendChild(tag);
+                }
+            }
+        }
+
+        div.innerHTML = replyHtml + `<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>` + media;
         
         div.onclick = () => {
-            selectedReply = data.name;
+            if (div.classList.contains('was-replied-to')) { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+            selectedReply = { name: data.name, msgId: msgId };
             document.getElementById('reply-preview').style.display = 'flex';
             document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
             document.getElementById('wizsInput').focus();
@@ -190,14 +200,12 @@
         window.scrollTo(0, document.body.scrollHeight);
     });
 
+    // FUNCTIONS
     function submitRating(n) { socket.emit('send-rating', { name: myName, stars: n }); closeModal('ratingModal'); }
     function unblockAll() { blockedIds.clear(); updateBlockList(); }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function openSettings() { updateBlockList(); document.getElementById('settingsModal').style.display = 'flex'; }
-    function saveSettings() { 
-        const n = document.getElementById('newNick').value; 
-        if(n) myName = n; closeModal('settingsModal'); 
-    }
+    function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
 
     function updateBlockList() {
         const c = document.getElementById('userListContainer'); c.innerHTML = '';
@@ -216,15 +224,13 @@
         }
     };
 
-    document.getElementById('cancel-reply').onclick = () => {
-        selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
-    };
+    document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
 
     document.getElementById('imgInput').onchange = e => {
-        if (imgCooldown) { alert("Please wait 1 minute between photos."); return; }
+        if (imgCooldown) { alert("Please wait 1 minute."); return; }
         const reader = new FileReader();
         reader.onload = () => {
-            socket.emit('send-msg', { name: myName, color: myColor, text: "[Photo]", image: reader.result });
+            socket.emit('send-msg', { name: myName, color: myColor, text: "[Photo Shared]", image: reader.result });
             imgCooldown = true; setTimeout(() => imgCooldown = false, 60000);
         };
         reader.readAsDataURL(e.target.files[0]);
