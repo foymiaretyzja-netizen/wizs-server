@@ -2,136 +2,202 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Wizs | Live Chat</title>
+    <title>WIZs | v2</title>
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; --gray: #333; }
-        body { background: var(--bg); color: #e0e0e0; font-family: sans-serif; margin: 0; padding-bottom: 150px; overflow-x: hidden; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 160px; overflow-x: hidden; }
+
+        /* Welcome & Settings Modals */
+        .modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .modal-content { background: #111; padding: 30px; border-radius: 20px; max-width: 400px; text-align: center; border: 1px solid var(--gray); }
+        .modal-btn { background: var(--blue); color: black; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+
+        /* UI Elements */
+        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 999; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .gear-btn { font-size: 18px; cursor: pointer; color: #888; margin-left: 10px; }
+        .user-count { font-weight: bold; color: var(--blue); }
+
+        /* Messages */
+        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.3s ease-out; }
+        .msg-blocked { height: 20px; opacity: 0.3; border-left: 4px solid gray; overflow: hidden; }
+        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(20px); transition: 0.3s; cursor: pointer; margin-top: 10px; }
+        .img-msg:active { filter: blur(0); }
+        .video-box { width: 100%; aspect-ratio: 16/9; margin-top: 10px; border-radius: 8px; }
+
+        /* Input Area */
+        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(10px); }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; }
+        .file-label { cursor: pointer; color: var(--blue); font-size: 20px; }
         
-        /* Status Bar */
-        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 999; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .status-top { display: flex; align-items: center; gap: 8px; justify-content: center; }
-        #status-circle { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); transition: 0.3s; }
-        #reset-timer { color: #888; font-weight: bold; background: #222; padding: 2px 8px; border-radius: 10px; border: 1px solid #333; }
-
-        /* Lock Screen Overlay */
-        #lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; text-align: center; backdrop-filter: blur(10px); }
-        #lock-screen h1 { color: var(--red); font-size: 2rem; margin-bottom: 10px; }
-        #lock-screen p { color: #888; margin-bottom: 20px; }
-        #refresh-btn { background: var(--blue); color: black; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-
-        header { text-align: center; padding: 80px 10px 20px; }
-        .logo { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
-
-        #feed { max-width: 500px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 10px; border-left: 4px solid var(--u-color); cursor: pointer; transition: 0.2s; word-wrap: break-word; }
-        .msg.is-reply-to-me { border: 2px solid var(--blue); box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); }
-        .u-name { font-size: 0.8rem; font-weight: bold; color: var(--u-color); margin-bottom: 4px; }
-        .reply-tag { font-size: 0.7rem; color: #888; margin-bottom: 4px; display: block; }
-
-        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px 20px; border-top: 1px solid #222; box-sizing: border-box; backdrop-filter: blur(10px); }
-        #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; }
-        input { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 15px; color: white; border-radius: 8px; outline: none; font-size: 16px; }
-
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-        .cooldown-anim { animation: shake 0.2s ease-in-out 2; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
 
-<div id="lock-screen">
-    <h1>Times Up!</h1>
-    <p>Refresh to continue chatting!</p>
-    <button id="refresh-btn" onclick="location.reload()">Refresh Now</button>
-</div>
-
-<div id="status-bar">
-    <div class="status-top">
-        <div id="status-circle"></div>
-        <span id="stat-text">Connecting...</span>
-        <span id="reset-timer">15:00</span>
-        <span style="color: #444;">|</span>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeChvOFtxPM9caxUlsDXyzw903xFSm0WmvQ9yeNEswdFuoBpw/viewform?usp=publish-editor" target="_blank" style="color: #888; text-decoration: none;">Report issues</a>
+<div id="welcomeModal" class="modal">
+    <div class="modal-content">
+        <h2 style="color:var(--blue)">Welcome to WIZs</h2>
+        <p>WIZs is an anonymous chatting service where you and others can chat freely.</p>
+        <p style="font-size: 0.8rem; color: #888;">Chat data doesn't save, and every 15 minutes is a full server data wipe.</p>
+        <p style="font-size: 0.8rem; color: #888;">Note: Click the gear icon (top left) to change your username or color.</p>
+        <button class="modal-btn" onclick="closeModal('welcomeModal')">Click here to close and begin chatting</button>
     </div>
 </div>
 
-<header><div class="logo">Wizs</div></header>
+<div id="settingsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>User Settings</h3>
+        <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:80%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:white;">
+        <p>Select Name Color:</p>
+        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px;"></div>
+        <p>Block User:</p>
+        <select id="blockSelect" style="width:90%; background:#222; color:white; padding:5px;"></select>
+        <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
+    </div>
+</div>
+
+<div id="soloModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <p>Uh-oh, no one is online! Share the link via outlook or email to add friends!</p>
+        <p class="user-count">WIZers online: 1</p>
+        <button class="modal-btn" onclick="closeModal('soloModal')">Click here to ignore</button>
+    </div>
+</div>
+
+<div id="status-bar">
+    <div>
+        <i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i>
+        <span id="reset-timer" style="margin-left:15px; color:#888;">15:00</span>
+    </div>
+    <div>
+        <span class="user-count" id="count-display">WIZers online: 0</span>
+    </div>
+</div>
+
 <div id="feed"></div>
 
 <div class="input-wrap">
-    <div id="reply-preview"><span id="reply-text">Replying...</span><span id="cancel-reply" style="cursor:pointer; color:var(--red)">×</span></div>
-    <input type="text" id="wizsInput" placeholder="Type a message..." maxlength="250" autocomplete="off">
+    <div class="controls">
+        <label class="file-label"><i class="fa-solid fa-image"></i><input type="file" id="imgInput" hidden accept="image/*"></label>
+        <input type="text" id="wizsInput" placeholder="Type a message or paste YouTube link..." maxlength="250">
+    </div>
 </div>
 
 <script>
-    const myName = "Wiz-" + Math.floor(Math.random()*999);
-    const myColor = `hsl(${Math.random() * 360}, 75%, 65%)`;
-    const socket = io(); 
-    let selectedReply = null;
-    let canSend = true;
+    const socket = io();
+    let myName = "Wiz-" + Math.floor(Math.random()*999);
+    let myColor = "#00f2fe";
+    let myId = "";
+    let blockedIds = new Set();
+    let userMap = {}; // Tracks name/ID for blocking
+    let imgCooldown = false;
 
-    const input = document.getElementById('wizsInput');
-    const timerDisplay = document.getElementById('reset-timer');
-    const lockScreen = document.getElementById('lock-screen');
-
-    socket.on('connect', () => {
-        document.getElementById('status-circle').style.background = "var(--green)";
-        document.getElementById('stat-text').innerText = "Servers ready!";
+    // Setup Colors
+    const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#95a5a6', '#ff4d4d', '#7bed9f', '#70a1ff', '#eccc68', '#ff6b81', '#a4b0be', '#57606f', '#ffa502', '#2f3542', '#ffffff'];
+    const picker = document.getElementById('colorPicker');
+    colors.forEach(c => {
+        const div = document.createElement('div');
+        div.style.background = c;
+        div.style.height = '25px';
+        div.style.cursor = 'pointer';
+        div.style.borderRadius = '4px';
+        div.onclick = () => myColor = c;
+        picker.appendChild(div);
     });
 
-    socket.on('timer-update', (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        timerDisplay.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        if (seconds < 60) timerDisplay.style.color = "var(--red)";
+    socket.on('assign-id', id => myId = id);
+
+    socket.on('user-count', count => {
+        document.getElementById('count-display').innerText = `WIZers online: ${count}`;
+        if (count === 1) document.getElementById('soloModal').style.display = 'flex';
     });
 
-    // When the time is up, show the lock screen
-    socket.on('room-reset', () => {
-        lockScreen.style.display = 'flex';
-        input.disabled = true; // Extra protection
+    socket.on('timer-update', s => {
+        const m = Math.floor(s/60); const sec = s%60;
+        document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`;
     });
 
-    socket.on('receive-msg', (data) => {
+    socket.on('room-reset', () => location.reload());
+
+    socket.on('receive-msg', data => {
+        if (blockedIds.has(data.userId)) {
+            const blockedDiv = document.createElement('div');
+            blockedDiv.className = 'msg msg-blocked';
+            document.getElementById('feed').appendChild(blockedDiv);
+            return;
+        }
+
+        // Add to block list dropdown
+        if (data.userId !== myId && !userMap[data.userId]) {
+            userMap[data.userId] = data.name;
+            const opt = document.createElement('option');
+            opt.value = data.userId;
+            opt.innerText = data.name;
+            document.getElementById('blockSelect').appendChild(opt);
+        }
+
         const div = document.createElement('div');
         div.className = 'msg';
-        if (data.replyTo === myName) div.classList.add('is-reply-to-me');
         div.style.setProperty('--u-color', data.color);
-        let replyHTML = data.replyTo ? `<span class="reply-tag">@${data.replyTo}</span>` : '';
-        div.innerHTML = `${replyHTML}<div class="u-name">${data.name}</div><div>${data.text}</div>`;
         
-        div.onclick = () => {
-            selectedReply = data.name;
-            document.getElementById('reply-preview').style.display = 'flex';
-            document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
-            input.focus();
-        };
+        let content = `<div>${data.text}</div>`;
+        
+        // Image support
+        if (data.image) {
+            content += `<img src="${data.image}" class="img-msg" title="Click to unblur">`;
+        }
+
+        // YouTube Support
+        if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
+            const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
+            if (vidId) {
+                content += `<iframe class="video-box" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen></iframe>`;
+            }
+        } else if (data.text.includes('.com')) {
+            content += `<div style="color:var(--red); font-size:10px;">Error, video website not supported.</div>`;
+        }
+
+        div.innerHTML = `<div style="font-weight:bold; color:${data.color}">${data.name}</div>${content}`;
         document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && canSend && input.value.trim() !== "") {
-            socket.emit('send-msg', { name: myName, color: myColor, text: input.value, replyTo: selectedReply });
-            input.value = '';
-            selectedReply = null;
-            document.getElementById('reply-preview').style.display = 'none';
-            canSend = false;
-            input.disabled = true;
-            setTimeout(() => { 
-                if (lockScreen.style.display !== 'flex') {
-                    canSend = true; 
-                    input.disabled = false; 
-                    input.focus(); 
-                }
-            }, 1200);
-        }
-    });
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+    
+    function saveSettings() {
+        const nick = document.getElementById('newNick').value;
+        if (nick) myName = nick;
+        const toBlock = document.getElementById('blockSelect').value;
+        if (toBlock) blockedIds.add(toBlock);
+        closeModal('settingsModal');
+    }
 
-    document.getElementById('cancel-reply').onclick = () => {
-        selectedReply = null;
-        document.getElementById('reply-preview').style.display = 'none';
+    // Input Logic
+    document.getElementById('wizsInput').onkeydown = e => {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value });
+            e.target.value = '';
+        }
+    };
+
+    // Photo Upload Logic
+    document.getElementById('imgInput').onchange = e => {
+        if (imgCooldown) { alert("Photo cooldown: 1 minute"); return; }
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            socket.emit('send-msg', { name: myName, color: myColor, text: "Shared a photo", image: reader.result });
+            imgCooldown = true;
+            setTimeout(() => imgCooldown = false, 60000);
+        };
+        reader.readAsDataURL(file);
     };
 </script>
 </body>
+</html>
 </html>
