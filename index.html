@@ -19,26 +19,69 @@
             background: var(--bg); color: var(--text-main); 
             font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; 
             overflow-x: hidden; opacity: 0; animation: fadeInBody 1s forwards; 
-            overflow-y: scroll; /* Force scrollbar to prevent layout shift */
+            overflow-y: scroll; 
         }
 
         @keyframes fadeInBody { to { opacity: 1; } }
 
-        /* --- BACKGROUND FX LAYER --- */
-        #bg-layer {
+        /* --- BACKGROUND FX LAYERS --- */
+        #bg-base {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none; 
+            z-index: -2; background: var(--bg); transition: background 0.5s ease;
         }
 
-        @keyframes drift { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
-        
-        .astrolight-fx {
+        #bg-fx-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none; opacity: 0.6;
+            transition: opacity 0.5s ease;
+        }
+
+        /* FX ANIMATIONS */
+        @keyframes drift { from { background-position: 0 0; } to { background-position: 100% 100%; } }
+        @keyframes wave { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes rise { from { background-position: 0 0; } to { background-position: 0 -100%; } }
+
+        /* FX CLASSES */
+        .fx-astrolight {
             background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
             background-size: 50px 50px, 30px 30px;
-            background-position: 0 0, 15px 15px;
             animation: drift 60s linear infinite;
-            opacity: 0.6;
         }
+        .fx-water {
+            background: linear-gradient(180deg, rgba(0,242,254,0.05) 0%, rgba(0,0,0,0) 100%);
+            background-size: 400% 400%;
+            animation: wave 10s ease infinite;
+        }
+        .fx-wind {
+            background-image: linear-gradient(90deg, rgba(123, 237, 159, 0.05) 1px, transparent 1px);
+            background-size: 100px 100%;
+            animation: drift 20s linear infinite;
+        }
+        .fx-fire {
+            background-image: linear-gradient(0deg, rgba(255, 77, 77, 0.1) 1px, transparent 1px);
+            background-size: 100% 50px;
+            animation: rise 5s linear infinite;
+        }
+        .fx-candy {
+            background: linear-gradient(45deg, rgba(255,0,0,0.05), rgba(255,255,0,0.05), rgba(0,0,255,0.05));
+            background-size: 200% 200%;
+            animation: wave 5s linear infinite;
+        }
+        .fx-sand {
+            background-image: radial-gradient(rgba(255, 159, 67, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* --- LOCKDOWN OVERLAY --- */
+        #lockdown-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .lock-icon { font-size: 60px; color: var(--red); margin-bottom: 20px; animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         /* --- CINEMATIC INTRO --- */
         #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -67,13 +110,11 @@
         .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
 
         /* --- SIDEBARS --- */
-        /* Left: Media */
         #media-sidebar { position: fixed; top: 60px; left: 0; width: 320px; height: calc(100% - 60px); background: #0f0f0f; border-right: 1px solid #333; z-index: 1999; transform: translateX(-100%); padding: 15px; overflow-y: auto; }
         #media-sidebar.active { transform: translateX(0); }
         .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid #333; margin-bottom:10px; cursor:pointer; opacity:0.7; }
         .sidebar-thumb:hover { opacity:1; border-color:var(--accent); }
 
-        /* Right: Users */
         #users-sidebar { position: fixed; top: 60px; right: 0; width: 250px; height: calc(100% - 60px); background: #0f0f0f; border-left: 1px solid #333; z-index: 1999; transform: translateX(100%); padding: 15px; overflow-y: auto; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #users-sidebar.active { transform: translateX(0); }
         
@@ -81,7 +122,7 @@
         .user-row:hover { background: rgba(255,255,255,0.05); }
         .user-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
 
-        /* --- ALERTS & NOTIFICATIONS --- */
+        /* --- ALERTS --- */
         .toast-notify { 
             display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); 
             padding: 10px 20px; border-radius: 25px; font-size: 12px; z-index: 1900; 
@@ -89,10 +130,9 @@
         }
         #invite-toast { background: rgba(255, 77, 77, 0.2); border: 1px solid var(--red); color: #ffcccc; }
         #verified-toast { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #ccffcc; }
-
         @keyframes fadeIn { from{opacity:0; transform:translate(-50%, -10px);} to{opacity:1; transform:translate(-50%, 0);} }
 
-        /* --- FEED & MEDIA --- */
+        /* --- FEED --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1; position: relative; }
         .msg { background: var(--card); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUpFade 0.3s ease; cursor: pointer; border: 1px solid transparent; word-wrap: break-word; }
         .msg.mentioned { border-color: var(--yellow); box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
@@ -109,19 +149,13 @@
         
         .owner-name {
             background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 900;
+            -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 900;
         }
-
         .rainbow-box { position: relative; overflow: hidden; border: none; }
         .rainbow-box::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(45deg, rgba(255,0,0,0.15), rgba(255,165,0,0.15), rgba(255,255,0,0.15), rgba(0,128,0,0.15), rgba(0,0,255,0.15), rgba(75,0,130,0.15), rgba(238,130,238,0.15));
-            background-size: 200% 200%;
-            animation: rainbowShine 5s linear infinite;
-            pointer-events: none; z-index: 0;
+            background-size: 200% 200%; animation: rainbowShine 5s linear infinite; pointer-events: none; z-index: 0;
         }
         .rainbow-box > * { position: relative; z-index: 1; }
 
@@ -130,17 +164,11 @@
         .reaction-pill { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 12px; padding: 2px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
         .reaction-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
 
-        /* --- CONTEXT MENU --- */
-        #context-menu { position: fixed; display: none; background: var(--card); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .emoji-opt { cursor: pointer; font-size: 20px; padding: 5px; border-radius: 4px; text-align: center; }
-        .emoji-opt:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
-
         /* --- INPUT --- */
         .input-wrapper-outer { position: fixed; bottom: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; }
         #reply-bar { display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--accent); align-items: center; justify-content: space-between; }
         .input-wrap { background: var(--card); padding: 15px 20px; border-top: 1px solid #333; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
-        /* 400 CHAR LIMIT ON INPUT */
         #wizsInput { flex-grow: 1; margin-bottom: 0; border: 1px solid #444; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; color: white; outline: none; }
 
         /* --- MODALS --- */
@@ -149,6 +177,7 @@
         .modal-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 10px; }
         
+        /* THEME OPTIONS COLORS */
         option[value="default"] { color: #00f2fe; }
         option[value="seashine"] { color: #00e5ff; background: #001f24; }
         option[value="grassy"] { color: #7bed9f; background: #0e2411; }
@@ -161,31 +190,28 @@
         #userListContainer { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
 
         .admin-check-container { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
-        .admin-label { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; color: var(--accent); cursor: pointer; }
-        
-        /* Checkbox Style */
         .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:#ccc; }
-        .check-box-wrapper input { width:auto; margin:0; }
-        
-        /* NUKE BUTTON */
-        .nuke-btn {
-            background: linear-gradient(45deg, #ff0000, #ff4757);
-            color: white; font-weight: 900; letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-            border: 2px solid #ff0000;
-        }
+        .nuke-btn { background: linear-gradient(45deg, #ff0000, #ff4757); color: white; font-weight: 900; letter-spacing: 1px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); border: 2px solid #ff0000; }
         .nuke-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255,0,0,0.8); }
 
-        /* THE EXPLOSION CLASS (Added via JS) */
-        .falling-debris {
-            transition-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
-            pointer-events: none;
-        }
+        .falling-debris { transition-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); pointer-events: none; }
+        
+        /* Context Menu */
+        #context-menu { position: fixed; display: none; background: var(--card); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .emoji-opt { cursor: pointer; font-size: 20px; padding: 5px; border-radius: 4px; text-align: center; }
+        .emoji-opt:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
     </style>
 </head>
 <body id="mainBody" onclick="hideContextMenu()">
 
-<div id="bg-layer"></div>
+<div id="bg-base"></div>
+<div id="bg-fx-layer"></div>
+
+<div id="lockdown-overlay">
+    <i class="fa-solid fa-lock lock-icon"></i>
+    <h1 style="color:var(--text-main); margin:0;">SYSTEM RESET IN PROGRESS</h1>
+    <p style="color:#888;">Chat is locked. Refreshing connection...</p>
+</div>
 
 <div id="intro-overlay">
     <div class="intro-logo" id="introLogo">WIZs</div>
@@ -196,14 +222,13 @@
             <h2 style="color:var(--accent); margin-top:0;">Welcome to WIZs.</h2>
             <p style="font-size:14px; color:#ccc; line-height:1.6;">WIZs is a free-to-use chat app like social media, but <b>completely anonymous</b>. Nothing saves. Everything deletes automatically.</p>
             <div style="background:#000; padding:10px; border-radius:8px; border:1px solid #333; margin:15px 0;">
-                <span style="color:var(--red); font-size:11px; font-weight:bold;">TIME T'ILL NEXT WIPE</span><br>
+                <span style="color:var(--red); font-size:11px; font-weight:bold;">TIME T'ILL LOCKDOWN</span><br>
                 <span id="tut-timer" style="font-size:20px; font-family:monospace; color:var(--text-main)">15:00</span>
             </div>
             <button class="modal-btn" onclick="nextStep(2)">Next (1/3)</button>
         </div>
         <div class="tut-step" id="step2">
             <h2 style="color:var(--mint); margin-top:0;">Customize Your Identity</h2>
-            <p style="font-size:12px; color:#888;">Set up your look before you chat.</p>
             <input type="text" id="tut-nick" maxlength="20" placeholder="Enter Username (max 20 chars)" oninput="updateTutPreview()">
             <select id="tut-color" onchange="updateTutPreview()">
                 <option value="#00f2fe">Cyan</option> <option value="#4facfe">Sky Blue</option> <option value="#2ecc71">Emerald Green</option>
@@ -211,11 +236,14 @@
                 <option value="#ff6b81">Hot Pink</option>
             </select>
             <select id="tut-theme" onchange="applyTheme(this.value)">
-                <option value="default">Default Theme</option> <option value="seashine">Seashine</option> <option value="grassy">Grassy Plains</option>
-                <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight</option> <option value="candy">CandyPink</option>
+                <option value="default">Default Theme</option> <option value="seashine">Seashine (Water FX)</option> <option value="grassy">Grassy Plains (Wind FX)</option>
+                <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight (Fire FX)</option> <option value="candy">CandyPink (Rainbow FX)</option>
                 <option value="astrolight">✨ Astrolight</option>
             </select>
             
+            <label class="check-box-wrapper">
+                 <input type="checkbox" id="tut-bg-fx" checked onchange="toggleEffects()"> Enable Background FX?
+            </label>
             <label class="check-box-wrapper">
                  <input type="checkbox" id="tut-filter"> Censor hate/speech & curse words?
             </label>
@@ -228,7 +256,7 @@
 
 <div id="arrow-guide" class="arrow-guide">
     <i class="fa-solid fa-arrow-down" style="font-size:30px;"></i>
-    <p style="background:var(--card); padding:10px; border-radius:8px; border:1px solid var(--accent);">Send your first message.<br>Left-Click messages to Reply.</p>
+    <p style="background:var(--card); padding:10px; border-radius:8px; border:1px solid var(--accent);">Send your first message.</p>
     <button class="modal-btn" style="font-size:10px; padding:5px 10px;" onclick="endTutorial()">Finish</button>
 </div>
 
@@ -240,7 +268,7 @@
 
 <div id="verified-toast" class="toast-notify">
     <i class="fa-solid fa-circle-check"></i> 
-    <span>Verified: Welcome Owner</span>
+    <span>ADMIN ACCESS GRANTED</span>
 </div>
 
 <div id="status-bar">
@@ -259,7 +287,6 @@
 </div>
 
 <div id="media-sidebar"><div class="media-grid" id="sidebar-content"></div></div>
-
 <div id="users-sidebar">
     <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent); font-size:14px;">Active / Known Users</h3>
     <div id="users-list-content"></div>
@@ -299,32 +326,35 @@
              <option value="#ff6b81">Hot Pink</option>
         </select>
         <select id="main-theme" onchange="applyTheme(this.value)">
-            <option value="default">Default Theme</option> <option value="seashine">Seashine</option> <option value="grassy">Grassy Plains</option>
-            <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight</option> <option value="candy">CandyPink</option>
+            <option value="default">Default Theme</option> <option value="seashine">Seashine (Water FX)</option> <option value="grassy">Grassy Plains (Wind FX)</option>
+            <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight (Fire FX)</option> <option value="candy">CandyPink (Rainbow FX)</option>
             <option value="astrolight">✨ Astrolight</option>
         </select>
         
+        <label class="check-box-wrapper">
+            <input type="checkbox" id="main-bg-fx" checked onchange="toggleEffects()"> Enable Background FX?
+       </label>
+
         <label class="check-box-wrapper">
              <input type="checkbox" id="main-filter"> Censor hate/speech & curse words?
         </label>
         
         <div id="admin-controls" class="admin-check-container">
             <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
-            <label class="admin-label">
+            <label class="admin-label" style="justify-content:center; display:flex;">
                 <input type="checkbox" id="rainbow-toggle"> 🌈 Enable Admin Rainbow FX
             </label>
             
             <br>
             <div style="border-top:1px solid #333; margin-top:10px; padding-top:10px;">
                 <p style="font-size:10px; color:#666; margin:0 0 5px 0;">DANGER ZONE</p>
-                <button class="modal-btn nuke-btn" onclick="triggerUIExplosion()">💥 NUKE UI (EXPLODE ALL)</button>
+                <button class="modal-btn nuke-btn" onclick="triggerUIExplosion()">💥 NUKE UI</button>
             </div>
         </div>
 
         <label style="display:block; text-align:left; font-size:11px; color:#888; margin-top:10px;">Block Users</label>
         <div id="userListContainer"></div>
         <button class="modal-btn" style="background:var(--red); font-size:12px;" onclick="blockedIds.clear(); openMainSettings()">Unblock All</button>
-        
         <button class="modal-btn" onclick="saveMainSettings()">Save & Close</button>
     </div>
 </div>
@@ -332,12 +362,11 @@
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.8.0</p>
+        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 4.0 - Security</p>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
-            <span style="color:var(--mint)">> Added Max Char Limits (20/400)</span><br>
-            <span style="color:var(--mint)">> Added Right Sidebar (Users)</span><br>
-            <span style="color:var(--mint)">> Added @Mention Logic</span><br>
-            <span style="color:var(--red)">> [REDACTED] Protocol Added</span>
+            <span style="color:var(--mint)">> Patched Admin Vulnerability</span><br>
+            <span style="color:var(--mint)">> Added Background FX System</span><br>
+            <span style="color:var(--mint)">> Fixed Timer Lockdown</span><br>
         </div>
         <button class="modal-btn" onclick="document.getElementById('changelogModal').style.display='none'">Close</button>
     </div>
@@ -359,12 +388,45 @@
     let contextTargetId = null;
     let typingTimeout;
     let blockedIds = new Set();
-    // STRUCTURE: { userId: { name: 'Name', color: '#hex' } }
     let discoveredUsers = {}; 
     let activeReply = null; 
+    
+    // --- SECURITY & ADMIN VARS ---
+    let isAdmin = false;
     let isAdminRainbow = false; 
     let currentTheme = 'default';
     let filterEnabled = false;
+    let fxEnabled = true;
+
+    // --- KEY COMBO AUTHENTICATION ---
+    let keysPressed = {};
+    let authTimer = null;
+
+    document.addEventListener('keydown', (e) => {
+        keysPressed[e.key.toLowerCase()] = true;
+        
+        // CHECK: q + 1 + Correct Name
+        if(keysPressed['q'] && keysPressed['1'] && myName === "Founder1" && !isAdmin) {
+            if(!authTimer) {
+                // START TIMER
+                authTimer = setTimeout(() => {
+                    // SUCCESS
+                    isAdmin = true;
+                    isAdminRainbow = true;
+                    const t = document.getElementById('verified-toast');
+                    t.style.display = 'flex';
+                    setTimeout(() => t.style.display = 'none', 3000);
+                    authTimer = null;
+                }, 3000); // 3 seconds
+            }
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        keysPressed[e.key.toLowerCase()] = false;
+        if(authTimer) { clearTimeout(authTimer); authTimer = null; }
+    });
+
 
     // --- 1. INTRO & SETUP ---
     window.onload = () => {
@@ -397,12 +459,10 @@
         document.getElementById('introLogo').style.display = 'none';
     }
 
-    // --- 2. SETTINGS & ADMIN LOGIC ---
+    // --- 2. SETTINGS LOGIC ---
     function updateTutPreview() {
-        // Enforce Limit in Preview
         let nick = document.getElementById('tut-nick').value || myName;
         if(nick.length > 20) nick = nick.substring(0,20);
-        
         const color = document.getElementById('tut-color').value;
         const prev = document.getElementById('tut-preview');
         prev.innerText = nick; prev.style.color = color;
@@ -411,21 +471,24 @@
     function syncSettings() {
         let nick = document.getElementById('tut-nick').value;
         if(nick.length > 20) nick = nick.substring(0,20);
+        myName = nick || myName;
         
-        if(nick) checkAdminName(nick); else myName = nick || myName;
         myColor = document.getElementById('tut-color').value;
         filterEnabled = document.getElementById('tut-filter').checked;
+        fxEnabled = document.getElementById('tut-bg-fx').checked;
+        toggleEffects();
         renderUserList(); 
     }
 
     function openMainSettings() {
-        document.getElementById('main-nick').value = (myName === "WIZs Owner") ? "Admin1" : myName;
+        document.getElementById('main-nick').value = myName;
         document.getElementById('main-color').value = myColor;
         document.getElementById('main-theme').value = currentTheme;
         document.getElementById('main-filter').checked = filterEnabled;
+        document.getElementById('main-bg-fx').checked = fxEnabled;
 
-        // Admin Visibility
-        if(myName === "WIZs Owner" || myName === "Admin1") {
+        // Admin Visibility (Only shows if unlocked via key combo)
+        if(isAdmin) {
             document.getElementById('admin-controls').style.display = "block";
             document.getElementById('rainbow-toggle').checked = isAdminRainbow;
         } else {
@@ -439,72 +502,46 @@
     function saveMainSettings() {
         let inputName = document.getElementById('main-nick').value;
         if(inputName.length > 20) inputName = inputName.substring(0,20);
+        
+        // If they change name away from Founder1, they lose admin pending re-auth
+        if(myName === "Founder1" && inputName !== "Founder1") {
+            isAdmin = false;
+        }
 
-        checkAdminName(inputName);
+        myName = inputName || "Wiz-" + Math.floor(Math.random()*999);
         myColor = document.getElementById('main-color').value;
         filterEnabled = document.getElementById('main-filter').checked;
-        
-        if(myName === "WIZs Owner") {
+        fxEnabled = document.getElementById('main-bg-fx').checked;
+        toggleEffects();
+
+        if(isAdmin) {
             isAdminRainbow = document.getElementById('rainbow-toggle').checked;
-        } else {
-            isAdminRainbow = false; 
         }
         renderUserList(); 
         document.getElementById('settingsModal').style.display = 'none';
     }
 
-    function checkAdminName(name) {
-        if(name === "Admin1") {
-            if(myName !== "WIZs Owner") { 
-                const t = document.getElementById('verified-toast');
-                t.style.display = 'flex';
-                setTimeout(() => t.style.display = 'none', 3000);
-            }
-            myName = "WIZs Owner";
-            isAdminRainbow = true; 
-        } else {
-            myName = name || "Wiz-" + Math.floor(Math.random()*999);
-        }
-    }
-
     // --- NUKE LOGIC ---
     function triggerUIExplosion() {
-        if(confirm("ARE YOU SURE? This will destroy the UI for EVERYONE connected.")) {
-            // Send a special hidden message that triggers the nuke locally on clients
+        if(confirm("DANGER: Destroy UI for ALL users?")) {
             socket.emit('send-msg', {
-                name: "SYSTEM",
-                color: "#ff0000",
-                text: "💥 SYSTEM CRITICAL FAILURE 💥",
-                msgId: 'nuke-'+Date.now(),
-                isNuke: true // Special Flag
+                name: "SYSTEM", color: "#ff0000", text: "SYSTEM CRITICAL", msgId: 'nuke-'+Date.now(), isNuke: true
             });
             document.getElementById('settingsModal').style.display = 'none';
         }
     }
 
     function performExplosion() {
-        // Select everything that isn't the background layer
         const bodyChildren = Array.from(document.body.children);
-        
         bodyChildren.forEach(el => {
-            if(el.id === 'bg-layer' || el.tagName === 'SCRIPT') return;
-
-            // Add CSS class
+            if(el.id === 'bg-base' || el.id === 'bg-fx-layer' || el.tagName === 'SCRIPT') return;
             el.classList.add('falling-debris');
-            
-            // Random physics
-            const rot = Math.random() * 120 - 60; // -60 to 60 deg
-            const delay = Math.random() * 0.5; // 0 to 0.5s delay
-            
-            el.style.transitionDuration = '1.5s';
-            el.style.transitionDelay = `${delay}s`;
-            el.style.transform = `translateY(150vh) rotate(${rot}deg)`;
-            el.style.opacity = '0';
+            const rot = Math.random() * 120 - 60; 
+            const delay = Math.random() * 0.5;
+            el.style.transitionDuration = '1.5s'; el.style.transitionDelay = `${delay}s`;
+            el.style.transform = `translateY(150vh) rotate(${rot}deg)`; el.style.opacity = '0';
         });
-
-        setTimeout(() => {
-            alert("CONNECTION LOST. \nUI INTEGRITY COMPROMISED. \nPLEASE REFRESH.");
-        }, 2000);
+        setTimeout(() => { alert("CONNECTION LOST. \nUI DESTROYED."); }, 2000);
     }
 
     function renderBlockList() {
@@ -517,67 +554,50 @@
             const isBlocked = blockedIds.has(uid);
             const uData = discoveredUsers[uid];
             item.innerHTML = `<span>${uData.name}</span> <span style="color:${isBlocked?'var(--red)':'#888'}; font-weight:bold;">${isBlocked?'Unblock':'Block'}</span>`;
-            item.onclick = () => {
-                if(isBlocked) blockedIds.delete(uid); else blockedIds.add(uid);
-                renderBlockList();
-            };
+            item.onclick = () => { if(isBlocked) blockedIds.delete(uid); else blockedIds.add(uid); renderBlockList(); };
             list.appendChild(item);
         });
     }
 
-    // --- 3. REPLY SYSTEM ---
+    // --- 3. REPLY & FILTER ---
     function initReply(msgId, name, text) {
-        activeReply = { id: msgId, name: name, text: cleanText(text).substring(0, 30) + (text.length>30 ? '...' : '') };
+        activeReply = { id: msgId, name: name, text: cleanText(text).substring(0, 30) };
         document.getElementById('reply-bar').style.display = 'flex';
         document.getElementById('reply-target-name').innerText = name;
         document.getElementById('wizsInput').focus();
     }
-
-    function cancelReply() {
-        activeReply = null;
-        document.getElementById('reply-bar').style.display = 'none';
-    }
-
-    // --- 4. FILTERING ---
+    function cancelReply() { activeReply = null; document.getElementById('reply-bar').style.display = 'none'; }
     function cleanText(text) {
         if(!filterEnabled || !text) return text;
-        const filterList = ["fuck", "shit", "bitch", "ass", "dick", "cunt", "whore", "fag", "nigger", "slut", "bastard"]; 
+        const list = ["fuck", "shit", "bitch", "ass", "dick", "cunt", "nigger", "slut"]; 
         let clean = text;
-        filterList.forEach(word => {
-            const regex = new RegExp(`\\b${word}\\b`, 'gi');
-            clean = clean.replace(regex, '*'.repeat(word.length));
-        });
+        list.forEach(w => { clean = clean.replace(new RegExp(`\\b${w}\\b`, 'gi'), '*'.repeat(w.length)); });
         return clean;
     }
 
-    // --- 5. MESSAGING ---
+    // --- 4. MESSAGING ---
     function sendMsg(text, mediaData = null, mediaType = null) {
         if(!text && !mediaData) return;
-        if(text.length > 400) text = text.substring(0,400); // Enforce limit
+        if(text.length > 400) text = text.substring(0,400); 
         
+        // Use "WIZs Owner" as display name if admin enabled, else regular name
+        const displayName = (isAdmin && myName === "Founder1") ? "WIZs Owner" : myName;
+
         const payload = { 
-            name: myName, 
+            name: displayName, 
             color: myColor, 
             text: text, 
             msgId: 'm-'+Date.now(),
             reply: activeReply,
             rainbowMode: isAdminRainbow
         };
-
         if(mediaData) payload[mediaType] = mediaData;
         socket.emit('send-msg', payload);
-        
-        document.getElementById('wizsInput').value = ''; 
-        cancelReply(); 
+        document.getElementById('wizsInput').value = ''; cancelReply(); 
     }
 
     socket.on('receive-msg', data => {
-        // --- CHECK FOR NUKE ---
-        if(data.isNuke) {
-            performExplosion();
-            return; // Do not render the message
-        }
-
+        if(data.isNuke) { performExplosion(); return; }
         if (blockedIds.has(data.userId)) return;
         
         if (data.userId && data.name) {
@@ -585,73 +605,48 @@
             renderUserList(); 
         }
 
-        const div = document.createElement('div'); 
-        div.className = 'msg'; 
-        div.id = data.msgId; 
+        const div = document.createElement('div'); div.className = 'msg'; div.id = data.msgId; 
         div.style.setProperty('--u-color', data.color);
 
-        const safeText = cleanText(data.text);
-        let safeReplyText = "";
-
-        // --- REPLY RENDER ---
         let replyHtml = '';
         if (data.reply) {
-            safeReplyText = cleanText(data.reply.text);
-            replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${safeReplyText}</div>`;
+            replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${cleanText(data.reply.text)}</div>`;
             if (data.reply.name === myName) div.classList.add('mentioned');
         }
 
-        // --- ADMIN RENDER ---
         let nameClass = '';
         if (data.name === "WIZs Owner" && data.rainbowMode) {
-            div.classList.add('rainbow-box');
-            nameClass = 'owner-name';
+            div.classList.add('rainbow-box'); nameClass = 'owner-name';
         }
 
-        // --- MEDIA ---
         let mediaHtml = '';
         if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="toggleMedia(this)">`;
         if (data.video) mediaHtml = `<div class="vid-container"><video src="${data.video}" class="media-msg" onclick="toggleMedia(this)" loop muted></video></div>`;
         
-        // --- YOUTUBE ---
-        let ytThumb = null;
         if (data.text && (data.text.includes('youtube.com') || data.text.includes('youtu.be'))) {
             const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vidId) {
                 mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
-                ytThumb = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
-                addToSidebar(ytThumb, `https://www.youtube.com/watch?v=${vidId}`, true);
+                addToSidebar(`https://img.youtube.com/vi/${vidId}/hqdefault.jpg`, `https://www.youtube.com/watch?v=${vidId}`, true);
             }
         }
-        
-        if (data.image || data.video) {
-             addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
-        }
+        if (data.image || data.video) addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
 
-        div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${safeText || ''}</div>${mediaHtml}`;
-        
+        div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${cleanText(data.text) || ''}</div>${mediaHtml}`;
         div.onclick = (e) => {
             if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || e.target.closest('.reaction-bar')) return;
-            initReply(data.msgId, data.name, safeText || '[Media]');
+            initReply(data.msgId, data.name, data.text || '[Media]');
         };
-
         document.getElementById('feed').appendChild(div); 
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    function addToSidebar(imgSrc, linkUrl, isYT) {
-        const sItem = document.createElement('img');
-        sItem.className = 'sidebar-thumb';
-        sItem.src = imgSrc;
-        if(isYT && linkUrl) {
-            sItem.onclick = () => window.open(linkUrl, '_blank');
-        } else {
-            sItem.onclick = () => { };
-        }
-        document.getElementById('sidebar-content').prepend(sItem);
+    function addToSidebar(src, link, isYT) {
+        const i = document.createElement('img'); i.className = 'sidebar-thumb'; i.src = src;
+        i.onclick = isYT ? () => window.open(link, '_blank') : () => {};
+        document.getElementById('sidebar-content').prepend(i);
     }
 
-    // --- 6. USER SIDEBAR LOGIC ---
     function toggleUserSidebar() {
         const el = document.getElementById('users-sidebar');
         el.classList.toggle('active');
@@ -659,60 +654,49 @@
     }
 
     function renderUserList() {
-        const list = document.getElementById('users-list-content');
-        list.innerHTML = '';
-
-        // 1. Add Me (White)
-        const meRow = document.createElement('div');
-        meRow.className = 'user-row';
-        meRow.style.color = '#fff'; // White for self
+        const list = document.getElementById('users-list-content'); list.innerHTML = '';
+        const meRow = document.createElement('div'); meRow.className = 'user-row'; meRow.style.color = '#fff';
         meRow.innerHTML = `<span class="user-dot" style="background:white"></span> ${myName} (You)`;
         list.appendChild(meRow);
 
-        // 2. Add Discovered Users
         Object.keys(discoveredUsers).forEach(uid => {
-            if(uid === myId) return; // Skip self if in list
+            if(uid === myId) return;
             const u = discoveredUsers[uid];
-            
-            const row = document.createElement('div');
-            row.className = 'user-row';
-            row.style.color = u.color;
+            const row = document.createElement('div'); row.className = 'user-row'; row.style.color = u.color;
             row.innerHTML = `<span class="user-dot" style="background:${u.color}"></span> ${u.name}`;
-            
-            // Add mention on click
-            row.onclick = () => {
-                const input = document.getElementById('wizsInput');
-                input.value += `@${u.name} `;
-                input.focus();
-            };
-            
+            row.onclick = () => { document.getElementById('wizsInput').value += `@${u.name} `; };
             list.appendChild(row);
         });
     }
 
-    // --- 7. EVENTS & UTILS ---
+    // --- 5. EVENTS ---
     const dot = document.getElementById('connection-dot');
-    socket.on('connect', () => { dot.className = 'status-dot status-green'; });
+    socket.on('connect', () => { dot.className = 'status-dot status-green'; document.getElementById('lockdown-overlay').style.display='none'; });
     socket.on('disconnect', () => { dot.className = 'status-dot status-red'; });
     socket.on('assign-id', id => { myId = id; renderUserList(); });
     socket.on('user-count', c => {
         document.getElementById('count-display').innerText = `${c} Online`;
         const toast = document.getElementById('invite-toast');
-        if(c <= 1) toast.style.display = 'flex'; else toast.style.display = 'none';
+        toast.style.display = (c <= 1) ? 'flex' : 'none';
     });
+    
+    // --- TIMER LOCKDOWN LOGIC ---
     socket.on('timer-update', s => {
-        const t = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-        document.getElementById('reset-timer-real').innerText = t;
-        document.getElementById('tut-timer').innerText = t;
+        if(s <= 0) {
+            // TRIGGER LOCKDOWN
+            document.getElementById('lockdown-overlay').style.display = 'flex';
+            document.getElementById('reset-timer-real').innerText = "0:00";
+            document.getElementById('wizsInput').disabled = true;
+        } else {
+            const t = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+            document.getElementById('reset-timer-real').innerText = t;
+            document.getElementById('tut-timer').innerText = t;
+        }
     });
 
     document.getElementById('wizsInput').onkeydown = e => { if (e.key === 'Enter') sendMsg(e.target.value); };
     document.getElementById('mediaInput').onchange = e => { 
-        const f = e.target.files[0]; if(!f) return;
-        const r = new FileReader(); r.onload = () => { 
-            const t = f.type.startsWith('video') ? 'video' : 'image'; 
-            sendMsg(`[Shared ${t}]`, r.result, t); 
-        }; r.readAsDataURL(f); 
+        const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = () => sendMsg(`[Shared]`, r.result, f.type.startsWith('video')?'video':'image'); r.readAsDataURL(f); }
     };
 
     const input = document.getElementById('wizsInput');
@@ -745,28 +729,33 @@
         }
     });
 
+    // --- THEMES & FX ---
     const themes = {
-        default: { bg: "#0a0a0a", card: "#161616", accent: "#00f2fe" },
-        seashine: { bg: "#001f24", card: "#00333b", accent: "#00e5ff" },
-        grassy: { bg: "#0e2411", card: "#18361b", accent: "#7bed9f" },
-        sandy: { bg: "#2e2516", card: "#453823", accent: "#ff9f43" },
-        flame: { bg: "#2e0b0b", card: "#4d1212", accent: "#ff4757" },
-        candy: { bg: "#2e0b1f", card: "#4d1233", accent: "#ff6b81" },
-        astrolight: { bg: "#150a26", card: "#241240", accent: "#dfa8ff" }
+        default: { bg: "#0a0a0a", card: "#161616", accent: "#00f2fe", fx: "" },
+        seashine: { bg: "#001f24", card: "#00333b", accent: "#00e5ff", fx: "fx-water" },
+        grassy: { bg: "#0e2411", card: "#18361b", accent: "#7bed9f", fx: "fx-wind" },
+        sandy: { bg: "#2e2516", card: "#453823", accent: "#ff9f43", fx: "fx-sand" },
+        flame: { bg: "#2e0b0b", card: "#4d1212", accent: "#ff4757", fx: "fx-fire" },
+        candy: { bg: "#2e0b1f", card: "#4d1233", accent: "#ff6b81", fx: "fx-candy" },
+        astrolight: { bg: "#150a26", card: "#241240", accent: "#dfa8ff", fx: "fx-astrolight" }
     };
 
     function applyTheme(n) {
         currentTheme = n;
         const t = themes[n] || themes.default;
         const r = document.documentElement.style;
-        r.setProperty('--bg', t.bg); 
-        r.setProperty('--card', t.card); 
-        r.setProperty('--accent', t.accent);
-        const bgLayer = document.getElementById('bg-layer');
-        if(n === 'astrolight') {
-            bgLayer.className = 'astrolight-fx';
+        r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--accent', t.accent);
+        document.getElementById('bg-base').style.background = t.bg;
+        toggleEffects();
+    }
+
+    function toggleEffects() {
+        const layer = document.getElementById('bg-fx-layer');
+        if(!fxEnabled) {
+            layer.className = '';
         } else {
-            bgLayer.className = '';
+            const t = themes[currentTheme] || themes.default;
+            layer.className = t.fx;
         }
     }
     
