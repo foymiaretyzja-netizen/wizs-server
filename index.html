@@ -33,12 +33,24 @@
         .sidebar-item { width: 100%; border-radius: 6px; border: 1px solid #333; background: #000; aspect-ratio: 1/1; object-fit: cover; }
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         
+        /* --- ADMIN EFFECTS --- */
+        @keyframes rainbowGlow { 0% { border-color: red; box-shadow: 0 0 10px red; } 16% { border-color: orange; } 32% { border-color: yellow; } 48% { border-color: green; } 64% { border-color: blue; } 80% { border-color: violet; } 100% { border-color: red; box-shadow: 0 0 10px red; } }
+        
+        /* The effect on the MESSAGE BUBBLE (Public) */
+        .rainbow-msg-box { animation: rainbowGlow 4s linear infinite; border: 2px solid transparent !important; }
+
+        /* The effect on the INPUT FIELD (Private) */
+        .rainbow-input-local { animation: rainbowGlow 6s linear infinite !important; border-width: 2px !important; }
+        
+        @keyframes textShine { to { background-position: 200% center; } }
+        .rainbow-name { background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff, #ff0000); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: textShine 3s linear infinite; font-weight: 900; }
+
         /* --- MODALS --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid var(--gray); position: relative; }
         .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
 
-        /* Change Log Specifics */
+        /* Change Log */
         .changelog-text { text-align: left; font-family: 'Consolas', monospace; font-size: 13px; color: #ccc; line-height: 1.5; margin: 15px 0; background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333; }
         .version-tag { color: var(--mint); font-weight: bold; }
 
@@ -48,7 +60,7 @@
 
         /* --- FEED & MESSAGES --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; }
+        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; border: 1px solid transparent; }
         
         .vid-container { position: relative; width: 100%; margin-top: 10px; border-radius: 8px; overflow: hidden; background: #000; }
         .mute-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; z-index: 10; font-size: 12px; visibility: hidden; }
@@ -65,11 +77,14 @@
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); z-index: 2000; }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
-        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
+        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; transition: 0.3s; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; }
         #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 100px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
+        
+        .admin-toggle { display: none; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px; }
+        .admin-toggle label { display: block; font-size: 12px; margin-bottom: 5px; cursor: pointer; color: var(--yellow); }
     </style>
 </head>
 <body>
@@ -88,7 +103,8 @@
         <p style="color:var(--blue); font-weight:bold; font-size:14px;">You are LIVE on the current version. (V.3.3) on WIZs servers.</p>
         <div class="changelog-text">
             <span class="version-tag">V.3.3 (1/29/2026)</span><br>
-            adds user customizations - blocking users - media upload (video files, youtube video links, Gifs (unstable.)) - refined reply system - new View all media button and changelogs!<br><br>
+            adds user customizations - blocking users - media upload (video files, youtube video links, Gifs) - refined reply system - new View all media button and changelogs!<br>
+            <span style="color:var(--yellow)">* Owner Tools: Rainbow Message Box (Public) & Rainbow Name added.</span><br><br>
             <span style="color:#666">V.3.3 adds quality of life and much much more! last public version (V.1.2) was bare and simple.</span>
         </div>
         <button class="modal-btn" onclick="closeModal('changelogModal')">close</button>
@@ -111,6 +127,16 @@
         <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
         <p style="font-size:12px; margin-top:15px;">Block Users:</p>
         <div id="userListContainer"></div>
+        
+        <div id="adminControls" class="admin-toggle">
+            <p style="color:var(--yellow); font-weight:bold;">Owner Controls</p>
+            <p style="font-size:10px; color:#666; margin-bottom:5px;">Visible to Everyone:</p>
+            <label><input type="checkbox" id="toggleRainbowName" checked onchange="toggleAdminFx()"> Rainbow Name Text</label>
+            <label><input type="checkbox" id="toggleRainbowBox" checked onchange="toggleAdminFx()"> Rainbow Message Box</label>
+            <p style="font-size:10px; color:#666; margin-bottom:5px; margin-top:10px;">Visible to You:</p>
+            <label><input type="checkbox" id="toggleRainbowInput" checked onchange="toggleAdminFx()"> Rainbow Input Field</label>
+        </div>
+
         <button class="modal-btn" style="background:var(--red); color:white;" onclick="unblockAll()">Unblock All</button>
         <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
     </div>
@@ -162,8 +188,14 @@
     let blockedIds = new Set();
     let discoveredUsers = {}; 
     let audioCtx = null;
+    
+    // --- ADMIN STATE ---
+    let isAdmin = false;
+    let adminRainbowInput = false; // Local only
+    let adminRainbowName = false;  // Public
+    let adminRainbowBox = false;   // Public (The message bubble)
 
-    // --- CONNECTION STATUS DOT ---
+    // --- CONNECTION STATUS ---
     const dot = document.getElementById('connection-dot');
     socket.on('connect', () => { dot.className = 'status-dot status-green'; dot.title = "Connected"; });
     socket.on('disconnect', () => { dot.className = 'status-dot status-red'; dot.title = "Disconnected"; });
@@ -205,7 +237,7 @@
             data.results.forEach(gif => {
                 const img = document.createElement('img'); img.src = gif.media_formats.tinygif.url; img.className = 'tenor-gif';
                 img.onclick = () => {
-                    socket.emit('send-msg', { name: myName, color: myColor, text: "[GIF]", image: gif.media_formats.gif.url, msgId: "g-"+Date.now(), replyTo: selectedReply });
+                    sendMsg("[GIF]", gif.media_formats.gif.url, "image");
                     closeModal('gifModal');
                 };
                 container.appendChild(img);
@@ -276,22 +308,91 @@
             if (orig && !orig.querySelector('.reply-notif-tag')) { const t = document.createElement('span'); t.className = 'reply-notif-tag'; t.innerText = `💬 ${data.name} replied.`; orig.appendChild(t); }
         }
 
-        div.innerHTML = `${replyHeader}<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${mediaHtml}`;
+        // --- OWNER/ADMIN RENDER LOGIC ---
+        // 1. Rainbow Name (Text)
+        let nameClass = "";
+        if (data.name === "WIZs Owner" || data.isRainbowName) { nameClass = "rainbow-name"; }
+        
+        // 2. Rainbow Message Box (Border/Glow)
+        if (data.isRainbowBox) { div.classList.add('rainbow-msg-box'); }
+
+        div.innerHTML = `${replyHeader}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${mediaHtml}`;
         div.onclick = () => { selectedReply = { name: data.name, msgId: data.msgId }; document.getElementById('reply-preview').style.display = 'flex'; document.getElementById('reply-text').innerText = `Replying to @${data.name}`; document.getElementById('wizsInput').focus(); };
         document.getElementById('feed').appendChild(div); window.scrollTo(0, document.body.scrollHeight);
     });
 
-    document.getElementById('wizsInput').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) { socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply, msgId: "m-"+Date.now() }); e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; }};
-    document.getElementById('mediaInput').onchange = e => { const f = e.target.files[0]; const r = new FileReader(); r.onload = () => { const t = f.type.startsWith('video') ? 'video' : 'image'; socket.emit('send-msg', { name: myName, color: myColor, text: `[Shared ${t}]`, [t]: r.result, msgId: "u-"+Date.now(), replyTo: selectedReply }); }; r.readAsDataURL(f); };
+    // --- SEND MESSAGE WRAPPER ---
+    function sendMsg(text, mediaData = null, mediaType = null) {
+        const payload = { 
+            name: myName, 
+            color: myColor, 
+            text: text, 
+            replyTo: selectedReply, 
+            msgId: (mediaType ? "u-" : "m-") + Date.now(),
+            // Pass admin toggles to server so everyone sees them
+            isRainbowName: (isAdmin && adminRainbowName),
+            isRainbowBox: (isAdmin && adminRainbowBox) 
+        };
+        if (mediaType && mediaData) payload[mediaType] = mediaData;
+        socket.emit('send-msg', payload);
+        
+        // Clear inputs
+        document.getElementById('wizsInput').value = ''; 
+        selectedReply = null; 
+        document.getElementById('reply-preview').style.display = 'none';
+    }
+
+    document.getElementById('wizsInput').onkeydown = e => { if (e.key === 'Enter' && e.target.value.trim()) sendMsg(e.target.value); };
+    document.getElementById('mediaInput').onchange = e => { const f = e.target.files[0]; const r = new FileReader(); r.onload = () => { const t = f.type.startsWith('video') ? 'video' : 'image'; sendMsg(`[Shared ${t}]`, r.result, t); }; r.readAsDataURL(f); };
 
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     colors.forEach(c => { const d = document.createElement('div'); d.style.background = c; d.style.height = '20px'; d.style.borderRadius = '4px'; d.style.cursor = 'pointer'; d.onclick = () => myColor = c; document.getElementById('colorPicker').appendChild(d); });
+    
+    // --- SETTINGS & ADMIN LOGIC ---
     function openSettings() {
         const c = document.getElementById('userListContainer'); c.innerHTML = '';
         Object.keys(discoveredUsers).forEach(id => { const i = document.createElement('div'); i.className = 'user-item'; i.innerHTML = `<span>${discoveredUsers[id]}</span> <span style="color:var(--red)">${blockedIds.has(id)?'Blocked':'Block'}</span>`; i.onclick = () => { blockedIds.has(id)?blockedIds.delete(id):blockedIds.add(id); openSettings(); }; c.appendChild(i); });
+        
+        // Toggle Visibility of Admin Controls
+        document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
         document.getElementById('settingsModal').style.display = 'flex';
     }
-    function saveSettings() { const n = document.getElementById('newNick').value; if(n) myName = n; closeModal('settingsModal'); }
+
+    function saveSettings() { 
+        const n = document.getElementById('newNick').value; 
+        
+        // ADMIN ACTIVATION
+        if (n === 'Admin1') {
+            isAdmin = true;
+            myName = "WIZs Owner";
+            adminRainbowInput = true;
+            adminRainbowName = true;
+            adminRainbowBox = true;
+            document.getElementById('newNick').value = ""; // Clear security
+            toggleAdminFx();
+            alert("Owner Identity Verified.");
+        } 
+        // LOSS OF ADMIN STATUS
+        else if(n && n !== "") {
+            isAdmin = false; // Remove powers
+            myName = n; 
+        }
+        
+        closeModal('settingsModal'); 
+    }
+    
+    function toggleAdminFx() {
+        if (!isAdmin) return;
+        adminRainbowInput = document.getElementById('toggleRainbowInput').checked;
+        adminRainbowName = document.getElementById('toggleRainbowName').checked;
+        adminRainbowBox = document.getElementById('toggleRainbowBox').checked;
+        
+        // Local Effect only (Input Box)
+        const input = document.getElementById('wizsInput');
+        if (adminRainbowInput) input.classList.add('rainbow-input-local');
+        else input.classList.remove('rainbow-input-local');
+    }
+
     function unblockAll() { blockedIds.clear(); openSettings(); }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     document.getElementById('cancel-reply').onclick = () => { selectedReply = null; document.getElementById('reply-preview').style.display = 'none'; };
