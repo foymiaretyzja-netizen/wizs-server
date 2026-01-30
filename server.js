@@ -1,64 +1,57 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 const path = require('path');
 
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: '10mb' })); 
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 const server = http.createServer(app);
+
+// INCREASED LIMIT: We set maxHttpBufferSize to 1e7 (10MB) 
+// to handle video/GIF uploads smoothly.
 const io = new Server(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
     maxHttpBufferSize: 1e7 
 });
 
-let timeLeft = 900; 
-let timerStarted = false;
-let onlineUsers = 0;
+app.use(express.static(path.join(__dirname, 'public')));
 
-function startRoomTimer() {
-    if (timerStarted) return;
-    timerStarted = true;
-    const interval = setInterval(() => {
-        timeLeft--;
-        io.emit('timer-update', timeLeft);
-        if (timeLeft <= 0) {
-            clearInterval(interval);
-            timeLeft = 900; timerStarted = false;
-            io.emit('room-reset');
-        }
-    }, 1000);
-}
+let userCount = 0;
+let timeLeft = 900; // 15 minutes
+
+// Timer logic
+setInterval(() => {
+    timeLeft--;
+    io.emit('timer-update', timeLeft);
+    if (timeLeft <= 0) {
+        timeLeft = 900;
+        io.emit('room-reset');
+    }
+}, 1000);
 
 io.on('connection', (socket) => {
-    onlineUsers++;
-    const userId = "ID-" + Math.random().toString(36).substring(2, 7);
+    userCount++;
+    const userId = socket.id; // Unique ID for blocking system
     
-    startRoomTimer();
-    io.emit('user-count', onlineUsers);
+    io.emit('user-count', userCount);
     socket.emit('assign-id', userId);
+    socket.emit('timer-update', timeLeft);
 
+    // This handles EVERYTHING: text, images, videos, gifs, and msgIds
     socket.on('send-msg', (data) => {
-        data.userId = userId;
-        io.emit('receive-msg', data);
+        data.userId = userId; // Attach the hidden ID for the blocking system
+        io.emit('receive-msg', data); 
     });
 
-    // Handle the Star Rating broadcast
     socket.on('send-rating', (data) => {
         io.emit('receive-rating', data);
     });
 
     socket.on('disconnect', () => {
-        onlineUsers--;
-        io.emit('user-count', onlineUsers);
+        userCount--;
+        io.emit('user-count', userCount);
     });
 });
 
-const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`WIZs Server running on port ${PORT}`);
+});
