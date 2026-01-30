@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">WIZs | Anonymous Chat</title>
     <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/512/3659/3659744.png">
     <script src="/socket.io/socket.io.js"></script>
@@ -18,6 +19,8 @@
             --yellow: #f1c40f; 
         }
 
+        /* RESET & BODY */
+        * { box-sizing: border-box; } /* GLOBAL FIX: Prevents elements from going off screen */
         body { background: var(--bg); color: var(--text-main); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; overflow-x: hidden; transition: background 0.5s ease; }
 
         /* --- ASTROLIGHT SPECIAL FX --- */
@@ -29,8 +32,14 @@
             animation: drift 60s linear infinite;
         }
 
-        /* --- STATUS BAR --- */
-        #status-bar { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); padding: 10px 20px; z-index: 2000; border-bottom: 1px solid #333; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 15px; }
+        /* --- STATUS BAR (FIXED) --- */
+        #status-bar { 
+            position: fixed; top: 0; left: 0; width: 100%; 
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); 
+            padding: 10px 20px; z-index: 2000; border-bottom: 1px solid #333; 
+            display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 15px;
+            box-sizing: border-box; /* IMPORTANT: Keeps padding inside the 100% width */
+        }
         .bar-left { display: flex; align-items: center; gap: 15px; }
         .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--accent); text-shadow: 0 0 10px rgba(255,255,255,0.1); text-align: center; }
         .bar-right { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
@@ -66,7 +75,7 @@
         .modal-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
 
         /* DROPDOWNS */
-        select, input[type="text"] { width: 95%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; border-radius: 8px; outline: none; margin-bottom: 10px; font-family: inherit; }
+        select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; border-radius: 8px; outline: none; margin-bottom: 10px; font-family: inherit; }
         select option { background: #111; color: white; }
 
         /* --- GIF PICKER --- */
@@ -82,7 +91,7 @@
         .unblurred { filter: blur(0) !important; }
 
         /* --- INPUT --- */
-        .input-wrap { position: fixed; bottom: 0; width: 100%; background: var(--card); padding: 15px 20px; border-top: 1px solid #333; z-index: 2000; transition: background 0.5s ease; }
+        .input-wrap { position: fixed; bottom: 0; width: 100%; background: var(--card); padding: 15px 20px; border-top: 1px solid #333; z-index: 2000; transition: background 0.5s ease; box-sizing: border-box; }
         #reply-preview { display: none; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--accent); justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
         #wizsInput { flex-grow: 1; margin-bottom: 0; border: 1px solid #444; background: rgba(0,0,0,0.3); }
@@ -108,13 +117,12 @@
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">You are LIVE on Version 3.3.1</p>
+        <p style="color:var(--accent); font-weight:bold; font-size:14px;">You are LIVE on Version 3.3.2</p>
         <div style="text-align: left; font-family: 'Consolas', monospace; font-size: 13px; color: #ccc; line-height: 1.5; margin: 15px 0; background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333;">
-            <span style="color:var(--mint); font-weight:bold;">V.3.3.1 Update</span><br>
-            - Added THEME ENGINE (Settings > BG & Text Color).<br>
-            - Compact Settings Menu.<br>
-            - 7 New Presets (Astrolight, FlameLight, Sandy Oasis, etc).<br>
-            <span style="color:var(--yellow)">* Owner Rainbow Effects fully integrated.</span>
+            <span style="color:var(--mint); font-weight:bold;">V.3.3.2 Update</span><br>
+            - Fixed Status Bar overflow on right side.<br>
+            - Optimized box-model for better mobile scaling.<br>
+            <span style="color:var(--yellow)">* All Theme & Owner features active.</span>
         </div>
         <button class="modal-btn" onclick="closeModal('changelogModal')">close</button>
     </div>
