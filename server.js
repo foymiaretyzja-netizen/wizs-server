@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '5mb' })); // Allows for photo uploads
+app.use(express.json({ limit: '10mb' })); 
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] },
-    maxHttpBufferSize: 1e7 // 10MB limit for photos
+    maxHttpBufferSize: 1e7 
 });
 
 let timeLeft = 900; 
@@ -38,15 +38,14 @@ function startRoomTimer() {
 
 io.on('connection', (socket) => {
     onlineUsers++;
-    const userId = Math.random().toString(36).substring(2, 15); // Hidden ID
+    const userId = "ID-" + Math.random().toString(36).substring(2, 7);
     
     startRoomTimer();
     io.emit('user-count', onlineUsers);
     socket.emit('assign-id', userId);
 
     socket.on('send-msg', (data) => {
-        // Add the hidden ID to the message data before broadcasting
-        data.userId = userId;
+        data.userId = userId; // Attach the hidden ID
         io.emit('receive-msg', data);
     });
 
