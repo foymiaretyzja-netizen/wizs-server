@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIZs | v2.5</title>
+    <title>WIZs | v2.6 Official</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -27,17 +27,17 @@
 
         /* --- MESSAGES & THREADING --- */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; }
+        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; transition: border 0.3s; }
         .was-replied-to { border: 1px solid var(--mint) !important; box-shadow: 0 0 10px rgba(123, 237, 159, 0.2); }
         .reply-notif-tag { color: var(--mint); font-size: 10px; font-weight: bold; margin-top: 8px; display: block; border-top: 1px solid #222; padding-top: 5px; }
         .msg-blocked { height: 12px; opacity: 0.1; background: #444; border-radius: 6px; }
         .rating-notif { background: rgba(241, 196, 15, 0.05); border: 1px dashed var(--yellow); color: var(--yellow); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; margin-bottom: 10px; }
-        
         .img-msg { max-width: 100%; border-radius: 8px; filter: blur(25px); transition: 0.4s; margin-top: 10px; }
         .img-msg:active { filter: blur(0); }
-        .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; }
+        .reply-tag { font-size: 11px; color: #666; margin-bottom: 4px; display: block; font-style: italic; }
+        .is-reply-to-me { background: #1a1f24; border-right: 2px solid var(--blue); }
 
-        /* --- INPUT --- */
+        /* --- INPUT AREA --- */
         .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.98); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(15px); }
         #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
         input[type="text"] { width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
@@ -55,6 +55,19 @@
     </div>
 </div>
 
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <h3>User Settings</h3>
+        <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+        <p style="font-size:12px; margin-top:10px;">Pick Name Color:</p>
+        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
+        <p style="font-size:12px; margin-top:15px;">Click to Block Users:</p>
+        <div id="userListContainer"></div>
+        <button class="modal-btn" style="background:var(--red); color:white; margin-right:5px;" onclick="unblockAll()">Unblock All</button>
+        <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
+    </div>
+</div>
+
 <div id="ratingModal" class="modal">
     <div class="modal-content">
         <h3>Enjoying WIZs?</h3>
@@ -67,19 +80,6 @@
             <span onclick="submitRating(5)" style="cursor:pointer">⭐</span>
         </div>
         <button class="modal-btn" style="background:#333; color:white;" onclick="closeModal('ratingModal')">Cancel</button>
-    </div>
-</div>
-
-<div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <h3>User Settings</h3>
-        <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:90%; padding:10px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
-        <p style="font-size:12px; margin-top:10px;">Pick Name Color:</p>
-        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px;"></div>
-        <p style="font-size:12px; margin-top:15px;">Click to Block Users:</p>
-        <div id="userListContainer"></div>
-        <button class="modal-btn" style="background:var(--red); color:white; margin-right:5px;" onclick="unblockAll()">Unblock All</button>
-        <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
     </div>
 </div>
 
@@ -123,7 +123,7 @@
     let discoveredUsers = {}; 
     let imgCooldown = false;
 
-    // SETUP COLORS
+    // COLORS SETUP
     const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     const picker = document.getElementById('colorPicker');
     colors.forEach(c => {
@@ -151,6 +151,7 @@
         window.scrollTo(0, document.body.scrollHeight);
     });
 
+    // MESSAGE HANDLER
     socket.on('receive-msg', data => {
         if (data.userId !== myId && !discoveredUsers[data.userId]) { discoveredUsers[data.userId] = data.name; }
         if (blockedIds.has(data.userId)) {
@@ -158,12 +159,12 @@
             document.getElementById('feed').appendChild(b); return;
         }
 
-        const msgId = "msg-" + Math.random().toString(36).substring(2, 9);
         const div = document.createElement('div');
         div.className = 'msg';
-        div.id = msgId;
+        div.id = data.msgId; // Syncing Global ID
         div.style.setProperty('--u-color', data.color);
-        
+        if (data.replyTo && data.replyTo.name === myName) div.classList.add('is-reply-to-me');
+
         let media = '';
         if (data.image) media = `<img src="${data.image}" class="img-msg">`;
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
@@ -180,7 +181,7 @@
                 if (!original.querySelector('.reply-notif-tag')) {
                     const tag = document.createElement('span');
                     tag.className = 'reply-notif-tag';
-                    tag.innerText = `💬 @${data.name} replied to this. Click to see reply.`;
+                    tag.innerText = `💬 ${data.name} replied to this.`;
                     original.appendChild(tag);
                 }
             }
@@ -189,8 +190,7 @@
         div.innerHTML = replyHtml + `<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>` + media;
         
         div.onclick = () => {
-            if (div.classList.contains('was-replied-to')) { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
-            selectedReply = { name: data.name, msgId: msgId };
+            selectedReply = { name: data.name, msgId: data.msgId };
             document.getElementById('reply-preview').style.display = 'flex';
             document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
             document.getElementById('wizsInput').focus();
@@ -219,7 +219,11 @@
 
     document.getElementById('wizsInput').onkeydown = e => {
         if (e.key === 'Enter' && e.target.value.trim()) {
-            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply });
+            const uniqueMsgId = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+            socket.emit('send-msg', { 
+                name: myName, color: myColor, text: e.target.value, 
+                replyTo: selectedReply, msgId: uniqueMsgId 
+            });
             e.target.value = ''; selectedReply = null; document.getElementById('reply-preview').style.display = 'none';
         }
     };
@@ -230,7 +234,8 @@
         if (imgCooldown) { alert("Please wait 1 minute."); return; }
         const reader = new FileReader();
         reader.onload = () => {
-            socket.emit('send-msg', { name: myName, color: myColor, text: "[Photo Shared]", image: reader.result });
+            const uniqueMsgId = "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+            socket.emit('send-msg', { name: myName, color: myColor, text: "[Photo Shared]", image: reader.result, msgId: uniqueMsgId });
             imgCooldown = true; setTimeout(() => imgCooldown = false, 60000);
         };
         reader.readAsDataURL(e.target.files[0]);
