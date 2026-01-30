@@ -45,8 +45,13 @@ io.on('connection', (socket) => {
     socket.emit('assign-id', userId);
 
     socket.on('send-msg', (data) => {
-        data.userId = userId; // Attach the hidden ID
+        data.userId = userId;
         io.emit('receive-msg', data);
+    });
+
+    // Handle the Star Rating broadcast
+    socket.on('send-rating', (data) => {
+        io.emit('receive-rating', data);
     });
 
     socket.on('disconnect', () => {
