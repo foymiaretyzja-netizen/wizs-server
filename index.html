@@ -2,38 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WIZs | v2</title>
+    <title>WIZs | v2.1</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0a0a0a; --card: #161616; --blue: #00f2fe; --green: #2ecc71; --red: #ff4d4d; --gray: #333; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 160px; overflow-x: hidden; }
+        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; overflow-x: hidden; }
 
-        /* Welcome & Settings Modals */
+        /* Modals */
         .modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: #111; padding: 30px; border-radius: 20px; max-width: 400px; text-align: center; border: 1px solid var(--gray); }
-        .modal-btn { background: var(--blue); color: black; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-
-        /* UI Elements */
-        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 999; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-        .gear-btn { font-size: 18px; cursor: pointer; color: #888; margin-left: 10px; }
-        .user-count { font-weight: bold; color: var(--blue); }
-
-        /* Messages */
-        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.3s ease-out; }
-        .msg-blocked { height: 20px; opacity: 0.3; border-left: 4px solid gray; overflow: hidden; }
-        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(20px); transition: 0.3s; cursor: pointer; margin-top: 10px; }
-        .img-msg:active { filter: blur(0); }
-        .video-box { width: 100%; aspect-ratio: 16/9; margin-top: 10px; border-radius: 8px; }
-
-        /* Input Area */
-        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(10px); }
-        .controls { display: flex; gap: 10px; align-items: center; }
-        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; }
-        .file-label { cursor: pointer; color: var(--blue); font-size: 20px; }
+        .modal-content { background: #111; padding: 25px; border-radius: 20px; max-width: 400px; width: 90%; text-align: center; border: 1px solid var(--gray); }
+        .modal-btn { background: var(--blue); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        /* Blocking List UI */
+        #userListContainer { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; max-height: 120px; overflow-y: auto; margin: 10px 0; padding: 5px; text-align: left; }
+        .user-item { padding: 8px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
+        .user-item:hover { background: #222; }
+        .block-btn-small { color: var(--red); font-weight: bold; font-size: 11px; }
+
+        /* Status Bar */
+        #status-bar { position: fixed; top: 10px; left: 5%; width: 90%; background: #111; padding: 12px; border-radius: 30px; z-index: 999; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+        .gear-btn { font-size: 18px; cursor: pointer; color: #888; }
+
+        /* Feed & Messages */
+        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { background: var(--card); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideIn 0.2s ease-out; cursor: pointer; }
+        .msg.is-reply-to-me { border: 2px solid var(--blue); box-shadow: 0 0 10px rgba(0,242,254,0.2); }
+        .msg-blocked { height: 10px; opacity: 0.1; background: #333; border-radius: 5px; }
+        .reply-tag { font-size: 11px; color: #777; margin-bottom: 5px; display: block; }
+        .img-msg { max-width: 100%; border-radius: 8px; filter: blur(20px); transition: 0.3s; margin-top: 10px; }
+        .img-msg:hover { filter: blur(0); }
+
+        /* Input & Reply Preview */
+        .input-wrap { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px; border-top: 1px solid #222; backdrop-filter: blur(10px); }
+        #reply-preview { display: none; background: #222; padding: 8px 15px; border-radius: 8px 8px 0 0; font-size: 12px; border-left: 3px solid var(--blue); justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        input[type="text"] { flex-grow: 1; background: #1a1a1a; border: 1px solid #333; padding: 12px; color: white; border-radius: 8px; outline: none; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -41,30 +47,29 @@
 <div id="welcomeModal" class="modal">
     <div class="modal-content">
         <h2 style="color:var(--blue)">Welcome to WIZs</h2>
-        <p>WIZs is an anonymous chatting service where you and others can chat freely.</p>
-        <p style="font-size: 0.8rem; color: #888;">Chat data doesn't save, and every 15 minutes is a full server data wipe.</p>
-        <p style="font-size: 0.8rem; color: #888;">Note: Click the gear icon (top left) to change your username or color.</p>
-        <button class="modal-btn" onclick="closeModal('welcomeModal')">Click here to close and begin chatting</button>
+        <p style="font-size: 14px;">Anonymous chatting, no data saved. Every 15 minutes is a full wipe.</p>
+        <button class="modal-btn" onclick="closeModal('welcomeModal')">Click here to begin</button>
     </div>
 </div>
 
 <div id="settingsModal" class="modal" style="display:none;">
     <div class="modal-content">
-        <h3>User Settings</h3>
-        <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:80%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:white;">
-        <p>Select Name Color:</p>
-        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px;"></div>
-        <p>Block User:</p>
-        <select id="blockSelect" style="width:90%; background:#222; color:white; padding:5px;"></select>
+        <h3>Settings</h3>
+        <input type="text" id="newNick" placeholder="Change username..." maxlength="15" style="width:90%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #444; color:white; border-radius:5px;">
+        <p style="font-size:12px;">Select Name Color:</p>
+        <div id="colorPicker" style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 10px;"></div>
+        
+        <p style="font-size:12px; margin-top:10px;">Active Users (Click to Block):</p>
+        <div id="userListContainer"></div>
+        <button class="modal-btn" style="background:var(--red); color:white; margin-right:5px;" onclick="unblockAll()">Unblock All</button>
         <button class="modal-btn" onclick="saveSettings()">Save & Close</button>
     </div>
 </div>
 
 <div id="soloModal" class="modal" style="display:none;">
     <div class="modal-content">
-        <p>Uh-oh, no one is online! Share the link via outlook or email to add friends!</p>
-        <p class="user-count">WIZers online: 1</p>
-        <button class="modal-btn" onclick="closeModal('soloModal')">Click here to ignore</button>
+        <p>Uh-oh, no one is online! Share the link to add friends!</p>
+        <button class="modal-btn" onclick="closeModal('soloModal')">Ignore</button>
     </div>
 </div>
 
@@ -73,17 +78,16 @@
         <i class="fa-solid fa-gear gear-btn" onclick="openSettings()"></i>
         <span id="reset-timer" style="margin-left:15px; color:#888;">15:00</span>
     </div>
-    <div>
-        <span class="user-count" id="count-display">WIZers online: 0</span>
-    </div>
+    <span class="user-count" id="count-display">WIZers online: 0</span>
 </div>
 
 <div id="feed"></div>
 
 <div class="input-wrap">
+    <div id="reply-preview"><span id="reply-text">Replying...</span><span id="cancel-reply" style="cursor:pointer; color:var(--red)">×</span></div>
     <div class="controls">
-        <label class="file-label"><i class="fa-solid fa-image"></i><input type="file" id="imgInput" hidden accept="image/*"></label>
-        <input type="text" id="wizsInput" placeholder="Type a message or paste YouTube link..." maxlength="250">
+        <label style="cursor:pointer; color:var(--blue); font-size:20px;"><i class="fa-solid fa-image"></i><input type="file" id="imgInput" hidden accept="image/*"></label>
+        <input type="text" id="wizsInput" placeholder="Message or YouTube link..." autocomplete="off">
     </div>
 </div>
 
@@ -92,112 +96,119 @@
     let myName = "Wiz-" + Math.floor(Math.random()*999);
     let myColor = "#00f2fe";
     let myId = "";
+    let selectedReply = null;
     let blockedIds = new Set();
-    let userMap = {}; // Tracks name/ID for blocking
+    let discoveredUsers = {}; // Tracks {id: name}
     let imgCooldown = false;
 
     // Setup Colors
-    const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#95a5a6', '#ff4d4d', '#7bed9f', '#70a1ff', '#eccc68', '#ff6b81', '#a4b0be', '#57606f', '#ffa502', '#2f3542', '#ffffff'];
+    const colors = ['#00f2fe', '#4facfe', '#2ecc71', '#e74c3c', '#f1c40f', '#9b59b6', '#ff9f43', '#1abc9c', '#3498db', '#ffffff'];
     const picker = document.getElementById('colorPicker');
     colors.forEach(c => {
         const div = document.createElement('div');
-        div.style.background = c;
-        div.style.height = '25px';
-        div.style.cursor = 'pointer';
-        div.style.borderRadius = '4px';
-        div.onclick = () => myColor = c;
-        picker.appendChild(div);
+        div.style.background = c; div.style.height = '20px'; div.style.cursor = 'pointer'; div.style.borderRadius = '3px';
+        div.onclick = () => myColor = c; picker.appendChild(div);
     });
 
     socket.on('assign-id', id => myId = id);
-
     socket.on('user-count', count => {
         document.getElementById('count-display').innerText = `WIZers online: ${count}`;
         if (count === 1) document.getElementById('soloModal').style.display = 'flex';
     });
-
     socket.on('timer-update', s => {
         const m = Math.floor(s/60); const sec = s%60;
         document.getElementById('reset-timer').innerText = `${m}:${sec<10?'0':''}${sec}`;
     });
-
     socket.on('room-reset', () => location.reload());
 
     socket.on('receive-msg', data => {
+        // Track users for the blocking list
+        if (data.userId !== myId && !discoveredUsers[data.userId]) {
+            discoveredUsers[data.userId] = data.name;
+            updateBlockListUI();
+        }
+
         if (blockedIds.has(data.userId)) {
-            const blockedDiv = document.createElement('div');
-            blockedDiv.className = 'msg msg-blocked';
-            document.getElementById('feed').appendChild(blockedDiv);
+            const b = document.createElement('div'); b.className = 'msg msg-blocked';
+            document.getElementById('feed').appendChild(b);
             return;
         }
 
-        // Add to block list dropdown
-        if (data.userId !== myId && !userMap[data.userId]) {
-            userMap[data.userId] = data.name;
-            const opt = document.createElement('option');
-            opt.value = data.userId;
-            opt.innerText = data.name;
-            document.getElementById('blockSelect').appendChild(opt);
-        }
-
         const div = document.createElement('div');
-        div.className = 'msg';
+        div.className = 'msg' + (data.replyTo === myName ? ' is-reply-to-me' : '');
         div.style.setProperty('--u-color', data.color);
         
-        let content = `<div>${data.text}</div>`;
+        let replyHeader = data.replyTo ? `<span class="reply-tag">@${data.replyTo}</span>` : '';
+        let mediaContent = '';
         
-        // Image support
-        if (data.image) {
-            content += `<img src="${data.image}" class="img-msg" title="Click to unblur">`;
-        }
-
-        // YouTube Support
+        if (data.image) mediaContent = `<img src="${data.image}" class="img-msg">`;
         if (data.text.includes('youtube.com') || data.text.includes('youtu.be')) {
             const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
-            if (vidId) {
-                content += `<iframe class="video-box" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen></iframe>`;
-            }
-        } else if (data.text.includes('.com')) {
-            content += `<div style="color:var(--red); font-size:10px;">Error, video website not supported.</div>`;
+            if (vidId) mediaContent += `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
         }
 
-        div.innerHTML = `<div style="font-weight:bold; color:${data.color}">${data.name}</div>${content}`;
+        div.innerHTML = `${replyHeader}<div style="font-weight:bold; color:${data.color}">${data.name}</div><div>${data.text}</div>${mediaContent}`;
+        
+        div.onclick = () => {
+            selectedReply = data.name;
+            document.getElementById('reply-preview').style.display = 'flex';
+            document.getElementById('reply-text').innerText = `Replying to @${data.name}`;
+            document.getElementById('wizsInput').focus();
+        };
+
         document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
-    
-    function saveSettings() {
-        const nick = document.getElementById('newNick').value;
-        if (nick) myName = nick;
-        const toBlock = document.getElementById('blockSelect').value;
-        if (toBlock) blockedIds.add(toBlock);
-        closeModal('settingsModal');
+    function updateBlockListUI() {
+        const container = document.getElementById('userListContainer');
+        container.innerHTML = '';
+        Object.keys(discoveredUsers).forEach(id => {
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.innerHTML = `<span>${discoveredUsers[id]}</span> <span class="block-btn-small">${blockedIds.has(id) ? 'BLOCKED' : 'BLOCK'}</span>`;
+            item.onclick = () => {
+                if (blockedIds.has(id)) blockedIds.delete(id);
+                else blockedIds.add(id);
+                updateBlockListUI();
+            };
+            container.appendChild(item);
+        });
     }
 
-    // Input Logic
+    function unblockAll() { blockedIds.clear(); updateBlockListUI(); }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openSettings() { updateBlockListUI(); document.getElementById('settingsModal').style.display = 'flex'; }
+    function saveSettings() { 
+        const n = document.getElementById('newNick').value; 
+        if(n) myName = n; 
+        closeModal('settingsModal'); 
+    }
+
     document.getElementById('wizsInput').onkeydown = e => {
         if (e.key === 'Enter' && e.target.value.trim()) {
-            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value });
+            socket.emit('send-msg', { name: myName, color: myColor, text: e.target.value, replyTo: selectedReply });
             e.target.value = '';
+            selectedReply = null;
+            document.getElementById('reply-preview').style.display = 'none';
         }
     };
 
-    // Photo Upload Logic
+    document.getElementById('cancel-reply').onclick = () => {
+        selectedReply = null;
+        document.getElementById('reply-preview').style.display = 'none';
+    };
+
     document.getElementById('imgInput').onchange = e => {
         if (imgCooldown) { alert("Photo cooldown: 1 minute"); return; }
-        const file = e.target.files[0];
         const reader = new FileReader();
         reader.onload = () => {
-            socket.emit('send-msg', { name: myName, color: myColor, text: "Shared a photo", image: reader.result });
+            socket.emit('send-msg', { name: myName, color: myColor, text: "[Shared an image]", image: reader.result });
             imgCooldown = true;
             setTimeout(() => imgCooldown = false, 60000);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(e.target.files[0]);
     };
 </script>
 </body>
-</html>
 </html>
