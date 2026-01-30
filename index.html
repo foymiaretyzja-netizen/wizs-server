@@ -239,6 +239,11 @@
              <option value="#e74c3c">Crimson Red</option> <option value="#f1c40f">Sunflower Yellow</option> <option value="#ff9f43">Orange Peel</option>
              <option value="#ff6b81">Hot Pink</option>
         </select>
+        <select id="main-theme" onchange="applyTheme(this.value)">
+            <option value="default">Default Theme</option> <option value="seashine">Seashine</option> <option value="grassy">Grassy Plains</option>
+            <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight</option> <option value="candy">CandyPink</option>
+            <option value="astrolight">✨ Astrolight</option>
+        </select>
         
         <div id="admin-controls" class="admin-check-container">
             <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
@@ -258,8 +263,9 @@
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.3.8</p>
+        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 3.3.9</p>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
+            <span style="color:var(--mint)">> Added Theme Selector to Main Settings</span><br>
             <span style="color:var(--mint)">> Added "Verified" Toast</span><br>
             <span style="color:var(--mint)">> Added Owner Rainbow Name</span><br>
             <span style="color:var(--mint)">> Added YT Links to Sidebar</span>
@@ -287,6 +293,7 @@
     let discoveredUsers = {}; 
     let activeReply = null; 
     let isAdminRainbow = false; 
+    let currentTheme = 'default';
 
     // --- 1. INTRO & SETUP ---
     window.onload = () => {
@@ -334,9 +341,9 @@
     }
 
     function openMainSettings() {
-        // Show current name (if it's "WIZs Owner", show "Admin1" in input so they know)
         document.getElementById('main-nick').value = (myName === "WIZs Owner") ? "Admin1" : myName;
         document.getElementById('main-color').value = myColor;
+        document.getElementById('main-theme').value = currentTheme;
 
         // Admin Visibility
         if(myName === "WIZs Owner" || myName === "Admin1") {
@@ -462,12 +469,10 @@
             if (vidId) {
                 mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
                 ytThumb = `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
-                // Add click to open listener for sidebar thumb
                 addToSidebar(ytThumb, `https://www.youtube.com/watch?v=${vidId}`, true);
             }
         }
         
-        // Add standard media to sidebar
         if (data.image || data.video) {
              addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
         }
@@ -490,7 +495,7 @@
         if(isYT && linkUrl) {
             sItem.onclick = () => window.open(linkUrl, '_blank');
         } else {
-            sItem.onclick = () => { /* Maybe scroll to message later */ };
+            sItem.onclick = () => { };
         }
         document.getElementById('sidebar-content').prepend(sItem);
     }
@@ -560,6 +565,7 @@
         astrolight: { bg: "#150a26", card: "#241240", accent: "#dfa8ff" }
     };
     function applyTheme(n) {
+        currentTheme = n;
         const t = themes[n] || themes.default;
         const r = document.documentElement.style;
         r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--accent', t.accent);
