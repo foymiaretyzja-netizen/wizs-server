@@ -4,71 +4,72 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-// Serve static files from the "public" folder
-app.use(express.static('public'));
+// 1. KEEP 10MB LIMIT (From your original code)
+const io = new Server(server, { 
+    maxHttpBufferSize: 1e7 
+});
+
+// 2. SERVE FROM ROOT FOLDER (Fixes "Cannot GET /" error)
+app.use(express.static(__dirname));
 
 let userCount = 0;
-let wipeTimer = 900; // 15 minutes in seconds
+let timeLeft = 900; // 15 minutes
 
-// --- THE WIPE TIMER LOOP ---
+// --- TIMER LOGIC ---
 setInterval(() => {
-    wipeTimer--;
+    timeLeft--;
     
-    // Send timer update to everyone every second
-    io.emit('timer-update', wipeTimer);
+    // Sync timer with everyone
+    io.emit('timer-update', timeLeft);
 
-    // When timer hits 0, wipe everything
-    if (wipeTimer <= 0) {
-        io.emit('force-wipe'); // Optional: triggers frontend clear
+    // Reset when time is up
+    if (timeLeft <= 0) {
+        timeLeft = 900;
+        io.emit('force-wipe'); // Triggers frontend clear
         io.emit('receive-msg', {
             msgId: 'sys-' + Date.now(),
             name: 'SYSTEM',
             color: '#ff4d4d',
-            text: '⚠️ DATA WIPE COMPLETE. CHAT HISTORY CLEARED.',
+            text: '⚠️ DATA WIPE COMPLETE.',
             isSystem: true
         });
-        wipeTimer = 900; // Reset to 15 mins
     }
 }, 1000);
 
 io.on('connection', (socket) => {
     userCount++;
+    const userId = socket.id;
+
+    // Send initial data to the new user
     io.emit('user-count', userCount);
+    socket.emit('assign-id', userId);
+    socket.emit('timer-update', timeLeft);
 
-    // assign a temporary ID to the user for blocking logic
-    socket.emit('assign-id', socket.id);
+    console.log(`User connected: ${userId}`);
 
-    console.log(`User connected: ${socket.id}`);
-
-    // 1. HANDLE MESSAGES
+    // --- MESSAGING ---
     socket.on('send-msg', (data) => {
-        // Broadcast the message to EVERYONE (including sender)
-        io.emit('receive-msg', {
-            userId: socket.id, // Used for blocking logic on frontend
-            ...data
-        });
+        data.userId = userId; // Attach ID for blocking
+        io.emit('receive-msg', data);
     });
 
-    // 2. HANDLE TYPING (New)
+    // --- NEW: TYPING INDICATORS ---
     socket.on('typing-start', (data) => {
-        // Broadcast to everyone EXCEPT the person typing
+        // Send to everyone EXCEPT sender
         socket.broadcast.emit('typing-update', { isTyping: true, user: data.name });
     });
 
     socket.on('typing-stop', () => {
-        // Broadcast to everyone EXCEPT the person typing
         socket.broadcast.emit('typing-update', { isTyping: false });
     });
 
-    // 3. HANDLE REACTIONS (New)
+    // --- NEW: REACTIONS ---
     socket.on('add-reaction', (data) => {
-        // Broadcast to EVERYONE (so the sender sees the count go up too)
         io.emit('update-reaction', data);
     });
 
-    // 4. HANDLE DISCONNECT
+    // --- DISCONNECT ---
     socket.on('disconnect', () => {
         userCount--;
         io.emit('user-count', userCount);
@@ -78,5 +79,5 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`WIZs Server running on port ${PORT}`);
+    console.log(`WIZs Server running on http://localhost:${PORT}`);
 });
