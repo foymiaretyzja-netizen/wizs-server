@@ -3,20 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIZs | Anonymous Chat</title>
+    <title>WIZs | Vivid</title>
     
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- CORE VARIABLES --- */
+        /* --- VIVID 3-COLOR PALETTE --- */
         :root { 
-            --bg: #0a0a0a; --card: #161616; --accent: #00f2fe; --text-main: #e0e0e0;
-            --mint: #7bed9f; --red: #ff4d4d; --yellow: #f1c40f; 
+            /* 1. DARK (Backgrounds) */
+            --c-dark: #050505; 
+            /* 2. MEDIUM (UI Elements, Cards, Inputs - Vivid) */
+            --c-med: #2a0a55; 
+            /* 3. LIGHT (Text, Icons, Borders - Bright) */
+            --c-light: #00f2fe;
+
+            --text-color: #ffffff;
+            --mint: #00ff9d; 
+            --red: #ff0055; 
+            --yellow: #ffdd00; 
         }
-        * { box-sizing: border-box; transition: all 0.3s ease; }
+
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         
         body { 
-            background: var(--bg); color: var(--text-main); 
+            background: var(--c-dark); color: var(--text-color); 
             font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; 
             overflow-x: hidden; opacity: 0; animation: fadeInBody 1s forwards; 
             overflow-y: scroll; 
@@ -24,52 +34,56 @@
 
         @keyframes fadeInBody { to { opacity: 1; } }
 
+        /* --- DESTRUCTION ANIMATION CLASSES --- */
+        .destroy-anim {
+            animation: crumble 2s forwards ease-in;
+            pointer-events: none;
+        }
+        @keyframes crumble {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(random(100)px, 100vh) rotate(random(360)deg); opacity: 0; }
+        }
+        #destroyed-msg {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3rem; color: var(--red); font-weight: 900; text-transform: uppercase;
+            z-index: 10000; text-shadow: 0 0 20px var(--red);
+        }
+
         /* --- BACKGROUND CONTAINER --- */
         #bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2; overflow: hidden; pointer-events: none;
         }
 
-        /* --- THEME ANIMATIONS --- */
-        /* SEA */
+        /* --- THEME CSS (Kept Intact) --- */
         .sea-gradient { background: linear-gradient(180deg, #006994 0%, #001f24 100%); width:100%; height:100%; position:absolute;}
         .wave-box { position: absolute; top: -50px; left: 0; width: 100%; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; animation: waveRock 5s infinite ease-in-out; transform-origin: 50% 0; }
         .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); animation: riseUp 10s linear infinite; }
         .shine-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.1), transparent 60%); }
         @keyframes waveRock { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.2); } }
         @keyframes riseUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-110vh) scale(1.5); opacity: 0; } }
-
-        /* GRASS */
         .sky-bg { background: linear-gradient(#4facfe, #00f2fe); width:100%; height:100%; position:absolute; }
         .hill { position: absolute; bottom: -50px; width: 120%; height: 200px; background: #2ecc71; border-radius: 50% 50% 0 0; box-shadow: inset 0 10px 20px rgba(0,0,0,0.1); }
         .hill-1 { left: -10%; z-index: 1; background: #27ae60; height: 250px; }
         .hill-2 { right: -10%; z-index: 2; background: #2ecc71; }
         .cloud { position: absolute; background: rgba(255,255,255,0.8); border-radius: 50px; animation: floatCloud linear infinite; filter: blur(3px); }
         @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(120vw); } }
-
-        /* SAND */
         .desert-bg { background: linear-gradient(to bottom, #800000, #d35400, #e67e22); width:100%; height:100%; position:absolute; }
         .sun { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; background: linear-gradient(#f1c40f, #e67e22); border-radius: 50%; box-shadow: 0 0 40px #f39c12; }
         .dune { position: absolute; bottom: 0; width: 100%; height: 150px; background: #d35400; clip-path: polygon(0 100%, 100% 100%, 100% 40%, 75% 20%, 50% 60%, 25% 30%, 0 50%); }
         .heat-haze { position: absolute; top:0; left:0; width:100%; height:100%; backdrop-filter: blur(1px); animation: haze 2s infinite linear; opacity: 0.3; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 4px); }
         @keyframes haze { 0% { transform: translateY(0); } 100% { transform: translateY(-5px); } }
-
-        /* FIRE */
         .fire-bg { background: #1a0505; width:100%; height:100%; position:absolute; box-shadow: inset 0 -100px 150px rgba(255,69,0,0.5); }
         .fireplace-glow { position: absolute; bottom: 0; width: 100%; height: 300px; background: radial-gradient(ellipse at bottom, rgba(255,69,0,0.4), transparent 70%); }
         .ember { position: absolute; bottom: 0; width: 4px; height: 4px; background: #ff4500; border-radius: 50%; animation: floatEmber linear infinite; box-shadow: 0 0 10px #ff6347; }
         .smoke { position: absolute; bottom: 0; background: rgba(100,100,100,0.2); border-radius: 50%; filter: blur(20px); animation: riseSmoke 4s linear infinite; }
         @keyframes floatEmber { 0% { transform: translateY(0) translateX(0); opacity: 1; } 100% { transform: translateY(-80vh) translateX(20px); opacity: 0; } }
         @keyframes riseSmoke { 0% { opacity: 0; transform: translateY(0) scale(1); } 50% { opacity: 0.5; } 100% { opacity: 0; transform: translateY(-60vh) scale(3); } }
-
-        /* CANDY */
         .candy-bg { background: linear-gradient(#ffe6fa, #cceeff); width:100%; height:100%; position:absolute; }
         .rainbow-static { position: absolute; top: 10%; left: 10%; width: 80%; height: 400px; border-radius: 50% 50% 0 0; box-shadow: 0 -20px 0 #ff0000, 0 -40px 0 #ff7f00, 0 -60px 0 #ffff00, 0 -80px 0 #00ff00, 0 -100px 0 #0000ff, 0 -120px 0 #4b0082, 0 -140px 0 #8f00ff; opacity: 0.3; filter: blur(5px); }
         .candy-ground { position: absolute; bottom: 0; width: 100%; height: 100px; background: #ffb7b2; border-radius: 50% 50% 0 0; }
         .falling-candy { position: absolute; font-size: 20px; top: -50px; animation: fallDown linear infinite; }
         @keyframes fallDown { to { transform: translateY(110vh) rotate(360deg); } }
-
-        /* ASTRO */
         .space-bg { background: radial-gradient(circle at bottom, #2b1055 0%, #000000 100%); width:100%; height:100%; position:absolute; }
         .moon { position: absolute; top: 50px; right: 50px; width: 80px; height: 80px; background: #fdfcdc; border-radius: 50%; box-shadow: 0 0 20px #fdfcdc; }
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite ease-in-out; }
@@ -77,8 +91,8 @@
         @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; transform: scale(1.2); } }
         @keyframes shoot { 0% { top: -50px; left: 20%; opacity: 1; } 20% { top: 40%; left: 60%; opacity: 0; } 100% { opacity: 0; } }
 
-        /* --- LOCKDOWN OVERLAY --- */
-        #lockdown-overlay {
+        /* --- LOCKDOWN & BAN OVERLAYS --- */
+        #lockdown-overlay, #kick-overlay, #ban-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.98); z-index: 9999;
             flex-direction: column; align-items: center; justify-content: center;
@@ -87,31 +101,30 @@
         .lock-icon { font-size: 80px; color: var(--red); margin-bottom: 20px; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* --- UI ELEMENTS --- */
-        #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .intro-logo { font-size: 4rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px rgba(0,242,254,0.5); transition: all 1s; }
+        /* --- UI ELEMENTS (VIVID COLOR APPLIED) --- */
+        #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--c-dark); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .intro-logo { font-size: 4rem; font-weight: 900; color: var(--c-light); text-shadow: 0 0 20px var(--c-light); transition: all 1s; }
         .intro-logo.minimize { transform: scale(0.3) translateY(-45vh); }
         
-        #tutorial-card { display: none; background: var(--card); width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        #tutorial-card { display: none; background: var(--c-med); width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; border: 2px solid var(--c-light); text-align: center; box-shadow: 0 10px 40px rgba(42, 10, 85, 0.5); }
         .tut-step { display: none; }
         .tut-step.active { display: block; }
         
-        #status-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); padding: 0 20px; z-index: 2000; border-bottom: 1px solid #333; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; opacity: 0; }
+        #status-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(5,5,5,0.9); backdrop-filter: blur(10px); padding: 0 20px; z-index: 2000; border-bottom: 2px solid var(--c-med); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; opacity: 0; box-shadow: 0 0 15px var(--c-med); }
         .bar-content { display: flex; align-items: center; gap: 15px; }
-        .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--accent); }
+        .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--c-light); text-shadow: 0 0 10px var(--c-light); }
         .icon-btn { cursor: pointer; color: #888; font-size: 16px; }
-        .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
+        .icon-btn:hover { color: var(--c-light); transform: scale(1.1); }
 
         /* SIDEBARS */
-        #media-sidebar, #users-sidebar { position: fixed; top: 60px; width: 320px; height: calc(100% - 60px); background: #0f0f0f; border: 1px solid #333; z-index: 1999; transform: translateX(100%); transition: transform 0.3s; overflow-y: auto; padding: 15px; }
-        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 1px solid #333; border-left: none; }
+        #media-sidebar, #users-sidebar { position: fixed; top: 60px; width: 320px; height: calc(100% - 60px); background: var(--c-dark); border: 2px solid var(--c-med); z-index: 1999; transform: translateX(100%); transition: transform 0.3s; overflow-y: auto; padding: 15px; }
+        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 2px solid var(--c-med); border-left: none; }
         #users-sidebar { right: 0; }
         .active-side { transform: translateX(0) !important; }
-        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid #333; margin-bottom:10px; cursor:pointer; }
+        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid var(--c-light); margin-bottom:10px; cursor:pointer; }
         
-        /* USERS LIST STYLE */
-        .user-row { padding: 10px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: #ccc; }
-        .user-row:hover { background: rgba(255,255,255,0.05); }
+        .user-row { padding: 10px; border-bottom: 1px solid var(--c-med); display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: var(--c-light); }
+        .user-row:hover { background: var(--c-med); }
         .user-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
 
         /* TOASTS */
@@ -119,9 +132,9 @@
         #verified-toast { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #ccffcc; }
         @keyframes fadeIn { from{opacity:0; transform:translate(-50%, -10px);} to{opacity:1; transform:translate(-50%, 0);} }
 
-        /* FEED */
+        /* FEED & MESSAGES */
         #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 1; }
-        .msg { background: rgba(22, 22, 22, 0.85); backdrop-filter: blur(5px); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUp 0.3s ease; word-wrap: break-word; }
+        .msg { background: rgba(42, 10, 85, 0.85); backdrop-filter: blur(5px); color: white; padding: 15px; border-radius: 12px; border: 1px solid var(--c-med); border-left: 4px solid var(--u-color); position: relative; animation: slideUp 0.3s ease; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         .rainbow-box { position: relative; overflow: hidden; border: none; }
@@ -132,23 +145,27 @@
         .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; max-height: 300px; object-fit: contain; background: #000; }
         .unblurred { filter: blur(0) !important; }
 
-        /* INPUT */
+        /* INPUT AREA */
         .input-wrapper-outer { position: fixed; bottom: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; }
-        #reply-bar { display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--accent); justify-content: space-between; align-items: center; }
-        .input-wrap { background: var(--card); padding: 15px 20px; border-top: 1px solid #333; }
+        #reply-bar { display: none; background: #1a0535; color: var(--c-light); font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--c-light); justify-content: space-between; align-items: center; }
+        .input-wrap { background: var(--c-dark); padding: 15px 20px; border-top: 2px solid var(--c-med); }
         .input-controls { display: flex; gap: 12px; align-items: center; }
-        #wizsInput { flex-grow: 1; border: 1px solid #444; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; color: white; outline: none; }
+        #wizsInput { flex-grow: 1; border: 2px solid var(--c-med); background: var(--c-med); padding: 12px; border-radius: 8px; color: var(--c-light); outline: none; font-weight: bold; }
+        #wizsInput::placeholder { color: rgba(0, 242, 254, 0.5); }
+        #wizsInput:focus { border-color: var(--c-light); box-shadow: 0 0 15px var(--c-med); }
 
         /* MODALS */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
-        .modal-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 10px; }
-        .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:#ccc; }
+        .modal-content { background: var(--c-med); padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 2px solid var(--c-light); max-height: 80vh; overflow-y: auto; box-shadow: 0 0 30px var(--c-med); }
+        .modal-btn { background: var(--c-light); color: var(--c-dark); border: none; padding: 10px 20px; border-radius: 25px; font-weight: 900; cursor: pointer; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .modal-btn:hover { background: white; box-shadow: 0 0 15px var(--c-light); }
+        
+        select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--c-light); color: white; border-radius: 8px; margin-bottom: 10px; }
+        .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:var(--c-light); }
 
         /* BLOCK LIST UI */
-        .user-item-block { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; color: #ccc; text-align: left; }
-        #userBlockListContainer { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
+        .user-item-block { padding: 8px; border-bottom: 1px solid var(--c-dark); cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; color: white; text-align: left; }
+        #userBlockListContainer, #bannedUsersList { background: rgba(0,0,0,0.3); border: 1px solid var(--c-light); border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
         
         /* COLORS FOR OPTIONS */
         option[value="default"] { color: #00f2fe; }
@@ -163,22 +180,35 @@
 <body id="mainBody">
 
 <div id="bg-container"></div>
+<div id="destroyed-msg">REFRESH PLEASE.</div>
 
 <div id="lockdown-overlay">
     <i class="fa-solid fa-lock lock-icon"></i>
-    <h1 style="color:var(--text-main); margin:0; text-transform: uppercase; letter-spacing: 2px;">System Locked</h1>
+    <h1 style="color:var(--text-color); margin:0; text-transform: uppercase; letter-spacing: 2px;">System Locked</h1>
     <p style="color:#888;">Timer Expired. Cleaning Data...</p>
+</div>
+
+<div id="kick-overlay" style="background: black; z-index: 10001;">
+    <h1 style="color:var(--red);">YOU HAVE BEEN KICKED</h1>
+    <p style="color:#666;">Connection Terminated.</p>
+</div>
+
+<div id="ban-overlay" style="background: rgba(0,0,0,0.9); z-index: 10001; text-align:center;">
+    <i class="fa-solid fa-ban" style="font-size: 60px; color: var(--red); margin-bottom: 20px;"></i>
+    <h1 style="color:var(--red);">TEMPORARILY BANNED</h1>
+    <p style="color:white;">You are in View-Only mode for <span id="ban-timer-display" style="color:var(--c-light); font-weight:bold;">0</span> minutes.</p>
+    <p style="color:#666; font-size:12px;">Do not reload.</p>
 </div>
 
 <div id="intro-overlay">
     <div class="intro-logo" id="introLogo">WIZs</div>
     <div id="tutorial-card">
         <div class="tut-step active" id="step1">
-            <h2 style="color:var(--accent); margin-top:0;">Welcome</h2>
-            <p style="font-size:14px; color:#ccc;">Anonymous. Temporary. Safe.</p>
-            <div style="background:#000; padding:10px; border-radius:8px; border:1px solid #333; margin:15px 0;">
+            <h2 style="color:var(--c-light); margin-top:0;">Welcome</h2>
+            <p style="font-size:14px; color:#ccc;">Anonymous. Temporary. Vivid.</p>
+            <div style="background:#000; padding:10px; border-radius:8px; border:1px solid var(--c-light); margin:15px 0;">
                 <span style="color:var(--red); font-size:11px; font-weight:bold;">SYSTEM PURGE IN</span><br>
-                <span id="tut-timer" style="font-size:20px; font-family:monospace; color:var(--text-main)">15:00</span>
+                <span id="tut-timer" style="font-size:20px; font-family:monospace; color:white">15:00</span>
             </div>
             <button class="modal-btn" onclick="nextStep(2)">Customize</button>
         </div>
@@ -216,21 +246,21 @@
         <i class="fa-solid fa-gear icon-btn" onclick="openMainSettings()"></i>
         <i class="fa-solid fa-photo-film icon-btn" onclick="document.getElementById('media-sidebar').classList.toggle('active-side')"></i>
         <i class="fa-solid fa-terminal icon-btn" onclick="document.getElementById('changelogModal').style.display='flex'"></i>
-        <span id="reset-timer-real" style="font-size: 11px; margin-left: 5px; color:#555;">15:00</span>
+        <span id="reset-timer-real" style="font-size: 11px; margin-left: 5px; color:#888;">15:00</span>
     </div>
     <div class="bar-center">WIZs</div>
     <div class="bar-content" style="justify-content: flex-end;">
-        <span id="count-display" style="font-size:10px; color:var(--accent); margin-right:10px;">0 Online</span>
+        <span id="count-display" style="font-size:10px; color:var(--c-light); margin-right:10px;">0 Online</span>
         <i class="fa-solid fa-users icon-btn" onclick="document.getElementById('users-sidebar').classList.toggle('active-side')"></i>
     </div>
 </div>
 
 <div id="media-sidebar">
-    <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent);">Media Gallery</h3>
+    <h3 style="margin-top:0; border-bottom:1px solid var(--c-light); padding-bottom:10px; color:var(--c-light);">Media Gallery</h3>
     <div id="sidebar-content"></div>
 </div>
 <div id="users-sidebar">
-    <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent);">Online Users</h3>
+    <h3 style="margin-top:0; border-bottom:1px solid var(--c-light); padding-bottom:10px; color:var(--c-light);">Online Users</h3>
     <div id="users-list-content"></div>
 </div>
 
@@ -243,7 +273,7 @@
     </div>
     <div class="input-wrap">
         <div class="input-controls">
-            <label style="cursor:pointer; color:var(--accent); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden></label>
+            <label style="cursor:pointer; color:var(--c-light); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden></label>
             <input type="text" id="wizsInput" maxlength="400" placeholder="Message... (YouTube links auto-embed)" autocomplete="off">
         </div>
     </div>
@@ -267,12 +297,18 @@
             <input type="checkbox" id="main-bg-fx" checked onchange="toggleEffects()"> Enable BG Effects?
         </label>
         
-        <div id="admin-controls" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+        <div id="admin-controls" style="display:none; margin-top:15px; border-top:1px solid var(--c-light); padding-top:10px;">
             <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
             <label class="check-box-wrapper"><input type="checkbox" id="rainbow-toggle"> 🌈 Admin Rainbow FX</label>
+            
+            <div style="margin-top:10px; font-size:11px; color:var(--red); font-weight:bold;">DANGER ZONE</div>
+            <button class="modal-btn" style="background:var(--red); color:white; font-size:10px; padding:5px 10px;" onclick="triggerDestroy()">⚠ MANUAL DESTROY</button>
+            
+            <div style="margin-top:10px; text-align:left; color:#ccc; font-size:11px;">Temp Banned Users (Click to Unban):</div>
+            <div id="bannedUsersList"></div>
         </div>
 
-        <label style="display:block; text-align:left; font-size:11px; color:#888; margin-top:10px;">Block Users</label>
+        <label style="display:block; text-align:left; font-size:11px; color:#888; margin-top:10px;">Block Users (Local)</label>
         <div id="userBlockListContainer"></div>
         <button class="modal-btn" style="background:var(--red); font-size:12px;" onclick="blockedIds.clear(); openMainSettings()">Unblock All</button>
 
@@ -280,15 +316,27 @@
     </div>
 </div>
 
+<div id="modModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--red)">Moderation Menu</h3>
+        <p>Target: <span id="mod-target-name" style="color:var(--c-light)">Unknown</span></p>
+        <button class="modal-btn" style="background:var(--red); color:white;" onclick="execKick()">KICK USER</button>
+        <div style="margin:10px 0; border-top:1px solid #444;"></div>
+        <button class="modal-btn" style="background:#ff9f43;" onclick="execBan(1)">Ban 1 Min</button>
+        <button class="modal-btn" style="background:#ff9f43;" onclick="execBan(5)">Ban 5 Mins</button>
+        <button class="modal-btn" style="background:#ff9f43;" onclick="execBan(10)">Ban 10 Mins</button>
+        <button class="modal-btn" style="background:#555;" onclick="document.getElementById('modModal').style.display='none'">Cancel</button>
+    </div>
+</div>
+
 <div id="changelogModal" class="modal">
     <div class="modal-content">
         <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> Updates</h3>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
-            <span style="color:var(--mint)">> Added Sea, Fire, Space Themes</span><br>
-            <span style="color:var(--mint)">> Added YouTube Embed Support</span><br>
-            <span style="color:var(--mint)">> Fixed Media Sidebar</span><br>
-            <span style="color:var(--mint)">> Added User Blocking</span><br>
-            <span style="color:var(--mint)">> Patched Security (Q+1)</span><br>
+            <span style="color:var(--c-light)">> UI Overhaul: Vivid Colors</span><br>
+            <span style="color:var(--c-light)">> Added Owner Manual Destroy</span><br>
+            <span style="color:var(--c-light)">> Added Kick/Ban System (G+Click)</span><br>
+            <span style="color:var(--c-light)">> Retained all media/themes</span><br>
         </div>
         <button class="modal-btn" onclick="document.getElementById('changelogModal').style.display='none'">Close</button>
     </div>
@@ -308,14 +356,20 @@
     let activeReply = null;
     let authTimer = null;
     let keysPressed = {};
+    let isGHeld = false;
+    let modTargetId = null;
+    let modTargetName = null;
     
     // LISTS
     let blockedIds = new Set();
     let discoveredUsers = {}; 
+    let bannedUsers = {}; // Admin view of bans
 
     // --- SECURITY: Q + 1 HOLD LOGIC ---
     document.addEventListener('keydown', (e) => {
         keysPressed[e.key.toLowerCase()] = true;
+        if (e.key.toLowerCase() === 'g') isGHeld = true;
+
         if(keysPressed['q'] && keysPressed['1'] && myName === "Founder1" && !isAdmin) {
             if(!authTimer) {
                 authTimer = setTimeout(() => {
@@ -331,10 +385,20 @@
     });
     document.addEventListener('keyup', (e) => {
         keysPressed[e.key.toLowerCase()] = false;
+        if (e.key.toLowerCase() === 'g') isGHeld = false;
         if(authTimer) { clearTimeout(authTimer); authTimer = null; }
     });
 
     // --- SETUP ---
+    socket.on('connect', () => { myId = socket.id; });
+    
+    // Check local bans on load
+    const savedBanEnd = localStorage.getItem('wizBanEnd');
+    if(savedBanEnd && Date.now() < parseInt(savedBanEnd)) {
+        const remaining = Math.ceil((parseInt(savedBanEnd) - Date.now()) / 60000);
+        enforceBanUI(remaining);
+    }
+
     window.onload = () => {
         setTimeout(() => {
             document.getElementById('introLogo').classList.add('minimize');
@@ -372,6 +436,7 @@
         if(isAdmin) {
             document.getElementById('admin-controls').style.display = "block";
             document.getElementById('rainbow-toggle').checked = isAdminRainbow;
+            renderBannedList();
         } else {
             document.getElementById('admin-controls').style.display = "none";
         }
@@ -391,6 +456,57 @@
         toggleEffects();
         renderUserList();
         document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    // --- MODERATION LOGIC ---
+    function openModMenu(targetId, targetName) {
+        modTargetId = targetId;
+        modTargetName = targetName;
+        document.getElementById('mod-target-name').innerText = targetName;
+        document.getElementById('modModal').style.display = 'flex';
+    }
+
+    function execKick() {
+        if(!modTargetId) return;
+        // Send a hidden system message that clients listen for
+        sendMsg("CMD:KICK:" + modTargetId, null, null, true);
+        document.getElementById('modModal').style.display = 'none';
+    }
+
+    function execBan(mins) {
+        if(!modTargetId) return;
+        const until = Date.now() + (mins * 60 * 1000);
+        // Track locally for admin unbanning (mock server persistence)
+        bannedUsers[modTargetId] = { name: modTargetName, until: until };
+        
+        // Send hidden ban command
+        sendMsg(`CMD:BAN:${modTargetId}:${until}`, null, null, true);
+        document.getElementById('modModal').style.display = 'none';
+    }
+
+    function triggerDestroy() {
+        if(confirm("ARE YOU SURE? This crashes the room for everyone.")) {
+            sendMsg("CMD:DESTROY", null, null, true);
+        }
+    }
+
+    function renderBannedList() {
+        const list = document.getElementById('bannedUsersList');
+        list.innerHTML = '';
+        const now = Date.now();
+        Object.keys(bannedUsers).forEach(uid => {
+            if(bannedUsers[uid].until > now) {
+                const row = document.createElement('div');
+                row.style.cssText = "padding:5px; border-bottom:1px solid #333; display:flex; justify-content:space-between; font-size:11px; cursor:pointer;";
+                row.innerHTML = `<span>${bannedUsers[uid].name}</span> <span style="color:var(--mint)">UNBAN</span>`;
+                row.onclick = () => {
+                    delete bannedUsers[uid];
+                    sendMsg(`CMD:UNBAN:${uid}`, null, null, true);
+                    renderBannedList();
+                };
+                list.appendChild(row);
+            }
+        });
     }
 
     // --- BLOCKING LOGIC ---
@@ -422,36 +538,27 @@
 
     function applyTheme(t) {
         currentTheme = t;
-        const root = document.documentElement.style;
         const bg = document.getElementById('bg-container');
-        
-        if(t === 'default' || t === 'flame' || t === 'astrolight' || t === 'seashine') {
-             root.setProperty('--text-main', '#e0e0e0'); 
-             root.setProperty('--card', '#161616');
-        } else {
-             root.setProperty('--text-main', '#fff'); 
-             root.setProperty('--card', 'rgba(0,0,0,0.6)');
-        }
-
         if(fxEnabled && themeConfigs[t]) {
             bg.innerHTML = themeConfigs[t];
         } else {
             bg.innerHTML = "";
-            if(t === 'seashine') document.body.style.background = "#001f24";
+            // Background colors for non-image themes handled in CSS classes, here we reset if needed
+             if(t === 'seashine') document.body.style.background = "#001f24";
             else if(t === 'grassy') document.body.style.background = "#4facfe";
             else if(t === 'sandy') document.body.style.background = "#e67e22";
             else if(t === 'flame') document.body.style.background = "#1a0505";
             else if(t === 'candy') document.body.style.background = "#ffe6fa";
             else if(t === 'astrolight') document.body.style.background = "#150a26";
-            else document.body.style.background = "#0a0a0a";
+            else document.body.style.background = "var(--c-dark)";
         }
     }
 
     function toggleEffects() { applyTheme(currentTheme); }
 
     // --- MESSAGING ---
-    function sendMsg(text, mediaData=null, mediaType=null) {
-        if((!text && !mediaData) || text.length > 400) return;
+    function sendMsg(text, mediaData=null, mediaType=null, isCmd=false) {
+        if((!text && !mediaData) || (!isCmd && text.length > 400)) return;
         const displayName = (isAdmin && myName === "Founder1") ? "WIZs Owner" : myName;
         
         const payload = { 
@@ -460,11 +567,12 @@
             text: text, 
             msgId: 'm-'+Date.now(),
             reply: activeReply,
-            rainbowMode: isAdminRainbow
+            rainbowMode: isAdminRainbow,
+            isCmd: isCmd // Flag for system commands
         };
         if(mediaData) payload[mediaType] = mediaData;
         socket.emit('send-msg', payload);
-        document.getElementById('wizsInput').value = ''; 
+        if(!isCmd) document.getElementById('wizsInput').value = ''; 
         cancelReply(); 
     }
 
@@ -476,12 +584,50 @@
     function cancelReply() { activeReply = null; document.getElementById('reply-bar').style.display = 'none'; }
 
     // --- SOCKET LISTENERS ---
-    socket.on('assign-id', id => { myId = id; });
-
     socket.on('receive-msg', data => {
-        if (blockedIds.has(data.userId)) return; // BLOCK CHECK
+        // --- COMMAND HANDLING (Hidden from Feed) ---
+        if(data.isCmd) {
+            const parts = data.text.split(':');
+            const cmd = parts[1];
+            
+            // 1. DESTROY
+            if(cmd === "DESTROY") {
+                document.querySelectorAll('div, button, input').forEach(el => {
+                    // Random delay for chaos
+                    el.style.animationDelay = Math.random() + 's';
+                    el.classList.add('destroy-anim');
+                });
+                setTimeout(() => { document.getElementById('destroyed-msg').style.display = 'block'; }, 2000);
+            }
 
-        // UPDATE USER DISCOVERY
+            // 2. KICK
+            if(cmd === "KICK" && parts[2] === myId) {
+                document.getElementById('kick-overlay').style.display = 'flex';
+                setTimeout(() => { window.close(); window.location.href="about:blank"; }, 2000); // Try close, fallback to blank
+            }
+
+            // 3. BAN
+            if(cmd === "BAN" && parts[2] === myId) {
+                const until = parseInt(parts[3]);
+                localStorage.setItem('wizBanEnd', until);
+                const mins = Math.ceil((until - Date.now())/60000);
+                enforceBanUI(mins);
+            }
+
+            // 4. UNBAN
+            if(cmd === "UNBAN" && parts[2] === myId) {
+                localStorage.removeItem('wizBanEnd');
+                document.getElementById('ban-overlay').style.display = 'none';
+                document.getElementById('wizsInput').disabled = false;
+            }
+
+            return; // Don't show commands in feed
+        }
+        
+        // --- NORMAL MESSAGE HANDLING ---
+        if (blockedIds.has(data.userId)) return;
+
+        // Update discovery
         if (data.userId && data.name) {
             discoveredUsers[data.userId] = { name: data.name, color: data.color };
             renderUserList(); 
@@ -491,6 +637,17 @@
         div.className = 'msg'; 
         div.style.setProperty('--u-color', data.color);
         
+        // --- G CLICK EVENT ---
+        div.onclick = (e) => {
+            if(isGHeld && isAdmin) {
+                e.preventDefault();
+                e.stopPropagation();
+                openModMenu(data.userId, data.name);
+                return;
+            }
+            if(e.target.tagName !== 'IMG' && e.target.tagName !== 'VIDEO') initReply(data.msgId, data.name, data.text || 'Media'); 
+        };
+        
         let content = '';
         if(data.reply) content += `<div style="font-size:11px; color:#aaa; margin-bottom:5px; border-left:2px solid #555; padding-left:5px;">Replying to ${data.reply.name}</div>`;
         
@@ -499,17 +656,15 @@
             div.classList.add('rainbow-box'); nameClass = 'owner-name';
         }
 
-        // MEDIA HANDLING
         if(data.image) {
             content += `<img src="${data.image}" class="media-msg" onclick="this.classList.toggle('unblurred')">`;
             addToSidebar(data.image, null, false);
         }
         if(data.video) {
             content += `<video src="${data.video}" class="media-msg" onclick="this.classList.toggle('unblurred')" loop muted></video>`;
-            addToSidebar(null, null, false); // Placeholder for video
+            addToSidebar(null, null, false);
         }
         
-        // YOUTUBE EMBED
         if (data.text && (data.text.includes('youtube.com') || data.text.includes('youtu.be'))) {
             const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vidId) {
@@ -519,7 +674,6 @@
         }
 
         div.innerHTML = `${content}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${data.text || ''}</div>`;
-        div.onclick = (e) => { if(e.target.tagName !== 'IMG' && e.target.tagName !== 'VIDEO') initReply(data.msgId, data.name, data.text || 'Media'); };
         
         document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
@@ -549,6 +703,23 @@
             list.appendChild(row);
         });
     }
+
+    function enforceBanUI(mins) {
+        document.getElementById('ban-overlay').style.display = 'flex';
+        document.getElementById('ban-timer-display').innerText = mins;
+        document.getElementById('wizsInput').disabled = true;
+        // Check every minute to update or remove
+        const intv = setInterval(() => {
+            const left = Math.ceil((parseInt(localStorage.getItem('wizBanEnd')) - Date.now())/60000);
+            document.getElementById('ban-timer-display').innerText = left;
+            if(left <= 0) {
+                localStorage.removeItem('wizBanEnd');
+                document.getElementById('ban-overlay').style.display = 'none';
+                document.getElementById('wizsInput').disabled = false;
+                clearInterval(intv);
+            }
+        }, 30000);
+    }
     
     // --- TIMER LOCKDOWN ---
     socket.on('timer-update', s => {
@@ -561,8 +732,11 @@
             document.getElementById('wizsInput').disabled = true;
             document.getElementById('wizsInput').placeholder = "Chat Locked.";
         } else {
-            document.getElementById('lockdown-overlay').style.display = 'none';
-            document.getElementById('wizsInput').disabled = false;
+            // Only unlock if not banned
+            if(!localStorage.getItem('wizBanEnd')) {
+                document.getElementById('lockdown-overlay').style.display = 'none';
+                document.getElementById('wizsInput').disabled = false;
+            }
         }
     });
 
