@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">WIZs | Anonymous Chat</title>
+    <title>WIZs | Anonymous Chat</title>
     
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,160 +24,133 @@
 
         @keyframes fadeInBody { to { opacity: 1; } }
 
-        /* --- BACKGROUND FX LAYERS --- */
-        #bg-base {
+        /* --- BACKGROUND CONTAINER --- */
+        #bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; background: var(--bg); transition: background 0.5s ease;
+            z-index: -2; overflow: hidden; pointer-events: none;
         }
 
-        #bg-fx-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none; opacity: 0.6;
-            transition: opacity 0.5s ease;
-        }
+        /* --- THEME ANIMATIONS --- */
+        /* SEA */
+        .sea-gradient { background: linear-gradient(180deg, #006994 0%, #001f24 100%); width:100%; height:100%; position:absolute;}
+        .wave-box { position: absolute; top: -50px; left: 0; width: 100%; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; animation: waveRock 5s infinite ease-in-out; transform-origin: 50% 0; }
+        .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); animation: riseUp 10s linear infinite; }
+        .shine-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.1), transparent 60%); }
+        @keyframes waveRock { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.2); } }
+        @keyframes riseUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-110vh) scale(1.5); opacity: 0; } }
 
-        /* FX ANIMATIONS */
-        @keyframes drift { from { background-position: 0 0; } to { background-position: 100% 100%; } }
-        @keyframes wave { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes rise { from { background-position: 0 0; } to { background-position: 0 -100%; } }
+        /* GRASS */
+        .sky-bg { background: linear-gradient(#4facfe, #00f2fe); width:100%; height:100%; position:absolute; }
+        .hill { position: absolute; bottom: -50px; width: 120%; height: 200px; background: #2ecc71; border-radius: 50% 50% 0 0; box-shadow: inset 0 10px 20px rgba(0,0,0,0.1); }
+        .hill-1 { left: -10%; z-index: 1; background: #27ae60; height: 250px; }
+        .hill-2 { right: -10%; z-index: 2; background: #2ecc71; }
+        .cloud { position: absolute; background: rgba(255,255,255,0.8); border-radius: 50px; animation: floatCloud linear infinite; filter: blur(3px); }
+        @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(120vw); } }
 
-        /* FX CLASSES */
-        .fx-astrolight {
-            background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
-            background-size: 50px 50px, 30px 30px;
-            animation: drift 60s linear infinite;
-        }
-        .fx-water {
-            background: linear-gradient(180deg, rgba(0,242,254,0.05) 0%, rgba(0,0,0,0) 100%);
-            background-size: 400% 400%;
-            animation: wave 10s ease infinite;
-        }
-        .fx-wind {
-            background-image: linear-gradient(90deg, rgba(123, 237, 159, 0.05) 1px, transparent 1px);
-            background-size: 100px 100%;
-            animation: drift 20s linear infinite;
-        }
-        .fx-fire {
-            background-image: linear-gradient(0deg, rgba(255, 77, 77, 0.1) 1px, transparent 1px);
-            background-size: 100% 50px;
-            animation: rise 5s linear infinite;
-        }
-        .fx-candy {
-            background: linear-gradient(45deg, rgba(255,0,0,0.05), rgba(255,255,0,0.05), rgba(0,0,255,0.05));
-            background-size: 200% 200%;
-            animation: wave 5s linear infinite;
-        }
-        .fx-sand {
-            background-image: radial-gradient(rgba(255, 159, 67, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
+        /* SAND */
+        .desert-bg { background: linear-gradient(to bottom, #800000, #d35400, #e67e22); width:100%; height:100%; position:absolute; }
+        .sun { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; background: linear-gradient(#f1c40f, #e67e22); border-radius: 50%; box-shadow: 0 0 40px #f39c12; }
+        .dune { position: absolute; bottom: 0; width: 100%; height: 150px; background: #d35400; clip-path: polygon(0 100%, 100% 100%, 100% 40%, 75% 20%, 50% 60%, 25% 30%, 0 50%); }
+        .heat-haze { position: absolute; top:0; left:0; width:100%; height:100%; backdrop-filter: blur(1px); animation: haze 2s infinite linear; opacity: 0.3; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.05) 4px); }
+        @keyframes haze { 0% { transform: translateY(0); } 100% { transform: translateY(-5px); } }
+
+        /* FIRE */
+        .fire-bg { background: #1a0505; width:100%; height:100%; position:absolute; box-shadow: inset 0 -100px 150px rgba(255,69,0,0.5); }
+        .fireplace-glow { position: absolute; bottom: 0; width: 100%; height: 300px; background: radial-gradient(ellipse at bottom, rgba(255,69,0,0.4), transparent 70%); }
+        .ember { position: absolute; bottom: 0; width: 4px; height: 4px; background: #ff4500; border-radius: 50%; animation: floatEmber linear infinite; box-shadow: 0 0 10px #ff6347; }
+        .smoke { position: absolute; bottom: 0; background: rgba(100,100,100,0.2); border-radius: 50%; filter: blur(20px); animation: riseSmoke 4s linear infinite; }
+        @keyframes floatEmber { 0% { transform: translateY(0) translateX(0); opacity: 1; } 100% { transform: translateY(-80vh) translateX(20px); opacity: 0; } }
+        @keyframes riseSmoke { 0% { opacity: 0; transform: translateY(0) scale(1); } 50% { opacity: 0.5; } 100% { opacity: 0; transform: translateY(-60vh) scale(3); } }
+
+        /* CANDY */
+        .candy-bg { background: linear-gradient(#ffe6fa, #cceeff); width:100%; height:100%; position:absolute; }
+        .rainbow-static { position: absolute; top: 10%; left: 10%; width: 80%; height: 400px; border-radius: 50% 50% 0 0; box-shadow: 0 -20px 0 #ff0000, 0 -40px 0 #ff7f00, 0 -60px 0 #ffff00, 0 -80px 0 #00ff00, 0 -100px 0 #0000ff, 0 -120px 0 #4b0082, 0 -140px 0 #8f00ff; opacity: 0.3; filter: blur(5px); }
+        .candy-ground { position: absolute; bottom: 0; width: 100%; height: 100px; background: #ffb7b2; border-radius: 50% 50% 0 0; }
+        .falling-candy { position: absolute; font-size: 20px; top: -50px; animation: fallDown linear infinite; }
+        @keyframes fallDown { to { transform: translateY(110vh) rotate(360deg); } }
+
+        /* ASTRO */
+        .space-bg { background: radial-gradient(circle at bottom, #2b1055 0%, #000000 100%); width:100%; height:100%; position:absolute; }
+        .moon { position: absolute; top: 50px; right: 50px; width: 80px; height: 80px; background: #fdfcdc; border-radius: 50%; box-shadow: 0 0 20px #fdfcdc; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite ease-in-out; }
+        .meteor { position: absolute; top: -50px; width: 100px; height: 2px; background: linear-gradient(90deg, white, transparent); transform: rotate(45deg); animation: shoot 4s infinite ease-in; opacity: 0; }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; transform: scale(1.2); } }
+        @keyframes shoot { 0% { top: -50px; left: 20%; opacity: 1; } 20% { top: 40%; left: 60%; opacity: 0; } 100% { opacity: 0; } }
 
         /* --- LOCKDOWN OVERLAY --- */
         #lockdown-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 9999;
+            background: rgba(0,0,0,0.98); z-index: 9999;
             flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(10px);
         }
-        .lock-icon { font-size: 60px; color: var(--red); margin-bottom: 20px; animation: pulse 1s infinite; }
-        
+        .lock-icon { font-size: 80px; color: var(--red); margin-bottom: 20px; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* --- CINEMATIC INTRO --- */
+        /* --- UI ELEMENTS --- */
         #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .intro-logo { font-size: 4rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px rgba(0,242,254,0.5); transition: all 1s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .intro-logo { font-size: 4rem; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px rgba(0,242,254,0.5); transition: all 1s; }
         .intro-logo.minimize { transform: scale(0.3) translateY(-45vh); }
         
-        #tutorial-card { display: none; background: var(--card); width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.8); animation: slideUpFade 0.5s ease; }
+        #tutorial-card { display: none; background: var(--card); width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         .tut-step { display: none; }
         .tut-step.active { display: block; }
-        .skip-btn { position: absolute; top: 20px; right: 20px; color: #666; font-size: 12px; cursor: pointer; text-decoration: underline; z-index: 5001; display: none; }
         
-        .arrow-guide { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); text-align: center; color: var(--accent); animation: bounce 1.5s infinite; z-index: 5002; display: none; }
-        @keyframes bounce { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -10px); } }
-
-        /* --- STATUS BAR --- */
-        #status-bar { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); 
-            padding: 0 20px; z-index: 2000; border-bottom: 1px solid #333; 
-            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; 
-            opacity: 0; 
-        }
+        #status-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); padding: 0 20px; z-index: 2000; border-bottom: 1px solid #333; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; opacity: 0; }
         .bar-content { display: flex; align-items: center; gap: 15px; }
         .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--accent); }
         .icon-btn { cursor: pointer; color: #888; font-size: 16px; }
         .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
 
-        /* --- SIDEBARS --- */
-        #media-sidebar { position: fixed; top: 60px; left: 0; width: 320px; height: calc(100% - 60px); background: #0f0f0f; border-right: 1px solid #333; z-index: 1999; transform: translateX(-100%); padding: 15px; overflow-y: auto; }
-        #media-sidebar.active { transform: translateX(0); }
-        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid #333; margin-bottom:10px; cursor:pointer; opacity:0.7; }
-        .sidebar-thumb:hover { opacity:1; border-color:var(--accent); }
-
-        #users-sidebar { position: fixed; top: 60px; right: 0; width: 250px; height: calc(100% - 60px); background: #0f0f0f; border-left: 1px solid #333; z-index: 1999; transform: translateX(100%); padding: 15px; overflow-y: auto; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        #users-sidebar.active { transform: translateX(0); }
+        /* SIDEBARS */
+        #media-sidebar, #users-sidebar { position: fixed; top: 60px; width: 320px; height: calc(100% - 60px); background: #0f0f0f; border: 1px solid #333; z-index: 1999; transform: translateX(100%); transition: transform 0.3s; overflow-y: auto; padding: 15px; }
+        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 1px solid #333; border-left: none; }
+        #users-sidebar { right: 0; }
+        .active-side { transform: translateX(0) !important; }
+        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid #333; margin-bottom:10px; cursor:pointer; }
         
-        .user-row { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 13px; }
+        /* USERS LIST STYLE */
+        .user-row { padding: 10px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: #ccc; }
         .user-row:hover { background: rgba(255,255,255,0.05); }
         .user-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
 
-        /* --- ALERTS --- */
-        .toast-notify { 
-            display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); 
-            padding: 10px 20px; border-radius: 25px; font-size: 12px; z-index: 1900; 
-            align-items: center; gap: 10px; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease;
-        }
-        #invite-toast { background: rgba(255, 77, 77, 0.2); border: 1px solid var(--red); color: #ffcccc; }
+        /* TOASTS */
+        .toast-notify { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 25px; font-size: 12px; z-index: 1900; align-items: center; gap: 10px; backdrop-filter: blur(5px); animation: fadeIn 0.3s ease; }
         #verified-toast { background: rgba(0, 255, 0, 0.2); border: 1px solid #00ff00; color: #ccffcc; }
         @keyframes fadeIn { from{opacity:0; transform:translate(-50%, -10px);} to{opacity:1; transform:translate(-50%, 0);} }
 
-        /* --- FEED --- */
-        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1; position: relative; }
-        .msg { background: var(--card); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUpFade 0.3s ease; cursor: pointer; border: 1px solid transparent; word-wrap: break-word; }
-        .msg.mentioned { border-color: var(--yellow); box-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
+        /* FEED */
+        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 1; }
+        .msg { background: rgba(22, 22, 22, 0.85); backdrop-filter: blur(5px); color: var(--text-main); padding: 15px; border-radius: 12px; border-left: 4px solid var(--u-color); position: relative; animation: slideUp 0.3s ease; word-wrap: break-word; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .rainbow-box { position: relative; overflow: hidden; border: none; }
+        .rainbow-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, rgba(255,0,0,0.15), rgba(255,165,0,0.15), rgba(0,0,255,0.15)); background-size: 200% 200%; animation: rainbowShine 5s linear infinite; pointer-events: none; }
+        @keyframes rainbowShine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .owner-name { background: linear-gradient(to right, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: 900; }
 
-        .reply-context { font-size: 11px; color: #888; margin-bottom: 8px; padding-left: 8px; border-left: 2px solid #555; display: flex; align-items: center; gap: 5px; }
-        .vid-container { position: relative; width: 100%; margin-top: 10px; border-radius: 8px; overflow: hidden; background: #000; }
-        .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; display: block; background: #000; max-height: 300px; object-fit: contain; }
+        .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; max-height: 300px; object-fit: contain; background: #000; }
         .unblurred { filter: blur(0) !important; }
 
-        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- RAINBOW ADMIN FX --- */
-        @keyframes rainbowShine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
-        .owner-name {
-            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
-            -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 900;
-        }
-        .rainbow-box { position: relative; overflow: hidden; border: none; }
-        .rainbow-box::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(45deg, rgba(255,0,0,0.15), rgba(255,165,0,0.15), rgba(255,255,0,0.15), rgba(0,128,0,0.15), rgba(0,0,255,0.15), rgba(75,0,130,0.15), rgba(238,130,238,0.15));
-            background-size: 200% 200%; animation: rainbowShine 5s linear infinite; pointer-events: none; z-index: 0;
-        }
-        .rainbow-box > * { position: relative; z-index: 1; }
-
-        /* --- REACTIONS --- */
-        .reaction-bar { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
-        .reaction-pill { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 12px; padding: 2px 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
-        .reaction-pill:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
-
-        /* --- INPUT --- */
+        /* INPUT */
         .input-wrapper-outer { position: fixed; bottom: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; }
-        #reply-bar { display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--accent); align-items: center; justify-content: space-between; }
+        #reply-bar { display: none; background: #222; color: #aaa; font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--accent); justify-content: space-between; align-items: center; }
         .input-wrap { background: var(--card); padding: 15px 20px; border-top: 1px solid #333; }
         .input-controls { display: flex; gap: 12px; align-items: center; }
-        #wizsInput { flex-grow: 1; margin-bottom: 0; border: 1px solid #444; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; color: white; outline: none; }
+        #wizsInput { flex-grow: 1; border: 1px solid #444; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; color: white; outline: none; }
 
-        /* --- MODALS --- */
+        /* MODALS */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--card); padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 1px solid #333; max-height: 80vh; overflow-y: auto; }
         .modal-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; border-radius: 8px; margin-bottom: 10px; }
+        .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:#ccc; }
+
+        /* BLOCK LIST UI */
+        .user-item-block { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; color: #ccc; text-align: left; }
+        #userBlockListContainer { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
         
-        /* THEME OPTIONS COLORS */
+        /* COLORS FOR OPTIONS */
         option[value="default"] { color: #00f2fe; }
         option[value="seashine"] { color: #00e5ff; background: #001f24; }
         option[value="grassy"] { color: #7bed9f; background: #0e2411; }
@@ -185,85 +158,52 @@
         option[value="flame"] { color: #ff4757; background: #2e0b0b; }
         option[value="candy"] { color: #ff6b81; background: #2e0b1f; }
         option[value="astrolight"] { color: #dfa8ff; background: #150a26; }
-
-        .user-item { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; color: #ccc; text-align: left; }
-        #userListContainer { background: rgba(0,0,0,0.3); border: 1px solid #333; border-radius: 8px; max-height: 150px; overflow-y: auto; margin: 10px 0; padding: 5px; }
-
-        .admin-check-container { display: none; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
-        .check-box-wrapper { display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; cursor:pointer; justify-content:center; color:#ccc; }
-        .nuke-btn { background: linear-gradient(45deg, #ff0000, #ff4757); color: white; font-weight: 900; letter-spacing: 1px; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); border: 2px solid #ff0000; }
-        .nuke-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255,0,0,0.8); }
-
-        .falling-debris { transition-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53); pointer-events: none; }
-        
-        /* Context Menu */
-        #context-menu { position: fixed; display: none; background: var(--card); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; z-index: 10000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .emoji-opt { cursor: pointer; font-size: 20px; padding: 5px; border-radius: 4px; text-align: center; }
-        .emoji-opt:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
     </style>
 </head>
-<body id="mainBody" onclick="hideContextMenu()">
+<body id="mainBody">
 
-<div id="bg-base"></div>
-<div id="bg-fx-layer"></div>
+<div id="bg-container"></div>
 
 <div id="lockdown-overlay">
     <i class="fa-solid fa-lock lock-icon"></i>
-    <h1 style="color:var(--text-main); margin:0;">SYSTEM RESET IN PROGRESS</h1>
-    <p style="color:#888;">Chat is locked. Refreshing connection...</p>
+    <h1 style="color:var(--text-main); margin:0; text-transform: uppercase; letter-spacing: 2px;">System Locked</h1>
+    <p style="color:#888;">Timer Expired. Cleaning Data...</p>
 </div>
 
 <div id="intro-overlay">
     <div class="intro-logo" id="introLogo">WIZs</div>
-    <div id="skip-intro" class="skip-btn" onclick="endTutorial()">Skip All Info</div>
-    
     <div id="tutorial-card">
         <div class="tut-step active" id="step1">
-            <h2 style="color:var(--accent); margin-top:0;">Welcome to WIZs.</h2>
-            <p style="font-size:14px; color:#ccc; line-height:1.6;">WIZs is a free-to-use chat app like social media, but <b>completely anonymous</b>. Nothing saves. Everything deletes automatically.</p>
+            <h2 style="color:var(--accent); margin-top:0;">Welcome</h2>
+            <p style="font-size:14px; color:#ccc;">Anonymous. Temporary. Safe.</p>
             <div style="background:#000; padding:10px; border-radius:8px; border:1px solid #333; margin:15px 0;">
-                <span style="color:var(--red); font-size:11px; font-weight:bold;">TIME T'ILL LOCKDOWN</span><br>
+                <span style="color:var(--red); font-size:11px; font-weight:bold;">SYSTEM PURGE IN</span><br>
                 <span id="tut-timer" style="font-size:20px; font-family:monospace; color:var(--text-main)">15:00</span>
             </div>
-            <button class="modal-btn" onclick="nextStep(2)">Next (1/3)</button>
+            <button class="modal-btn" onclick="nextStep(2)">Customize</button>
         </div>
         <div class="tut-step" id="step2">
-            <h2 style="color:var(--mint); margin-top:0;">Customize Your Identity</h2>
-            <input type="text" id="tut-nick" maxlength="20" placeholder="Enter Username (max 20 chars)" oninput="updateTutPreview()">
-            <select id="tut-color" onchange="updateTutPreview()">
-                <option value="#00f2fe">Cyan</option> <option value="#4facfe">Sky Blue</option> <option value="#2ecc71">Emerald Green</option>
-                <option value="#e74c3c">Crimson Red</option> <option value="#f1c40f">Sunflower Yellow</option> <option value="#ff9f43">Orange Peel</option>
-                <option value="#ff6b81">Hot Pink</option>
+            <h2 style="color:var(--mint);">Identify</h2>
+            <input type="text" id="tut-nick" maxlength="20" placeholder="Username">
+            <select id="tut-color">
+                <option value="#00f2fe">Cyan</option> <option value="#e74c3c">Red</option> <option value="#2ecc71">Green</option>
+                <option value="#f1c40f">Yellow</option> <option value="#ff6b81">Pink</option>
             </select>
             <select id="tut-theme" onchange="applyTheme(this.value)">
-                <option value="default">Default Theme</option> <option value="seashine">Seashine (Water FX)</option> <option value="grassy">Grassy Plains (Wind FX)</option>
-                <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight (Fire FX)</option> <option value="candy">CandyPink (Rainbow FX)</option>
-                <option value="astrolight">✨ Astrolight</option>
+                <option value="default">Default Dark</option> 
+                <option value="seashine">🌊 Sea Shine (Animated)</option> 
+                <option value="grassy">🍃 Grassy Plains (Wind)</option>
+                <option value="sandy">☀️ Sandy Oasis (Heat)</option> 
+                <option value="flame">🔥 Firelight (Cozy)</option> 
+                <option value="candy">🍭 Candyland (Falling FX)</option>
+                <option value="astrolight">🌌 Astrolight (Meteors)</option>
             </select>
-            
             <label class="check-box-wrapper">
-                 <input type="checkbox" id="tut-bg-fx" checked onchange="toggleEffects()"> Enable Background FX?
+                 <input type="checkbox" id="tut-bg-fx" checked onchange="toggleEffects()"> Enable BG Effects?
             </label>
-            <label class="check-box-wrapper">
-                 <input type="checkbox" id="tut-filter"> Censor hate/speech & curse words?
-            </label>
-
-            <div style="margin-top:10px; font-size:13px;">Preview: <span id="tut-preview" style="font-weight:bold; color:#00f2fe">Username</span></div>
-            <button class="modal-btn" onclick="syncSettings(); nextStep(3)">Next (2/3)</button>
+            <button class="modal-btn" onclick="syncSettings(); endTutorial()">Enter Chat</button>
         </div>
     </div>
-</div>
-
-<div id="arrow-guide" class="arrow-guide">
-    <i class="fa-solid fa-arrow-down" style="font-size:30px;"></i>
-    <p style="background:var(--card); padding:10px; border-radius:8px; border:1px solid var(--accent);">Send your first message.</p>
-    <button class="modal-btn" style="font-size:10px; padding:5px 10px;" onclick="endTutorial()">Finish</button>
-</div>
-
-<div id="invite-toast" class="toast-notify">
-    <i class="fa-solid fa-user-group"></i> 
-    <span>It's quiet... Invite friends via link to chat!</span>
-    <i class="fa-solid fa-xmark" style="cursor:pointer; margin-left:10px;" onclick="document.getElementById('invite-toast').style.display='none'"></i>
 </div>
 
 <div id="verified-toast" class="toast-notify">
@@ -273,27 +213,28 @@
 
 <div id="status-bar">
     <div class="bar-content">
-        <i class="fa-solid fa-gear icon-btn" onclick="openMainSettings()" title="Settings"></i>
-        <i class="fa-solid fa-photo-film icon-btn" onclick="toggleSidebar()" title="Media"></i>
-        <i class="fa-solid fa-terminal icon-btn" onclick="document.getElementById('changelogModal').style.display='flex'" title="Log"></i>
+        <i class="fa-solid fa-gear icon-btn" onclick="openMainSettings()"></i>
+        <i class="fa-solid fa-photo-film icon-btn" onclick="document.getElementById('media-sidebar').classList.toggle('active-side')"></i>
+        <i class="fa-solid fa-terminal icon-btn" onclick="document.getElementById('changelogModal').style.display='flex'"></i>
         <span id="reset-timer-real" style="font-size: 11px; margin-left: 5px; color:#555;">15:00</span>
     </div>
     <div class="bar-center">WIZs</div>
     <div class="bar-content" style="justify-content: flex-end;">
         <span id="count-display" style="font-size:10px; color:var(--accent); margin-right:10px;">0 Online</span>
-        <i class="fa-solid fa-users icon-btn" onclick="toggleUserSidebar()" title="Online Users"></i>
-        <span id="connection-dot" class="status-dot status-orange" style="display:none"></span>
+        <i class="fa-solid fa-users icon-btn" onclick="document.getElementById('users-sidebar').classList.toggle('active-side')"></i>
     </div>
 </div>
 
-<div id="media-sidebar"><div class="media-grid" id="sidebar-content"></div></div>
+<div id="media-sidebar">
+    <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent);">Media Gallery</h3>
+    <div id="sidebar-content"></div>
+</div>
 <div id="users-sidebar">
-    <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent); font-size:14px;">Active / Known Users</h3>
+    <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px; color:var(--accent);">Online Users</h3>
     <div id="users-list-content"></div>
 </div>
 
 <div id="feed"></div>
-<div id="typing-indicator" style="display:none; bottom:75px; left:20px; position:fixed; color:var(--accent); font-size:12px;"><span id="typer-name">Someone</span> is typing...</div>
 
 <div class="input-wrapper-outer">
     <div id="reply-bar">
@@ -302,81 +243,54 @@
     </div>
     <div class="input-wrap">
         <div class="input-controls">
-            <label style="cursor:pointer; color:var(--accent); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden accept="image/*,video/*"></label>
-            <span onclick="openGIFs()" style="cursor:pointer; color:var(--mint); font-weight:bold;">GIF</span>
-            <input type="text" id="wizsInput" maxlength="400" placeholder="Message... (max 400 chars)" autocomplete="off">
+            <label style="cursor:pointer; color:var(--accent); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden></label>
+            <input type="text" id="wizsInput" maxlength="400" placeholder="Message... (YouTube links auto-embed)" autocomplete="off">
         </div>
     </div>
-</div>
-
-<div id="context-menu">
-    <div class="emoji-opt" onclick="addReaction('❤️')">❤️</div> <div class="emoji-opt" onclick="addReaction('😂')">😂</div>
-    <div class="emoji-opt" onclick="addReaction('🔥')">🔥</div> <div class="emoji-opt" onclick="addReaction('😮')">😮</div>
-    <div class="emoji-opt" onclick="addReaction('😢')">😢</div> <div class="emoji-opt" onclick="addReaction('👍')">👍</div>
-    <div class="emoji-opt" onclick="addReaction('💀')">💀</div> <div class="emoji-opt" onclick="addReaction('🤡')">🤡</div>
 </div>
 
 <div id="settingsModal" class="modal">
     <div class="modal-content">
         <h3>Settings</h3>
-        <input type="text" id="main-nick" maxlength="20" placeholder="Nickname (max 20 chars)">
+        <input type="text" id="main-nick" maxlength="20" placeholder="Nickname">
         <select id="main-color">
-             <option value="#00f2fe">Cyan</option> <option value="#4facfe">Sky Blue</option> <option value="#2ecc71">Emerald Green</option>
-             <option value="#e74c3c">Crimson Red</option> <option value="#f1c40f">Sunflower Yellow</option> <option value="#ff9f43">Orange Peel</option>
-             <option value="#ff6b81">Hot Pink</option>
+             <option value="#00f2fe">Cyan</option> <option value="#e74c3c">Red</option> <option value="#2ecc71">Green</option>
+             <option value="#f1c40f">Yellow</option> <option value="#ff6b81">Pink</option>
         </select>
         <select id="main-theme" onchange="applyTheme(this.value)">
-            <option value="default">Default Theme</option> <option value="seashine">Seashine (Water FX)</option> <option value="grassy">Grassy Plains (Wind FX)</option>
-            <option value="sandy">Sandy Oasis</option> <option value="flame">FlameLight (Fire FX)</option> <option value="candy">CandyPink (Rainbow FX)</option>
-            <option value="astrolight">✨ Astrolight</option>
+            <option value="default">Default Dark</option> <option value="seashine">Sea Shine</option> 
+            <option value="grassy">Grassy Plains</option> <option value="sandy">Sandy Oasis</option> 
+            <option value="flame">Firelight</option> <option value="candy">Candyland</option>
+            <option value="astrolight">Astrolight</option>
         </select>
-        
         <label class="check-box-wrapper">
-            <input type="checkbox" id="main-bg-fx" checked onchange="toggleEffects()"> Enable Background FX?
-       </label>
-
-        <label class="check-box-wrapper">
-             <input type="checkbox" id="main-filter"> Censor hate/speech & curse words?
+            <input type="checkbox" id="main-bg-fx" checked onchange="toggleEffects()"> Enable BG Effects?
         </label>
         
-        <div id="admin-controls" class="admin-check-container">
+        <div id="admin-controls" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
             <div style="font-weight:bold; color:var(--mint); margin-bottom:5px;">OWNER CONTROLS</div>
-            <label class="admin-label" style="justify-content:center; display:flex;">
-                <input type="checkbox" id="rainbow-toggle"> 🌈 Enable Admin Rainbow FX
-            </label>
-            
-            <br>
-            <div style="border-top:1px solid #333; margin-top:10px; padding-top:10px;">
-                <p style="font-size:10px; color:#666; margin:0 0 5px 0;">DANGER ZONE</p>
-                <button class="modal-btn nuke-btn" onclick="triggerUIExplosion()">💥 NUKE UI</button>
-            </div>
+            <label class="check-box-wrapper"><input type="checkbox" id="rainbow-toggle"> 🌈 Admin Rainbow FX</label>
         </div>
 
         <label style="display:block; text-align:left; font-size:11px; color:#888; margin-top:10px;">Block Users</label>
-        <div id="userListContainer"></div>
+        <div id="userBlockListContainer"></div>
         <button class="modal-btn" style="background:var(--red); font-size:12px;" onclick="blockedIds.clear(); openMainSettings()">Unblock All</button>
+
         <button class="modal-btn" onclick="saveMainSettings()">Save & Close</button>
     </div>
 </div>
 
 <div id="changelogModal" class="modal">
     <div class="modal-content">
-        <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> System Log</h3>
-        <p style="color:var(--accent); font-weight:bold; font-size:14px;">Version 4.0 - Security</p>
+        <h3><i class="fa-solid fa-terminal" style="color:var(--mint)"></i> Updates</h3>
         <div style="text-align: left; font-family: monospace; font-size: 13px; color: #ccc; background: #000; padding: 15px; border-radius: 8px;">
-            <span style="color:var(--mint)">> Patched Admin Vulnerability</span><br>
-            <span style="color:var(--mint)">> Added Background FX System</span><br>
-            <span style="color:var(--mint)">> Fixed Timer Lockdown</span><br>
+            <span style="color:var(--mint)">> Added Sea, Fire, Space Themes</span><br>
+            <span style="color:var(--mint)">> Added YouTube Embed Support</span><br>
+            <span style="color:var(--mint)">> Fixed Media Sidebar</span><br>
+            <span style="color:var(--mint)">> Added User Blocking</span><br>
+            <span style="color:var(--mint)">> Patched Security (Q+1)</span><br>
         </div>
         <button class="modal-btn" onclick="document.getElementById('changelogModal').style.display='none'">Close</button>
-    </div>
-</div>
-
-<div id="gifModal" class="modal">
-    <div class="modal-content">
-        <input type="text" id="gifSearch" placeholder="Search GIFs..." oninput="fetchGIFs(this.value)">
-        <div id="gif-results" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:10px; max-height:200px; overflow-y:auto;"></div>
-        <button class="modal-btn" onclick="document.getElementById('gifModal').style.display='none'">Close</button>
     </div>
 </div>
 
@@ -385,54 +299,45 @@
     let myName = "Wiz-" + Math.floor(Math.random()*999);
     let myColor = "#00f2fe";
     let myId = "";
-    let contextTargetId = null;
-    let typingTimeout;
-    let blockedIds = new Set();
-    let discoveredUsers = {}; 
-    let activeReply = null; 
     
-    // --- SECURITY & ADMIN VARS ---
+    // STATES
     let isAdmin = false;
     let isAdminRainbow = false; 
     let currentTheme = 'default';
-    let filterEnabled = false;
     let fxEnabled = true;
-
-    // --- KEY COMBO AUTHENTICATION ---
-    let keysPressed = {};
+    let activeReply = null;
     let authTimer = null;
+    let keysPressed = {};
+    
+    // LISTS
+    let blockedIds = new Set();
+    let discoveredUsers = {}; 
 
+    // --- SECURITY: Q + 1 HOLD LOGIC ---
     document.addEventListener('keydown', (e) => {
         keysPressed[e.key.toLowerCase()] = true;
-        
-        // CHECK: q + 1 + Correct Name
         if(keysPressed['q'] && keysPressed['1'] && myName === "Founder1" && !isAdmin) {
             if(!authTimer) {
-                // START TIMER
                 authTimer = setTimeout(() => {
-                    // SUCCESS
                     isAdmin = true;
                     isAdminRainbow = true;
                     const t = document.getElementById('verified-toast');
                     t.style.display = 'flex';
                     setTimeout(() => t.style.display = 'none', 3000);
                     authTimer = null;
-                }, 3000); // 3 seconds
+                }, 3000);
             }
         }
     });
-
     document.addEventListener('keyup', (e) => {
         keysPressed[e.key.toLowerCase()] = false;
         if(authTimer) { clearTimeout(authTimer); authTimer = null; }
     });
 
-
-    // --- 1. INTRO & SETUP ---
+    // --- SETUP ---
     window.onload = () => {
         setTimeout(() => {
             document.getElementById('introLogo').classList.add('minimize');
-            document.getElementById('skip-intro').style.display = 'block';
             setTimeout(() => {
                 document.getElementById('status-bar').style.opacity = '1';
                 document.getElementById('tutorial-card').style.display = 'block';
@@ -442,52 +347,28 @@
 
     function nextStep(step) {
         document.querySelectorAll('.tut-step').forEach(el => el.classList.remove('active'));
-        if(step === 3) {
-            document.getElementById('intro-overlay').style.background = 'transparent';
-            document.getElementById('intro-overlay').style.pointerEvents = 'none';
-            document.getElementById('tutorial-card').style.display = 'none';
-            document.getElementById('arrow-guide').style.display = 'block';
-            document.getElementById('skip-intro').style.display = 'none';
-        } else {
-            document.getElementById(`step${step}`).classList.add('active');
-        }
+        document.getElementById(`step${step}`).classList.add('active');
     }
 
     function endTutorial() {
         document.getElementById('intro-overlay').style.display = 'none';
-        document.getElementById('arrow-guide').style.display = 'none';
         document.getElementById('introLogo').style.display = 'none';
     }
 
-    // --- 2. SETTINGS LOGIC ---
-    function updateTutPreview() {
-        let nick = document.getElementById('tut-nick').value || myName;
-        if(nick.length > 20) nick = nick.substring(0,20);
-        const color = document.getElementById('tut-color').value;
-        const prev = document.getElementById('tut-preview');
-        prev.innerText = nick; prev.style.color = color;
-    }
-
     function syncSettings() {
-        let nick = document.getElementById('tut-nick').value;
-        if(nick.length > 20) nick = nick.substring(0,20);
-        myName = nick || myName;
-        
+        myName = document.getElementById('tut-nick').value || myName;
         myColor = document.getElementById('tut-color').value;
-        filterEnabled = document.getElementById('tut-filter').checked;
         fxEnabled = document.getElementById('tut-bg-fx').checked;
         toggleEffects();
-        renderUserList(); 
+        renderUserList();
     }
 
     function openMainSettings() {
         document.getElementById('main-nick').value = myName;
         document.getElementById('main-color').value = myColor;
         document.getElementById('main-theme').value = currentTheme;
-        document.getElementById('main-filter').checked = filterEnabled;
         document.getElementById('main-bg-fx').checked = fxEnabled;
-
-        // Admin Visibility (Only shows if unlocked via key combo)
+        
         if(isAdmin) {
             document.getElementById('admin-controls').style.display = "block";
             document.getElementById('rainbow-toggle').checked = isAdminRainbow;
@@ -501,56 +382,25 @@
 
     function saveMainSettings() {
         let inputName = document.getElementById('main-nick').value;
-        if(inputName.length > 20) inputName = inputName.substring(0,20);
-        
-        // If they change name away from Founder1, they lose admin pending re-auth
-        if(myName === "Founder1" && inputName !== "Founder1") {
-            isAdmin = false;
-        }
-
-        myName = inputName || "Wiz-" + Math.floor(Math.random()*999);
+        if(myName === "Founder1" && inputName !== "Founder1") isAdmin = false; 
+        myName = inputName || myName;
         myColor = document.getElementById('main-color').value;
-        filterEnabled = document.getElementById('main-filter').checked;
         fxEnabled = document.getElementById('main-bg-fx').checked;
+        if(isAdmin) isAdminRainbow = document.getElementById('rainbow-toggle').checked;
+        
         toggleEffects();
-
-        if(isAdmin) {
-            isAdminRainbow = document.getElementById('rainbow-toggle').checked;
-        }
-        renderUserList(); 
+        renderUserList();
         document.getElementById('settingsModal').style.display = 'none';
     }
 
-    // --- NUKE LOGIC ---
-    function triggerUIExplosion() {
-        if(confirm("DANGER: Destroy UI for ALL users?")) {
-            socket.emit('send-msg', {
-                name: "SYSTEM", color: "#ff0000", text: "SYSTEM CRITICAL", msgId: 'nuke-'+Date.now(), isNuke: true
-            });
-            document.getElementById('settingsModal').style.display = 'none';
-        }
-    }
-
-    function performExplosion() {
-        const bodyChildren = Array.from(document.body.children);
-        bodyChildren.forEach(el => {
-            if(el.id === 'bg-base' || el.id === 'bg-fx-layer' || el.tagName === 'SCRIPT') return;
-            el.classList.add('falling-debris');
-            const rot = Math.random() * 120 - 60; 
-            const delay = Math.random() * 0.5;
-            el.style.transitionDuration = '1.5s'; el.style.transitionDelay = `${delay}s`;
-            el.style.transform = `translateY(150vh) rotate(${rot}deg)`; el.style.opacity = '0';
-        });
-        setTimeout(() => { alert("CONNECTION LOST. \nUI DESTROYED."); }, 2000);
-    }
-
+    // --- BLOCKING LOGIC ---
     function renderBlockList() {
-        const list = document.getElementById('userListContainer');
+        const list = document.getElementById('userBlockListContainer');
         list.innerHTML = '';
         Object.keys(discoveredUsers).forEach(uid => {
             if(uid === myId) return;
             const item = document.createElement('div');
-            item.className = 'user-item';
+            item.className = 'user-item-block';
             const isBlocked = blockedIds.has(uid);
             const uData = discoveredUsers[uid];
             item.innerHTML = `<span>${uData.name}</span> <span style="color:${isBlocked?'var(--red)':'#888'}; font-weight:bold;">${isBlocked?'Unblock':'Block'}</span>`;
@@ -559,30 +409,51 @@
         });
     }
 
-    // --- 3. REPLY & FILTER ---
-    function initReply(msgId, name, text) {
-        activeReply = { id: msgId, name: name, text: cleanText(text).substring(0, 30) };
-        document.getElementById('reply-bar').style.display = 'flex';
-        document.getElementById('reply-target-name').innerText = name;
-        document.getElementById('wizsInput').focus();
-    }
-    function cancelReply() { activeReply = null; document.getElementById('reply-bar').style.display = 'none'; }
-    function cleanText(text) {
-        if(!filterEnabled || !text) return text;
-        const list = ["fuck", "shit", "bitch", "ass", "dick", "cunt", "nigger", "slut"]; 
-        let clean = text;
-        list.forEach(w => { clean = clean.replace(new RegExp(`\\b${w}\\b`, 'gi'), '*'.repeat(w.length)); });
-        return clean;
-    }
+    // --- THEME ENGINE ---
+    const themeConfigs = {
+        default: "",
+        seashine: `<div class="sea-gradient"></div><div class="shine-overlay"></div><div class="wave-box"></div><div class="bubble" style="left:10%; width:20px; height:20px; animation-duration:8s;"></div><div class="bubble" style="left:40%; width:30px; height:30px; animation-duration:12s; animation-delay:1s;"></div><div class="bubble" style="left:70%; width:15px; height:15px; animation-duration:15s; animation-delay:3s;"></div>`,
+        grassy: `<div class="sky-bg"></div><div class="cloud" style="top:50px; width:120px; height:40px; animation-duration:20s;"></div><div class="cloud" style="top:150px; width:180px; height:60px; animation-duration:35s; animation-delay:5s;"></div><div class="hill hill-1"></div><div class="hill hill-2"></div>`,
+        sandy: `<div class="desert-bg"></div><div class="sun"></div><div class="dune"></div><div class="heat-haze"></div>`,
+        flame: `<div class="fire-bg"></div><div class="fireplace-glow"></div><div class="smoke" style="left:30%;"></div><div class="ember" style="left:20%; animation-duration:3s;"></div><div class="ember" style="left:50%; animation-duration:5s; animation-delay:1s;"></div>`,
+        candy: `<div class="candy-bg"></div><div class="rainbow-static"></div><div class="candy-ground"></div><div class="falling-candy" style="left:10%; animation-duration:5s;">🍬</div><div class="falling-candy" style="left:50%; animation-duration:7s; animation-delay:2s;">🍭</div>`,
+        astrolight: `<div class="space-bg"></div><div class="moon"></div><div class="meteor"></div><div class="star" style="top:10%; left:20%; width:2px; height:2px;"></div><div class="star" style="top:30%; left:80%; width:3px; height:3px; animation-delay:1s;"></div>`
+    };
 
-    // --- 4. MESSAGING ---
-    function sendMsg(text, mediaData = null, mediaType = null) {
-        if(!text && !mediaData) return;
-        if(text.length > 400) text = text.substring(0,400); 
+    function applyTheme(t) {
+        currentTheme = t;
+        const root = document.documentElement.style;
+        const bg = document.getElementById('bg-container');
         
-        // Use "WIZs Owner" as display name if admin enabled, else regular name
-        const displayName = (isAdmin && myName === "Founder1") ? "WIZs Owner" : myName;
+        if(t === 'default' || t === 'flame' || t === 'astrolight' || t === 'seashine') {
+             root.setProperty('--text-main', '#e0e0e0'); 
+             root.setProperty('--card', '#161616');
+        } else {
+             root.setProperty('--text-main', '#fff'); 
+             root.setProperty('--card', 'rgba(0,0,0,0.6)');
+        }
 
+        if(fxEnabled && themeConfigs[t]) {
+            bg.innerHTML = themeConfigs[t];
+        } else {
+            bg.innerHTML = "";
+            if(t === 'seashine') document.body.style.background = "#001f24";
+            else if(t === 'grassy') document.body.style.background = "#4facfe";
+            else if(t === 'sandy') document.body.style.background = "#e67e22";
+            else if(t === 'flame') document.body.style.background = "#1a0505";
+            else if(t === 'candy') document.body.style.background = "#ffe6fa";
+            else if(t === 'astrolight') document.body.style.background = "#150a26";
+            else document.body.style.background = "#0a0a0a";
+        }
+    }
+
+    function toggleEffects() { applyTheme(currentTheme); }
+
+    // --- MESSAGING ---
+    function sendMsg(text, mediaData=null, mediaType=null) {
+        if((!text && !mediaData) || text.length > 400) return;
+        const displayName = (isAdmin && myName === "Founder1") ? "WIZs Owner" : myName;
+        
         const payload = { 
             name: displayName, 
             color: myColor, 
@@ -593,188 +464,117 @@
         };
         if(mediaData) payload[mediaType] = mediaData;
         socket.emit('send-msg', payload);
-        document.getElementById('wizsInput').value = ''; cancelReply(); 
+        document.getElementById('wizsInput').value = ''; 
+        cancelReply(); 
     }
 
+    function initReply(id, name, text) {
+        activeReply = { id, name, text };
+        document.getElementById('reply-bar').style.display = 'flex';
+        document.getElementById('reply-target-name').innerText = name;
+    }
+    function cancelReply() { activeReply = null; document.getElementById('reply-bar').style.display = 'none'; }
+
+    // --- SOCKET LISTENERS ---
+    socket.on('assign-id', id => { myId = id; });
+
     socket.on('receive-msg', data => {
-        if(data.isNuke) { performExplosion(); return; }
-        if (blockedIds.has(data.userId)) return;
-        
+        if (blockedIds.has(data.userId)) return; // BLOCK CHECK
+
+        // UPDATE USER DISCOVERY
         if (data.userId && data.name) {
             discoveredUsers[data.userId] = { name: data.name, color: data.color };
             renderUserList(); 
         }
 
-        const div = document.createElement('div'); div.className = 'msg'; div.id = data.msgId; 
+        const div = document.createElement('div'); 
+        div.className = 'msg'; 
         div.style.setProperty('--u-color', data.color);
-
-        let replyHtml = '';
-        if (data.reply) {
-            replyHtml = `<div class="reply-context"><i class="fa-solid fa-share"></i> <b>${data.reply.name}:</b> ${cleanText(data.reply.text)}</div>`;
-            if (data.reply.name === myName) div.classList.add('mentioned');
-        }
-
+        
+        let content = '';
+        if(data.reply) content += `<div style="font-size:11px; color:#aaa; margin-bottom:5px; border-left:2px solid #555; padding-left:5px;">Replying to ${data.reply.name}</div>`;
+        
         let nameClass = '';
-        if (data.name === "WIZs Owner" && data.rainbowMode) {
+        if(data.name === "WIZs Owner" && data.rainbowMode) {
             div.classList.add('rainbow-box'); nameClass = 'owner-name';
         }
 
-        let mediaHtml = '';
-        if (data.image) mediaHtml = `<img src="${data.image}" class="media-msg" onclick="toggleMedia(this)">`;
-        if (data.video) mediaHtml = `<div class="vid-container"><video src="${data.video}" class="media-msg" onclick="toggleMedia(this)" loop muted></video></div>`;
+        // MEDIA HANDLING
+        if(data.image) {
+            content += `<img src="${data.image}" class="media-msg" onclick="this.classList.toggle('unblurred')">`;
+            addToSidebar(data.image, null, false);
+        }
+        if(data.video) {
+            content += `<video src="${data.video}" class="media-msg" onclick="this.classList.toggle('unblurred')" loop muted></video>`;
+            addToSidebar(null, null, false); // Placeholder for video
+        }
         
+        // YOUTUBE EMBED
         if (data.text && (data.text.includes('youtube.com') || data.text.includes('youtu.be'))) {
             const vidId = data.text.split('v=')[1]?.split('&')[0] || data.text.split('.be/')[1];
             if (vidId) {
-                mediaHtml += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
+                content += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:8px;" allowfullscreen></iframe>`;
                 addToSidebar(`https://img.youtube.com/vi/${vidId}/hqdefault.jpg`, `https://www.youtube.com/watch?v=${vidId}`, true);
             }
         }
-        if (data.image || data.video) addToSidebar(data.image || 'https://via.placeholder.com/100?text=Video', null, false);
 
-        div.innerHTML = `${replyHtml}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${cleanText(data.text) || ''}</div>${mediaHtml}`;
-        div.onclick = (e) => {
-            if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || e.target.closest('.reaction-bar')) return;
-            initReply(data.msgId, data.name, data.text || '[Media]');
-        };
-        document.getElementById('feed').appendChild(div); 
+        div.innerHTML = `${content}<div class="${nameClass}" style="font-weight:bold; color:${data.color}">${data.name}</div><div style="margin-top:5px;">${data.text || ''}</div>`;
+        div.onclick = (e) => { if(e.target.tagName !== 'IMG' && e.target.tagName !== 'VIDEO') initReply(data.msgId, data.name, data.text || 'Media'); };
+        
+        document.getElementById('feed').appendChild(div);
         window.scrollTo(0, document.body.scrollHeight);
     });
 
+    socket.on('user-count', c => { document.getElementById('count-display').innerText = `${c} Online`; });
+
+    // --- SIDEBAR LOGIC ---
     function addToSidebar(src, link, isYT) {
+        if(!src) return;
         const i = document.createElement('img'); i.className = 'sidebar-thumb'; i.src = src;
         i.onclick = isYT ? () => window.open(link, '_blank') : () => {};
         document.getElementById('sidebar-content').prepend(i);
     }
 
-    function toggleUserSidebar() {
-        const el = document.getElementById('users-sidebar');
-        el.classList.toggle('active');
-        if(el.classList.contains('active')) renderUserList();
-    }
-
     function renderUserList() {
         const list = document.getElementById('users-list-content'); list.innerHTML = '';
-        const meRow = document.createElement('div'); meRow.className = 'user-row'; meRow.style.color = '#fff';
-        meRow.innerHTML = `<span class="user-dot" style="background:white"></span> ${myName} (You)`;
+        const meRow = document.createElement('div'); meRow.className = 'user-row';
+        meRow.innerHTML = `<span class="user-dot" style="background:${myColor}"></span> ${myName} (You)`;
         list.appendChild(meRow);
 
         Object.keys(discoveredUsers).forEach(uid => {
             if(uid === myId) return;
             const u = discoveredUsers[uid];
-            const row = document.createElement('div'); row.className = 'user-row'; row.style.color = u.color;
+            const row = document.createElement('div'); row.className = 'user-row';
             row.innerHTML = `<span class="user-dot" style="background:${u.color}"></span> ${u.name}`;
-            row.onclick = () => { document.getElementById('wizsInput').value += `@${u.name} `; };
             list.appendChild(row);
         });
     }
-
-    // --- 5. EVENTS ---
-    const dot = document.getElementById('connection-dot');
-    socket.on('connect', () => { dot.className = 'status-dot status-green'; document.getElementById('lockdown-overlay').style.display='none'; });
-    socket.on('disconnect', () => { dot.className = 'status-dot status-red'; });
-    socket.on('assign-id', id => { myId = id; renderUserList(); });
-    socket.on('user-count', c => {
-        document.getElementById('count-display').innerText = `${c} Online`;
-        const toast = document.getElementById('invite-toast');
-        toast.style.display = (c <= 1) ? 'flex' : 'none';
-    });
     
-    // --- TIMER LOCKDOWN LOGIC ---
+    // --- TIMER LOCKDOWN ---
     socket.on('timer-update', s => {
+        const display = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+        document.getElementById('reset-timer-real').innerText = display;
+        document.getElementById('tut-timer').innerText = display;
+
         if(s <= 0) {
-            // TRIGGER LOCKDOWN
             document.getElementById('lockdown-overlay').style.display = 'flex';
-            document.getElementById('reset-timer-real').innerText = "0:00";
             document.getElementById('wizsInput').disabled = true;
+            document.getElementById('wizsInput').placeholder = "Chat Locked.";
         } else {
-            const t = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-            document.getElementById('reset-timer-real').innerText = t;
-            document.getElementById('tut-timer').innerText = t;
+            document.getElementById('lockdown-overlay').style.display = 'none';
+            document.getElementById('wizsInput').disabled = false;
         }
     });
 
-    document.getElementById('wizsInput').onkeydown = e => { if (e.key === 'Enter') sendMsg(e.target.value); };
+    document.getElementById('wizsInput').onkeydown = e => { if(e.key === 'Enter') sendMsg(e.target.value); };
     document.getElementById('mediaInput').onchange = e => { 
-        const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = () => sendMsg(`[Shared]`, r.result, f.type.startsWith('video')?'video':'image'); r.readAsDataURL(f); }
-    };
-
-    const input = document.getElementById('wizsInput');
-    input.addEventListener('input', () => {
-        socket.emit('typing-start', { name: myName });
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => socket.emit('typing-stop'), 1000);
-    });
-    socket.on('typing-update', d => {
-        const ind = document.getElementById('typing-indicator');
-        if (d.isTyping && d.user !== myName) { ind.style.display = 'flex'; document.getElementById('typer-name').innerText = d.user; } 
-        else { ind.style.display = 'none'; }
-    });
-
-    document.addEventListener('contextmenu', e => {
-        const msg = e.target.closest('.msg');
-        if (msg) { e.preventDefault(); contextTargetId = msg.id; const m = document.getElementById('context-menu'); m.style.display = 'grid'; m.style.left = e.pageX + 'px'; m.style.top = e.pageY + 'px'; }
-    });
-    function hideContextMenu() { document.getElementById('context-menu').style.display = 'none'; }
-    function addReaction(e) { if(contextTargetId) socket.emit('add-reaction', { msgId: contextTargetId, emoji: e }); hideContextMenu(); }
-    
-    socket.on('update-reaction', d => {
-        const m = document.getElementById(d.msgId); if(!m) return;
-        let b = m.querySelector('.reaction-bar'); if(!b) { b = document.createElement('div'); b.className='reaction-bar'; m.appendChild(b); }
-        let p = Array.from(b.children).find(x => x.dataset.emoji === d.emoji);
-        if(p) p.querySelector('span').innerText = parseInt(p.querySelector('span').innerText) + 1;
-        else { 
-            p = document.createElement('div'); p.className='reaction-pill'; p.dataset.emoji=d.emoji; 
-            p.innerHTML=`${d.emoji} <span>1</span>`; p.onclick=()=>socket.emit('add-reaction', {msgId:d.msgId, emoji:d.emoji}); b.appendChild(p); 
+        const f = e.target.files[0]; 
+        if(f) { 
+            const r = new FileReader(); 
+            r.onload = () => sendMsg("", r.result, f.type.startsWith('video')?'video':'image'); 
+            r.readAsDataURL(f); 
         }
-    });
-
-    // --- THEMES & FX ---
-    const themes = {
-        default: { bg: "#0a0a0a", card: "#161616", accent: "#00f2fe", fx: "" },
-        seashine: { bg: "#001f24", card: "#00333b", accent: "#00e5ff", fx: "fx-water" },
-        grassy: { bg: "#0e2411", card: "#18361b", accent: "#7bed9f", fx: "fx-wind" },
-        sandy: { bg: "#2e2516", card: "#453823", accent: "#ff9f43", fx: "fx-sand" },
-        flame: { bg: "#2e0b0b", card: "#4d1212", accent: "#ff4757", fx: "fx-fire" },
-        candy: { bg: "#2e0b1f", card: "#4d1233", accent: "#ff6b81", fx: "fx-candy" },
-        astrolight: { bg: "#150a26", card: "#241240", accent: "#dfa8ff", fx: "fx-astrolight" }
     };
-
-    function applyTheme(n) {
-        currentTheme = n;
-        const t = themes[n] || themes.default;
-        const r = document.documentElement.style;
-        r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--accent', t.accent);
-        document.getElementById('bg-base').style.background = t.bg;
-        toggleEffects();
-    }
-
-    function toggleEffects() {
-        const layer = document.getElementById('bg-fx-layer');
-        if(!fxEnabled) {
-            layer.className = '';
-        } else {
-            const t = themes[currentTheme] || themes.default;
-            layer.className = t.fx;
-        }
-    }
-    
-    async function fetchGIFs(q) {
-        if(q.length < 3) return;
-        try {
-            const r = await fetch(`https://tenor.googleapis.com/v2/search?q=${q}&key=LIVNE7WABNEL&limit=10&client_key=wizs`);
-            const d = await r.json();
-            const c = document.getElementById('gif-results'); c.innerHTML = '';
-            d.results.forEach(g => {
-                const i = document.createElement('img'); i.src = g.media_formats.tinygif.url; i.style.width='100%'; i.style.cursor='pointer';
-                i.onclick = () => { sendMsg("[GIF]", g.media_formats.gif.url, "image"); document.getElementById('gifModal').style.display='none'; };
-                c.appendChild(i);
-            });
-        } catch(e) {}
-    }
-    function openGIFs() { document.getElementById('gifModal').style.display = 'flex'; }
-    window.toggleMedia = (el) => { if(el.classList.contains('unblurred')) { el.classList.remove('unblurred'); if(el.tagName==='VIDEO') el.pause(); } else { el.classList.add('unblurred'); if(el.tagName==='VIDEO') el.play(); } };
-    function toggleSidebar() { document.getElementById('media-sidebar').classList.toggle('active'); }
 </script>
 </body>
 </html>
