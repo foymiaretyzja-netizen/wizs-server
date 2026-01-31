@@ -3,621 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WIZs | Vivid</title>
-    
+    <title>NEXUS</title>
     <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* --- DYNAMIC THEME VARIABLES (Default) --- */
-        :root { 
-            --c-dark: #050505;       /* Main Background */
-            --c-panel: #2a0a55;      /* Panels/Modals/Sidebars */
-            --c-accent: #00f2fe;     /* Borders/Icons/Text */
-            --c-input: #1a0535;      /* Text Box Backgrounds */
-            
-            --text-color: #ffffff;
-            --red: #ff0055; 
-            --mint: #00ff9d;
+        :root {
+            --font-main: 'Roboto Mono', monospace;
+            --c-dark: #0a0a0a;
+            --c-panel: rgba(20, 20, 20, 0.7);
+            --c-accent: #00ffcc; /* Default Mint */
+            --c-accent-dim: rgba(0, 255, 204, 0.2);
+            --grad-mint: linear-gradient(180deg, #00ffcc 0%, #008f7a 100%);
         }
 
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        /* --- THEME DEFINITIONS --- */
+        body.theme-default { --c-bg: #050505; --c-accent: #00ffcc; --bg-anim: stars; }
+        body.theme-fire { --c-bg: #1a0500; --c-accent: #ff4500; --c-panel: rgba(50, 10, 0, 0.7); }
+        body.theme-sea { --c-bg: #001f24; --c-accent: #00e5ff; --c-panel: rgba(0, 40, 50, 0.7); }
+        body.theme-astro { --c-bg: #120024; --c-accent: #d845ff; --c-panel: rgba(30, 0, 50, 0.7); }
+
+        * { box-sizing: border-box; font-family: var(--font-main); transition: all 0.3s ease; }
         
-        body { 
-            background: var(--c-dark); color: var(--text-color); 
-            font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 180px; 
-            overflow-x: hidden; opacity: 0; animation: fadeInBody 1s forwards; 
-            overflow-y: scroll; 
+        body {
+            margin: 0; background: var(--c-bg); color: #fff;
+            overflow: hidden; height: 100vh; width: 100vw;
         }
 
-        @keyframes fadeInBody { to { opacity: 1; } }
-
-        /* --- DESTRUCTION & NOTIFY ANIMATIONS --- */
-        .destroy-anim {
-            animation: crumble 2s forwards ease-in;
-            pointer-events: none;
-        }
-        @keyframes crumble {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            100% { transform: translate(random(100)px, 100vh) rotate(random(360)deg); opacity: 0; }
-        }
+        /* --- BACKGROUND FX --- */
+        #bg-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
         
-        /* --- BACKGROUND SCENES --- */
-        #bg-container {
+        /* Stars (Default) */
+        .fx-stars { background: radial-gradient(white 1px, transparent 1px) 0 0 / 50px 50px; opacity: 0.3; }
+        
+        /* Fire (Lava) */
+        .fx-fire { background: linear-gradient(to top, #300, transparent); }
+        .ember { position: absolute; width: 4px; height: 4px; background: orange; animation: floatUp 4s infinite linear; border-radius: 50%; bottom: -10px; }
+        
+        /* Sea (Waves) */
+        .fx-sea { background: linear-gradient(180deg, rgba(0,255,255,0.1), transparent); }
+        .weed { position: absolute; bottom: 0; width: 10px; height: 100px; background: rgba(0,255,200,0.3); border-radius: 20px 20px 0 0; animation: sway 3s infinite ease-in-out alternate; }
+
+        @keyframes floatUp { to { transform: translateY(-100vh); opacity: 0; } }
+        @keyframes sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+        /* --- INTRO SEQUENCE --- */
+        #intro-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; overflow: hidden; pointer-events: none;
+            background: #000; z-index: 9999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        .nexus-logo {
+            font-size: 4rem; font-weight: 700;
+            background: var(--grad-mint); -webkit-background-clip: text; color: transparent;
+            opacity: 0; animation: fadePulse 2s forwards; text-shadow: 0 0 30px var(--c-accent);
+        }
+        @keyframes fadePulse {
+            0% { opacity: 0; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
-        /* SEA SHINE */
-        .sea-gradient { background: linear-gradient(180deg, #006994 0%, #001f24 100%); width:100%; height:100%; position:absolute;}
-        .wave-box { position: absolute; top: -50px; left: 0; width: 100%; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; animation: waveRock 5s infinite ease-in-out; transform-origin: 50% 0; }
-        .bubble { position: absolute; bottom: -20px; background: rgba(255,255,255,0.2); border-radius: 50%; box-shadow: 0 0 10px rgba(255,255,255,0.5); animation: riseUp 10s linear infinite; }
-        @keyframes waveRock { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.2); } }
-        @keyframes riseUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-110vh) scale(1.5); opacity: 0; } }
-
-        /* SEAWEED FIELDS (Swaying Green) */
-        .shallow-water-bg { background: linear-gradient(to bottom, #7be0ed 0%, #20b2aa 40%, #004d40 100%); width:100%; height:100%; position:absolute; }
-        .strand { 
-            position: absolute; bottom: -50px; width: 25px; 
-            background: linear-gradient(to top, #004d40, #2e8b57);
-            border-radius: 50% 50% 0 0; transform-origin: bottom center; opacity: 0.8;
-            box-shadow: inset 5px 0 10px rgba(0,0,0,0.3);
-            animation: swish 4s ease-in-out infinite alternate;
-        }
-        @keyframes swish { 0% { transform: rotate(-8deg) scaleY(1); } 100% { transform: rotate(12deg) scaleY(1.05); } }
-
-        /* SANDY OASIS (Heat Distortion) */
-        .desert-bg { background: linear-gradient(to bottom, #800000, #d35400, #e67e22); width:100%; height:100%; position:absolute; }
-        .sun { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); width: 100px; height: 100px; background: linear-gradient(#f1c40f, #e67e22); border-radius: 50%; box-shadow: 0 0 40px #f39c12; }
-        .dune { position: absolute; bottom: 0; width: 100%; height: 150px; background: #d35400; clip-path: polygon(0 100%, 100% 100%, 100% 40%, 75% 20%, 50% 60%, 25% 30%, 0 50%); }
-        .heat-haze { 
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            backdrop-filter: blur(2px); 
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,200,100,0.05) 5px);
-            animation: extremeHaze 0.8s infinite linear; opacity: 0.4; mix-blend-mode: overlay;
-        }
-        @keyframes extremeHaze { 
-            0% { transform: translateY(0) scaleY(1); filter: hue-rotate(0deg); } 
-            50% { transform: translateY(-3px) scaleY(1.02); } 
-            100% { transform: translateY(-6px) scaleY(1); filter: hue-rotate(5deg); } 
+        /* --- UI COMPONENTS --- */
+        .glass-panel {
+            background: var(--c-panel); backdrop-filter: blur(10px);
+            border: 1px solid var(--c-accent-dim); box-shadow: 0 4px 30px rgba(0,0,0,0.5);
         }
 
-        /* FIRE */
-        .fire-bg { background: #1a0505; width:100%; height:100%; position:absolute; box-shadow: inset 0 -100px 150px rgba(255,69,0,0.5); }
-        .fireplace-glow { position: absolute; bottom: 0; width: 100%; height: 300px; background: radial-gradient(ellipse at bottom, rgba(255,69,0,0.4), transparent 70%); }
-        .ember { position: absolute; bottom: 0; width: 4px; height: 4px; background: #ff4500; border-radius: 50%; animation: floatEmber linear infinite; box-shadow: 0 0 10px #ff6347; }
-        @keyframes floatEmber { 0% { transform: translateY(0) translateX(0); opacity: 1; } 100% { transform: translateY(-80vh) translateX(20px); opacity: 0; } }
-
-        /* ASTRO */
-        .space-bg { background: radial-gradient(circle at bottom, #2b1055 0%, #000000 100%); width:100%; height:100%; position:absolute; }
-        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 2s infinite ease-in-out; }
-        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; transform: scale(1.2); } }
-
-        /* CANDY */
-        .candy-bg { background: linear-gradient(#ffe6fa, #cceeff); width:100%; height:100%; position:absolute; }
-        .falling-candy { position: absolute; font-size: 20px; top: -50px; animation: fallDown linear infinite; }
-        @keyframes fallDown { to { transform: translateY(110vh) rotate(360deg); } }
-
-        /* --- OVERLAYS --- */
-        .overlay-screen {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px); text-align: center;
+        /* TOP BAR */
+        #top-bar {
+            height: 60px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; border-bottom: 1px solid var(--c-accent); position: relative; z-index: 10;
         }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #333; margin-right: 5px; box-shadow: 0 0 5px currentColor;}
+        .status-dot.green { background: #00ff00; color: #00ff00; }
+        .status-dot.red { background: #ff0000; color: #ff0000; }
 
-        /* NOTIFY OVERLAY */
-        #notify-overlay { background: rgba(0,0,0,0.85); border: 4px solid var(--c-accent); }
-        .notify-box {
-            background: var(--c-panel); border: 2px solid var(--c-accent);
-            padding: 40px; border-radius: 20px; box-shadow: 0 0 50px var(--c-accent);
-            max-width: 80%; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* CHAT AREA */
+        #chat-container {
+            height: calc(100% - 130px); overflow-y: auto; padding: 20px;
+            scroll-behavior: smooth;
         }
-        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-
-        /* --- UI ELEMENTS --- */
-        #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--c-dark); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .intro-logo { font-size: 4rem; font-weight: 900; color: var(--c-accent); text-shadow: 0 0 20px var(--c-accent); transition: all 1s; }
-        .intro-logo.minimize { transform: scale(0.3) translateY(-45vh); }
         
-        #tutorial-card { display: none; background: var(--c-panel); width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; border: 2px solid var(--c-accent); text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .tut-step { display: none; }
-        .tut-step.active { display: block; }
-        
-        #status-bar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); padding: 0 20px; z-index: 2000; border-bottom: 2px solid var(--c-accent); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; opacity: 0; box-shadow: 0 0 15px var(--c-panel); transition: border-color 0.4s; }
-        .bar-center { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: var(--c-accent); text-shadow: 0 0 10px var(--c-accent); }
-        .icon-btn { cursor: pointer; color: #888; font-size: 16px; transition: color 0.4s; }
-        .icon-btn:hover { color: var(--c-accent); transform: scale(1.1); }
-
-        /* SIDEBARS */
-        #media-sidebar, #users-sidebar { position: fixed; top: 60px; width: 320px; height: calc(100% - 60px); background: var(--c-panel); border: 2px solid var(--c-accent); z-index: 1999; transform: translateX(100%); transition: transform 0.3s, background 0.4s, border-color 0.4s; overflow-y: auto; padding: 15px; }
-        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 2px solid var(--c-accent); border-left: none; }
-        #users-sidebar { right: 0; }
-        .active-side { transform: translateX(0) !important; }
-        .sidebar-thumb { width:100%; aspect-ratio:16/9; object-fit:cover; border:1px solid var(--c-accent); margin-bottom:10px; cursor:pointer; }
-        
-        .user-row { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: var(--c-accent); }
-        .user-row:hover { background: rgba(255,255,255,0.1); }
-        .user-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
-
-        /* FEED & MESSAGES */
-        #feed { max-width: 600px; margin: 80px auto 0; padding: 20px; display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 1; }
-        .msg { background: var(--c-panel); color: white; padding: 15px; border-radius: 12px; border: 1px solid var(--c-accent); border-left: 4px solid var(--u-color); position: relative; animation: slideUp 0.3s ease; word-wrap: break-word; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: background 0.4s, border-color 0.4s; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* OWNER RAINBOWS */
-        .rainbow-box { position: relative; overflow: hidden; border: none !important; }
-        .rainbow-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, rgba(255,0,0,0.15), rgba(255,165,0,0.15), rgba(0,0,255,0.15)); background-size: 200% 200%; animation: rainbowShine 5s linear infinite; pointer-events: none; }
-        @keyframes rainbowShine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .owner-name { background: linear-gradient(to right, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: 900; }
-
-        /* OWNER INPUT RAINBOW (Special Request) */
-        .owner-input-glow {
-            background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff) !important;
-            background-size: 400% 400% !important;
-            animation: rainbowFlow 6s ease infinite !important;
-            color: white !important;
-            border: 2px solid white !important;
-            box-shadow: 0 0 20px rgba(255,255,255,0.8) !important;
+        /* MESSAGES */
+        .msg {
+            margin-bottom: 15px; display: flex; flex-direction: column; animation: slideUp 0.3s ease;
+            max-width: 800px;
         }
-        @keyframes rainbowFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .msg.me { align-items: flex-end; margin-left: auto; }
+        .msg-header { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; margin-bottom: 5px; }
+        .msg-pfp { width: 30px; height: 30px; border-radius: 5px; object-fit: cover; background: #333; }
+        .msg-content {
+            background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 8px;
+            border-left: 3px solid var(--user-color, #fff); position: relative;
+        }
+        .msg-timestamp { font-size: 0.7rem; color: #888; margin-top: 5px; text-align: right; }
+        
+        .msg-media {
+            max-width: 300px; max-height: 200px; border-radius: 8px; cursor: pointer;
+            filter: blur(15px); transition: filter 0.3s;
+        }
+        .msg-media.unblurred { filter: blur(0); }
 
-        .media-msg { width: 100%; border-radius: 8px; filter: blur(45px); transition: filter 0.4s ease; max-height: 300px; object-fit: contain; background: #000; }
-        .unblurred { filter: blur(0) !important; }
+        /* REPLY & ACTIONS */
+        .reply-context {
+            font-size: 0.75rem; color: var(--c-accent); padding: 5px;
+            border-left: 2px solid var(--c-accent); margin-bottom: 5px; opacity: 0.8;
+        }
+        .action-menu {
+            position: absolute; background: var(--c-dark); border: 1px solid var(--c-accent);
+            padding: 5px; display: none; z-index: 100; font-size: 0.8rem;
+        }
+        .action-item { padding: 5px 10px; cursor: pointer; }
+        .action-item:hover { background: var(--c-accent); color: #000; }
 
         /* INPUT AREA */
-        .input-wrapper-outer { position: fixed; bottom: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; }
-        #reply-bar { display: none; background: var(--c-panel); color: var(--c-accent); font-size: 12px; padding: 8px 20px; border-top: 1px solid var(--c-accent); justify-content: space-between; align-items: center; }
-        .input-wrap { background: var(--c-dark); padding: 15px 20px; border-top: 2px solid var(--c-accent); transition: background 0.4s, border-color 0.4s; }
-        .input-controls { display: flex; gap: 12px; align-items: center; }
-        #wizsInput { flex-grow: 1; border: 2px solid var(--c-panel); background: var(--c-input); padding: 12px; border-radius: 8px; color: var(--c-accent); outline: none; font-weight: bold; transition: all 0.4s; }
-        #wizsInput::placeholder { color: rgba(255,255,255,0.3); }
-        #wizsInput:focus { border-color: var(--c-accent); box-shadow: 0 0 15px var(--c-panel); }
+        #input-area {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
+            padding: 10px 20px; display: flex; gap: 10px; align-items: center; z-index: 20;
+        }
+        #typing-indicator {
+            position: absolute; top: -25px; left: 20px; font-size: 0.8rem; color: var(--c-accent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        #msg-input {
+            flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--c-accent-dim);
+            color: #fff; padding: 12px; border-radius: 4px; outline: none;
+        }
+        #msg-input:focus { border-color: var(--c-accent); box-shadow: 0 0 10px var(--c-accent-dim); }
+        .btn-icon {
+            background: none; border: 1px solid var(--c-accent-dim); color: var(--c-accent);
+            width: 45px; height: 45px; border-radius: 4px; cursor: pointer; display: grid; place-items: center;
+        }
+        .btn-icon:hover { background: var(--c-accent); color: #000; }
 
         /* MODALS */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--c-panel); padding: 25px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; border: 2px solid var(--c-accent); max-height: 80vh; overflow-y: auto; box-shadow: 0 0 30px var(--c-panel); transition: background 0.4s, border-color 0.4s; }
-        .modal-btn { background: var(--c-accent); color: var(--c-dark); border: none; padding: 10px 20px; border-radius: 25px; font-weight: 900; cursor: pointer; margin-top: 15px; text-transform: uppercase; letter-spacing: 1px; transition: background 0.4s; }
-        .modal-btn:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--c-accent); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 5000;
+        }
+        .modal-box {
+            width: 90%; max-width: 500px; padding: 30px; text-align: center;
+            border: 1px solid var(--c-accent);
+        }
         
-        select, input[type="text"] { width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--c-accent); color: white; border-radius: 8px; margin-bottom: 10px; }
+        .pfp-preview { width: 80px; height: 80px; border: 2px solid var(--c-accent); border-radius: 10px; margin: 10px auto; display: grid; place-items: center; overflow: hidden; }
+        
+        select, input[type="text"] {
+            width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white;
+        }
+
+        /* MEDIA SIDEBAR */
+        #media-sidebar {
+            position: fixed; top: 60px; right: -320px; width: 300px; height: calc(100% - 60px);
+            transition: right 0.4s; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; z-index: 100;
+        }
+        #media-sidebar.open { right: 0; }
+        .sidebar-item { width: 100%; aspect-ratio: 1; object-fit: cover; border: 1px solid #555; }
+
+        /* KEYFRAMES */
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* NOTIFICATION TOAST */
+        #toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            padding: 10px 20px; background: var(--c-accent); color: #000;
+            font-weight: bold; border-radius: 20px; opacity: 0; pointer-events: none;
+        }
+        
+        /* SPAM DISABLED */
+        .disabled-input { opacity: 0.5; pointer-events: none; }
+        
+        /* MENTION LIST */
+        #mention-list {
+            position: absolute; bottom: 70px; left: 70px; background: #111; border: 1px solid var(--c-accent);
+            display: none; flex-direction: column; width: 200px;
+        }
+        .mention-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #333; }
+        .mention-item:hover { background: #333; }
     </style>
 </head>
-<body id="mainBody">
+<body class="theme-default">
 
-<div id="bg-container"></div>
+    <div id="bg-layer" class="fx-stars"></div>
 
-<div id="destroyed-msg" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: var(--red); font-weight: 900; z-index: 10000; text-shadow: 0 0 20px var(--red);">REFRESH PLEASE.</div>
-
-<div id="lockdown-overlay" class="overlay-screen" style="background:rgba(0,0,0,0.98);">
-    <i class="fa-solid fa-lock" style="font-size:80px; color:var(--red); margin-bottom:20px;"></i>
-    <h1 style="color:white; margin:0; text-transform: uppercase;">System Locked</h1>
-</div>
-
-<div id="kick-overlay" class="overlay-screen" style="background:black; z-index:10001;">
-    <h1 style="color:var(--red);">YOU HAVE BEEN KICKED</h1>
-    <p style="color:#666;">Connection Terminated.</p>
-</div>
-
-<div id="ban-overlay" class="overlay-screen" style="background:rgba(0,0,0,0.9);">
-    <i class="fa-solid fa-ban" style="font-size:60px; color:var(--red); margin-bottom:20px;"></i>
-    <h1 style="color:var(--red);">TEMPORARILY BANNED</h1>
-    <p style="color:white;">View-Only mode for <span id="ban-timer-display" style="color:var(--c-accent); font-weight:bold;">0</span> minutes.</p>
-</div>
-
-<div id="notify-overlay" class="overlay-screen">
-    <div class="notify-box">
-        <h2 style="color:var(--red); margin:0; text-transform:uppercase; border-bottom:1px solid #555; padding-bottom:10px; margin-bottom:10px;">WIZs Auto Moderation</h2>
-        <div style="font-size:18px; color:white; font-weight:bold; line-height:1.5;">
-            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red)"></i><br>
-            <span id="notify-content">MESSAGE CONTENT</span>
-        </div>
-        <button class="modal-btn" onclick="document.getElementById('notify-overlay').style.display='none'">ACKNOWLEDGE</button>
+    <div id="intro-screen">
+        <div class="nexus-logo">&lt;NEXUS&gt;</div>
     </div>
-</div>
 
-<div id="intro-overlay">
-    <div class="intro-logo" id="introLogo">WIZs</div>
-    <div id="tutorial-card">
-        <div class="tut-step active" id="step1">
-            <h2 style="color:var(--c-accent); margin-top:0;">Welcome</h2>
-            <div style="background:#000; padding:10px; border-radius:8px; border:1px solid var(--c-accent); margin:15px 0;">
-                <span style="color:var(--red); font-size:11px; font-weight:bold;">SYSTEM PURGE IN</span><br>
-                <span id="tut-timer" style="font-size:20px; font-family:monospace; color:white">15:00</span>
+    <div id="setup-modal" class="modal-overlay glass-panel">
+        <div class="modal-box glass-panel">
+            <h2 style="color:var(--c-accent)">INITIALIZE PROFILE</h2>
+            <div class="pfp-preview" onclick="document.getElementById('pfp-upload').click()">
+                <img id="pfp-display" src="" style="width:100%; height:100%; display:none; object-fit:cover;">
+                <span id="pfp-placeholder" style="font-size:40px;">?</span>
             </div>
-            <button class="modal-btn" onclick="nextStep(2)">Customize</button>
-        </div>
-        <div class="tut-step" id="step2">
-            <h2 style="color:var(--mint);">Identify</h2>
-            <input type="text" id="tut-nick" maxlength="20" placeholder="Username">
-            <select id="tut-color">
-                <option value="#00f2fe">Cyan</option> <option value="#e74c3c">Red</option> <option value="#2ecc71">Green</option>
-                <option value="#f1c40f">Yellow</option> <option value="#ff6b81">Pink</option>
-            </select>
-            <select id="tut-theme" onchange="applyTheme(this.value)">
-                <option value="default">Default Dark</option> 
-                <option value="seashine">🌊 Sea Shine</option> 
-                <option value="seaweed">🌿 Seaweed Fields</option>
-                <option value="sandy">☀️ Sandy Oasis</option> 
-                <option value="flame">🔥 Firelight</option> 
-                <option value="candy">🍭 Candyland</option>
-                <option value="astrolight">🌌 Astrolight</option>
-            </select>
-            <label style="color:white; font-size:12px;">
-                 <input type="checkbox" id="tut-bg-fx" checked onchange="toggleEffects()"> Enable BG Effects?
-            </label>
-            <button class="modal-btn" onclick="syncSettings(); endTutorial()">Enter Chat</button>
-        </div>
-    </div>
-</div>
-
-<div id="verified-toast" style="display:none; position:fixed; top:70px; left:50%; transform:translateX(-50%); padding:10px 20px; background:rgba(0,255,0,0.2); border:1px solid #00ff00; color:#ccffcc; border-radius:25px; z-index:1900; align-items:center; gap:10px; backdrop-filter:blur(5px);">
-    <i class="fa-solid fa-circle-check"></i> <span>ADMIN ACCESS GRANTED</span>
-</div>
-
-<div id="status-bar">
-    <div class="bar-content" style="display:flex; align-items:center; gap:15px;">
-        <i class="fa-solid fa-gear icon-btn" onclick="openMainSettings()"></i>
-        <i class="fa-solid fa-photo-film icon-btn" onclick="document.getElementById('media-sidebar').classList.toggle('active-side')"></i>
-        <span id="reset-timer-real" style="font-size:11px; color:#aaa;">15:00</span>
-    </div>
-    <div class="bar-center">WIZs</div>
-    <div class="bar-content" style="justify-content:flex-end; display:flex; gap:10px;">
-        <span id="count-display" style="font-size:10px; color:var(--c-accent);">0 Online</span>
-        <i class="fa-solid fa-users icon-btn" onclick="document.getElementById('users-sidebar').classList.toggle('active-side')"></i>
-    </div>
-</div>
-
-<div id="media-sidebar"><h3 style="color:var(--c-accent); border-bottom:1px solid var(--c-accent); padding-bottom:10px;">Gallery</h3><div id="sidebar-content"></div></div>
-<div id="users-sidebar"><h3 style="color:var(--c-accent); border-bottom:1px solid var(--c-accent); padding-bottom:10px;">Users</h3><div id="users-list-content"></div></div>
-
-<div id="feed"></div>
-
-<div class="input-wrapper-outer">
-    <div id="reply-bar"><span>Replying to <b id="reply-target-name">...</b></span> <i class="fa-solid fa-xmark" onclick="cancelReply()" style="cursor:pointer"></i></div>
-    <div class="input-wrap">
-        <div class="input-controls">
-            <label style="cursor:pointer; color:var(--c-accent); font-size:20px;"><i class="fa-solid fa-paperclip"></i><input type="file" id="mediaInput" hidden></label>
-            <input type="text" id="wizsInput" maxlength="400" placeholder="Message... (YouTube links auto-embed)" autocomplete="off">
-        </div>
-    </div>
-</div>
-
-<div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <h3>Settings</h3>
-        <input type="text" id="main-nick" maxlength="20" placeholder="Nickname">
-        <select id="main-color">
-             <option value="#00f2fe">Cyan</option> <option value="#e74c3c">Red</option> <option value="#2ecc71">Green</option>
-             <option value="#f1c40f">Yellow</option> <option value="#ff6b81">Pink</option>
-        </select>
-        <select id="main-theme" onchange="applyTheme(this.value)">
-            <option value="default">Default Dark</option> <option value="seashine">Sea Shine</option> 
-            <option value="seaweed">Seaweed Fields</option> <option value="sandy">Sandy Oasis</option> 
-            <option value="flame">Firelight</option> <option value="candy">Candyland</option>
-            <option value="astrolight">Astrolight</option>
-        </select>
-        <label style="color:white; font-size:12px;">
-            <input type="checkbox" id="main-bg-fx" checked onchange="toggleEffects()"> Enable BG Effects?
-        </label>
-        
-        <div id="admin-controls" style="display:none; margin-top:15px; border-top:1px solid var(--c-accent); padding-top:10px;">
-            <div style="font-weight:bold; color:var(--mint);">OWNER CONTROLS</div>
-            <label style="color:#ccc; font-size:12px;"><input type="checkbox" id="rainbow-toggle"> 🌈 Admin Rainbow Messages</label>
-            <button class="modal-btn" style="background:var(--red); font-size:10px; margin-top:10px;" onclick="triggerDestroy()">⚠ MANUAL DESTROY</button>
-            <div id="bannedUsersList" style="margin-top:10px;"></div>
-        </div>
-
-        <div id="userBlockListContainer" style="margin-top:10px; border-top:1px solid #444; padding-top:10px;"></div>
-        <button class="modal-btn" onclick="saveMainSettings()">Save & Close</button>
-    </div>
-</div>
-
-<div id="modModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color:var(--red)">Moderation Menu</h3>
-        <p>Target: <span id="mod-target-name" style="color:var(--c-accent)">Unknown</span></p>
-        
-        <button class="modal-btn" style="background:var(--c-accent); color:black;" onclick="execNotify()">📢 NOTIFY USER</button>
-        <div style="margin:10px 0; border-top:1px solid #444;"></div>
-        
-        <button class="modal-btn" style="background:var(--red); color:white;" onclick="execKick()">KICK USER</button>
-        <button class="modal-btn" style="background:#ff9f43;" onclick="execBan(5)">Ban 5 Mins</button>
-        <button class="modal-btn" style="background:#555;" onclick="document.getElementById('modModal').style.display='none'">Cancel</button>
-    </div>
-</div>
-
-<script>
-    const socket = io();
-    let myName = "Wiz-" + Math.floor(Math.random()*999);
-    let myColor = "#00f2fe";
-    let myId = "";
-    
-    let isAdmin = false;
-    let isAdminRainbow = false; 
-    let currentTheme = 'default';
-    let fxEnabled = true;
-    let activeReply = null;
-    let authTimer = null;
-    let keysPressed = {};
-    let isGHeld = false;
-    let modTargetId = null;
-    let modTargetName = null;
-    
-    let blockedIds = new Set();
-    let discoveredUsers = {}; 
-    let bannedUsers = {}; 
-
-    // --- THEME ENGINE (VIVID COLOR MAPPING) ---
-    const themes = {
-        default: { dark: '#050505', panel: '#2a0a55', accent: '#00f2fe', input: '#1a0535' },
-        seashine: { dark: '#001f24', panel: '#004d40', accent: '#00e5ff', input: '#00332e' },
-        seaweed: { dark: '#004d40', panel: '#1b5e20', accent: '#69f0ae', input: '#0d3314' },
-        sandy: { dark: '#2e2516', panel: '#d35400', accent: '#f39c12', input: '#5e2605' },
-        flame: { dark: '#1a0505', panel: '#800000', accent: '#ff4500', input: '#3d0a0a' },
-        candy: { dark: '#2e0b1f', panel: '#ff6b81', accent: '#ff9ff3', input: '#4a1230' },
-        astrolight: { dark: '#150a26', panel: '#4b0082', accent: '#e056fd', input: '#240e45' }
-    };
-
-    const bgHTML = {
-        default: "",
-        seashine: `<div class="sea-gradient"></div><div class="wave-box"></div><div class="bubble" style="left:10%;"></div><div class="bubble" style="left:50%; animation-delay:2s;"></div>`,
-        seaweed: `<div class="shallow-water-bg"></div><div class="strand" style="height:200px; left:5%;"></div><div class="strand" style="height:350px; left:20%; background:#1a5e4d; animation-duration:5s;"></div><div class="strand" style="height:250px; left:40%;"></div><div class="strand" style="height:400px; left:60%; background:#1a5e4d;"></div><div class="strand" style="height:300px; left:80%;"></div>`,
-        sandy: `<div class="desert-bg"></div><div class="sun"></div><div class="dune"></div><div class="heat-haze"></div>`,
-        flame: `<div class="fire-bg"></div><div class="fireplace-glow"></div><div class="ember" style="left:20%;"></div><div class="ember" style="left:60%; animation-delay:1s;"></div>`,
-        candy: `<div class="candy-bg"></div><div class="falling-candy" style="left:10%;">🍬</div><div class="falling-candy" style="left:60%; animation-delay:2s;">🍭</div>`,
-        astrolight: `<div class="space-bg"></div><div class="star" style="top:20%; left:20%;"></div><div class="star" style="top:50%; left:80%; animation-delay:1s;"></div>`
-    };
-
-    function applyTheme(t) {
-        currentTheme = t;
-        const p = themes[t] || themes.default;
-        
-        // Apply Variables
-        document.documentElement.style.setProperty('--c-dark', p.dark);
-        document.documentElement.style.setProperty('--c-panel', p.panel);
-        document.documentElement.style.setProperty('--c-accent', p.accent);
-        document.documentElement.style.setProperty('--c-input', p.input);
-        
-        // Apply Background
-        const bg = document.getElementById('bg-container');
-        if(fxEnabled && bgHTML[t]) {
-            bg.innerHTML = bgHTML[t];
-            document.body.style.background = "transparent";
-        } else {
-            bg.innerHTML = "";
-            document.body.style.background = p.dark;
-        }
-    }
-    
-    function toggleEffects() { applyTheme(currentTheme); }
-
-    // --- SECURITY & OWNER ---
-    document.addEventListener('keydown', (e) => {
-        keysPressed[e.key.toLowerCase()] = true;
-        if (e.key.toLowerCase() === 'g') isGHeld = true;
-        if(keysPressed['q'] && keysPressed['1'] && myName === "Founder1" && !isAdmin) {
-            if(!authTimer) authTimer = setTimeout(() => {
-                isAdmin = true;
-                isAdminRainbow = true;
-                document.getElementById('verified-toast').style.display = 'flex';
-                setTimeout(() => document.getElementById('verified-toast').style.display = 'none', 3000);
-                document.getElementById('wizsInput').classList.add('owner-input-glow'); // ACTIVE RAINBOW INPUT
-                authTimer = null;
-            }, 3000);
-        }
-    });
-    document.addEventListener('keyup', (e) => {
-        keysPressed[e.key.toLowerCase()] = false;
-        if (e.key.toLowerCase() === 'g') isGHeld = false;
-        if(authTimer) clearTimeout(authTimer);
-    });
-
-    // --- MODERATION ---
-    function openModMenu(id, name) {
-        modTargetId = id; modTargetName = name;
-        document.getElementById('mod-target-name').innerText = name;
-        document.getElementById('modModal').style.display = 'flex';
-    }
-
-    function execNotify() {
-        const msg = prompt("Enter Notification Message (Alert):");
-        if(msg && modTargetId) {
-            sendMsg(`CMD:NOTIFY:${modTargetId}:${msg}`, null, null, true);
-            document.getElementById('modModal').style.display = 'none';
-        }
-    }
-    
-    function execKick() { sendMsg("CMD:KICK:"+modTargetId, null, null, true); document.getElementById('modModal').style.display = 'none'; }
-    function execBan(m) { 
-        const u = Date.now() + (m*60000); 
-        bannedUsers[modTargetId] = { name: modTargetName, until: u };
-        sendMsg(`CMD:BAN:${modTargetId}:${u}`, null, null, true); 
-        document.getElementById('modModal').style.display = 'none'; 
-    }
-    function triggerDestroy() { if(confirm("CRASH ROOM?")) sendMsg("CMD:DESTROY", null, null, true); }
-
-    // --- CORE LOGIC ---
-    socket.on('connect', () => myId = socket.id);
-    
-    window.onload = () => {
-        setTimeout(() => {
-            document.getElementById('introLogo').classList.add('minimize');
-            setTimeout(() => {
-                document.getElementById('status-bar').style.opacity = '1';
-                document.getElementById('tutorial-card').style.display = 'block';
-            }, 800);
-        }, 1000);
-    };
-
-    function nextStep(s) { document.querySelectorAll('.tut-step').forEach(e=>e.classList.remove('active')); document.getElementById('step'+s).classList.add('active'); }
-    function endTutorial() { document.getElementById('intro-overlay').style.display = 'none'; }
-    
-    function syncSettings() {
-        myName = document.getElementById('tut-nick').value || myName;
-        myColor = document.getElementById('tut-color').value;
-        fxEnabled = document.getElementById('tut-bg-fx').checked;
-        toggleEffects();
-        renderUserList();
-    }
-    
-    function openMainSettings() {
-        document.getElementById('main-nick').value = myName;
-        document.getElementById('main-color').value = myColor;
-        document.getElementById('main-theme').value = currentTheme;
-        document.getElementById('main-bg-fx').checked = fxEnabled;
-        if(isAdmin) {
-            document.getElementById('admin-controls').style.display = "block";
-            document.getElementById('rainbow-toggle').checked = isAdminRainbow;
-            renderBanned();
-        }
-        renderBlocks();
-        document.getElementById('settingsModal').style.display = 'flex';
-    }
-
-    function saveMainSettings() {
-        myName = document.getElementById('main-nick').value || myName;
-        if(myName !== "Founder1") { isAdmin = false; document.getElementById('wizsInput').classList.remove('owner-input-glow'); }
-        myColor = document.getElementById('main-color').value;
-        fxEnabled = document.getElementById('main-bg-fx').checked;
-        if(isAdmin) isAdminRainbow = document.getElementById('rainbow-toggle').checked;
-        toggleEffects();
-        renderUserList();
-        document.getElementById('settingsModal').style.display = 'none';
-    }
-
-    // --- MESSAGING ---
-    function sendMsg(text, media=null, type=null, isCmd=false) {
-        if((!text && !media) || (!isCmd && text.length > 400)) return;
-        const pl = { name: myName, color: myColor, text: text, msgId: 'm-'+Date.now(), reply: activeReply, rainbowMode: isAdminRainbow, isCmd: isCmd };
-        if(media) pl[type] = media;
-        socket.emit('send-msg', pl);
-        if(!isCmd) document.getElementById('wizsInput').value = '';
-        cancelReply();
-    }
-
-    socket.on('receive-msg', data => {
-        if(data.isCmd) {
-            const parts = data.text.split(':');
-            const cmd = parts[1];
+            <input type="file" id="pfp-upload" hidden accept="image/*">
+            <input type="text" id="username-in" placeholder="Identify Yourself" maxlength="15">
             
-            // COMMANDS
-            if(cmd === "DESTROY") {
-                document.querySelectorAll('div').forEach(el => el.classList.add('destroy-anim'));
-                setTimeout(() => document.getElementById('destroyed-msg').style.display = 'block', 2000);
-            }
-            if(cmd === "KICK" && parts[2] === myId) {
-                document.getElementById('kick-overlay').style.display = 'flex';
-                setTimeout(()=>window.location.reload(), 2000);
-            }
-            if(cmd === "BAN" && parts[2] === myId) {
-                const u = parseInt(parts[3]);
-                localStorage.setItem('wizBanEnd', u);
-                enforceBanUI(Math.ceil((u - Date.now())/60000));
-            }
-            if(cmd === "NOTIFY" && parts[2] === myId) {
-                // PARTS[3] might be cut if msg had colons, join rest
-                const msg = parts.slice(3).join(':');
-                document.getElementById('notify-content').innerText = msg;
-                document.getElementById('notify-overlay').style.display = 'flex';
-            }
-            return;
-        }
+            <label>Color Signature</label>
+            <select id="color-in">
+                <option value="linear-gradient(to bottom, #ff5f6d, #ffc371)">Sunset (Orange/Yellow)</option>
+                <option value="linear-gradient(to bottom, #00c6ff, #0072ff)">Deep Ocean (Blue)</option>
+                <option value="linear-gradient(to bottom, #11998e, #38ef7d)" selected>Mint (Green)</option>
+                <option value="linear-gradient(to bottom, #833ab4, #fd1d1d)">Heat (Purple/Red)</option>
+                <option value="#ffffff">Ghost (White)</option>
+            </select>
 
-        if(blockedIds.has(data.userId)) return;
-        if(data.userId && data.name) { discoveredUsers[data.userId] = {name: data.name, color: data.color}; renderUserList(); }
+            <label>Environment</label>
+            <select id="theme-in">
+                <option value="theme-default">Default (Stars)</option>
+                <option value="theme-fire">FireStone (Volcano)</option>
+                <option value="theme-sea">SeaShine (Ocean)</option>
+                <option value="theme-astro">AstroLight (Space)</option>
+            </select>
 
-        const div = document.createElement('div');
-        div.className = 'msg';
-        div.style.setProperty('--u-color', data.color);
-        div.onclick = (e) => {
-            if(isGHeld && isAdmin) { e.preventDefault(); openModMenu(data.userId, data.name); return; }
-            if(e.target.tagName!=='IMG' && e.target.tagName!=='VIDEO') {
-                activeReply = {id: data.msgId, name: data.name, text: data.text || 'Media'};
-                document.getElementById('reply-bar').style.display = 'flex';
-                document.getElementById('reply-target-name').innerText = data.name;
-            }
-        };
+            <button class="btn-icon" style="width:100%; margin-top:20px; font-weight:bold;" onclick="completeSetup()">ENTER NEXUS</button>
+            <p style="font-size:0.7rem; color:#888; margin-top:10px;">Data wipes every 15 minutes.</p>
+        </div>
+    </div>
 
-        if(data.name === "WIZs Owner" || (data.rainbowMode && data.name==="Founder1")) {
-            div.classList.add('rainbow-box');
-            div.innerHTML += `<div class="owner-name" style="font-weight:bold">${data.name}</div>`;
-        } else {
-            div.innerHTML += `<div style="font-weight:bold; color:${data.color}">${data.name}</div>`;
-        }
-
-        if(data.reply) div.innerHTML = `<div style="font-size:11px; color:#aaa; border-left:2px solid #555; padding-left:5px; margin-bottom:5px;">Replying to ${data.reply.name}</div>` + div.innerHTML;
+    <div id="main-ui" style="display:none; height:100%;">
         
-        let content = data.text || '';
-        if(data.text && data.text.includes('youtube.com')) {
-            const vid = data.text.split('v=')[1]?.split('&')[0];
-            if(vid) { 
-                content += `<iframe width="100%" height="250" src="https://www.youtube.com/embed/${vid}" frameborder="0" style="margin-top:10px; border-radius:8px;"></iframe>`;
-                addToSidebar(`https://img.youtube.com/vi/${vid}/hqdefault.jpg`, `https://www.youtube.com/watch?v=${vid}`, true);
+        <div id="top-bar" class="glass-panel">
+            <div style="display:flex; align-items:center;">
+                <div class="nexus-logo" style="font-size:1.5rem; margin-right:20px; animation:none;">NEXUS</div>
+                <div class="status-dot green" id="conn-status"></div>
+                <span id="user-count" style="font-size:0.8rem;">0 Online</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--c-accent);">WIPE IN: <span id="wipe-timer">15:00</span></div>
+            <div>
+                <i class="fa-solid fa-photo-film btn-icon" style="width:30px; height:30px; font-size:14px;" onclick="toggleMediaSidebar()"></i>
+            </div>
+        </div>
+
+        <div id="chat-container">
+            <div id="empty-state" style="text-align:center; margin-top:50px; opacity:0.5;">
+                <h3>SIGNAL SILENT</h3>
+                <p>No other signals detected. Share the link?</p>
+            </div>
+        </div>
+
+        <div id="input-area" class="glass-panel">
+            <div id="typing-indicator">Someone is typing...</div>
+            
+            <div id="reply-bar" style="display:none; position:absolute; top:-40px; left:0; width:100%; background:var(--c-dark); padding:10px; border-top:1px solid var(--c-accent); font-size:0.8rem;">
+                Replying to <span id="reply-target-name">...</span> <i class="fa fa-times" style="float:right; cursor:pointer;" onclick="cancelReply()"></i>
+            </div>
+            
+            <div id="mention-list"></div>
+
+            <label class="btn-icon">
+                <i class="fa-solid fa-paperclip"></i>
+                <input type="file" id="media-upload" hidden accept="image/*,video/*">
+            </label>
+            
+            <input type="text" id="msg-input" placeholder="Transmit..." autocomplete="off">
+        </div>
+    </div>
+
+    <div id="media-sidebar" class="glass-panel"></div>
+
+    <div id="toast">ALERT</div>
+
+    <div id="ctx-menu" class="action-menu">
+        <div class="action-item" onclick="handleReply()">Reply</div>
+        <div class="action-item" onclick="handleVoteKick()">Vote Kick (Report)</div>
+        <div class="action-item" style="color:#aaa" onclick="closeCtx()">Cancel</div>
+    </div>
+
+    <script>
+        const socket = io();
+        let myProfile = { name: "Anon", color: "#fff", pfp: null };
+        let activeReplyId = null;
+        let activeCtxTarget = null; // {id, name}
+        let spamCount = 0;
+        let lastMsgTime = 0;
+        let knownUsers = {};
+
+        // --- SETUP ---
+        setTimeout(() => {
+            document.getElementById('intro-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('setup-modal').style.display = 'flex';
+            }, 1000);
+        }, 2500);
+
+        // PFP PREVIEW
+        document.getElementById('pfp-upload').addEventListener('change', function() {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                myProfile.pfp = e.target.result;
+                document.getElementById('pfp-display').src = e.target.result;
+                document.getElementById('pfp-display').style.display = 'block';
+                document.getElementById('pfp-placeholder').style.display = 'none';
+            }
+            reader.readAsDataURL(this.files[0]);
+        });
+
+        function completeSetup() {
+            const name = document.getElementById('username-in').value || "User-" + Math.floor(Math.random()*1000);
+            myProfile.name = name;
+            myProfile.color = document.getElementById('color-in').value;
+            const theme = document.getElementById('theme-in').value;
+
+            // Apply Theme
+            document.body.className = theme;
+            const bg = document.getElementById('bg-layer');
+            bg.innerHTML = ''; // Clear old fx
+            bg.className = '';
+            
+            if(theme === 'theme-fire') {
+                bg.className = 'fx-fire';
+                for(let i=0; i<10; i++) {
+                    let d = document.createElement('div'); d.className='ember';
+                    d.style.left = Math.random()*100 + '%'; d.style.animationDelay = Math.random()*2+'s';
+                    bg.appendChild(d);
+                }
+            } else if (theme === 'theme-sea') {
+                bg.className = 'fx-sea';
+                for(let i=0; i<5; i++) {
+                    let w = document.createElement('div'); w.className='weed';
+                    w.style.left = (i*20) + '%'; w.style.height = (100 + Math.random()*100) + 'px';
+                    bg.appendChild(w);
+                }
+            } else {
+                bg.className = 'fx-stars';
+            }
+
+            socket.emit('set-profile', myProfile);
+            document.getElementById('setup-modal').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+        }
+
+        // --- MESSAGING ---
+        const input = document.getElementById('msg-input');
+        
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') sendMessage();
+            socket.emit('typing', true);
+            clearTimeout(window.typingTimer);
+            window.typingTimer = setTimeout(() => socket.emit('typing', false), 1000);
+        });
+        
+        // MENTIONS
+        input.addEventListener('input', (e) => {
+            const val = input.value;
+            const mentionList = document.getElementById('mention-list');
+            
+            if(val.includes('@')) {
+                const query = val.split('@').pop().toLowerCase();
+                mentionList.style.display = 'flex';
+                mentionList.innerHTML = '';
+                Object.values(knownUsers).forEach(u => {
+                    if(u.name.toLowerCase().includes(query)) {
+                        let d = document.createElement('div'); d.className = 'mention-item';
+                        d.innerText = u.name;
+                        d.onclick = () => { 
+                            input.value = input.value.replace(`@${query}`, `@${u.name} `);
+                            mentionList.style.display='none';
+                        };
+                        mentionList.appendChild(d);
+                    }
+                });
+            } else {
+                mentionList.style.display = 'none';
+            }
+        });
+
+        // MEDIA UPLOAD
+        document.getElementById('media-upload').addEventListener('change', function() {
+            if(checkSpam()) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                socket.emit('send-message', { text: "", media: { type: 'image', src: e.target.result } });
+                showToast("Transmitting Media...");
+            };
+            reader.readAsDataURL(this.files[0]);
+            this.value = '';
+        });
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if(!text) return;
+            if(checkSpam()) return;
+
+            socket.emit('send-message', { text: text, replyTo: activeReplyId });
+            input.value = '';
+            cancelReply();
+        }
+
+        function checkSpam() {
+            const now = Date.now();
+            if (now - lastMsgTime < 1000) spamCount++;
+            else spamCount = 0;
+            lastMsgTime = now;
+
+            if (spamCount > 6) {
+                showToast("ANTISPAM: COOLDOWN 10s");
+                input.disabled = true;
+                input.classList.add('disabled-input');
+                setTimeout(() => {
+                    input.disabled = false;
+                    input.classList.remove('disabled-input');
+                    spamCount = 0;
+                }, 10000);
+                return true;
+            }
+            return false;
+        }
+
+        // --- INCOMING SOCKET EVENTS ---
+        socket.on('user-count', c => {
+            document.getElementById('user-count').innerText = c + " Online";
+            if(c > 1) document.getElementById('empty-state').style.display = 'none';
+        });
+
+        socket.on('user-list', list => knownUsers = list);
+
+        socket.on('new-message', msg => {
+            const div = document.createElement('div');
+            div.className = `msg ${msg.userId === socket.id ? 'me' : ''}`;
+            div.id = `msg-${msg.id}`;
+            div.style.setProperty('--user-color', msg.color.includes('gradient') ? '#fff' : msg.color);
+            
+            // Highlight mention
+            if(msg.text.includes(`@${myProfile.name}`)) {
+                div.style.border = "1px solid var(--c-accent)";
+                showToast(`New mention from ${msg.name}`);
+            }
+
+            // Click for Context Menu
+            div.onclick = (e) => {
+                if(msg.userId === socket.id) return; // Can't report self
+                e.stopPropagation();
+                activeCtxTarget = msg;
+                const menu = document.getElementById('ctx-menu');
+                menu.style.display = 'block';
+                menu.style.left = e.pageX + 'px';
+                menu.style.top = e.pageY + 'px';
+            };
+
+            let contentHtml = '';
+            
+            // Reply Header
+            if(msg.replyTo) {
+                const rName = document.getElementById(`msg-${msg.replyTo}`)?.querySelector('.name-tag')?.innerText || "Someone";
+                contentHtml += `<div class="reply-context" onclick="scrollToMsg('${msg.replyTo}')">Replying to ${rName}</div>`;
+            }
+
+            // Media
+            if(msg.media) {
+                contentHtml += `<img src="${msg.media.src}" class="msg-media" onclick="this.classList.toggle('unblurred')">`;
+                addToMediaSidebar(msg.media.src);
+            }
+
+            // Text & YT
+            if(msg.text) {
+                let txt = msg.text;
+                // Simple YT Embed
+                const ytMatch = txt.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+                if(ytMatch) {
+                    txt += `<br><iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" style="margin-top:10px;"></iframe>`;
+                }
+                contentHtml += `<div>${txt}</div>`;
+            }
+
+            // Structure
+            div.innerHTML = `
+                <div class="msg-header">
+                    <img class="msg-pfp" src="${msg.pfp || ''}" onerror="this.style.display='none'">
+                    <span class="name-tag" style="background:${msg.color}; -webkit-background-clip:text; color:transparent; font-weight:bold;">${msg.name}</span>
+                </div>
+                <div class="msg-content" style="background:${msg.color.includes('gradient')?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.5)'}">
+                    ${contentHtml}
+                    <div class="msg-timestamp" data-ts="${msg.timestamp}">Just now</div>
+                </div>
+            `;
+
+            document.getElementById('chat-container').appendChild(div);
+            div.scrollIntoView();
+        });
+
+        socket.on('user-typing', data => {
+            const ind = document.getElementById('typing-indicator');
+            ind.innerText = data.isTyping ? `${data.user} is typing...` : '';
+            ind.style.opacity = data.isTyping ? 1 : 0;
+        });
+
+        socket.on('timer-update', ms => {
+            const mins = Math.floor(ms / 60000);
+            const secs = Math.floor((ms % 60000) / 1000);
+            document.getElementById('wipe-timer').innerText = `${mins}:${secs < 10 ? '0'+secs : secs}`;
+        });
+
+        socket.on('system-wipe', () => {
+            document.getElementById('chat-container').innerHTML = '';
+            document.getElementById('media-sidebar').innerHTML = '';
+            showToast("SYSTEM WIPE COMPLETE");
+            window.location.reload(); // Force re-entry
+        });
+
+        socket.on('force-kick', () => {
+            document.body.innerHTML = `<div style="display:flex; height:100vh; align-items:center; justify-content:center; background:black; color:red; flex-direction:column;">
+                <h1>CONNECTION TERMINATED</h1>
+                <p>The community has removed you.</p>
+            </div>`;
+            socket.disconnect();
+        });
+
+        socket.on('system-alert', data => showToast(data.text));
+
+        // --- UTILS ---
+        function showToast(txt) {
+            const t = document.getElementById('toast');
+            t.innerText = txt;
+            t.style.opacity = 1;
+            t.style.top = '100px';
+            setTimeout(() => { t.style.opacity = 0; t.style.top = '80px'; }, 3000);
+        }
+
+        // Close Ctx Menu on click elsewhere
+        window.onclick = () => document.getElementById('ctx-menu').style.display = 'none';
+
+        function handleReply() {
+            if(!activeCtxTarget) return;
+            activeReplyId = activeCtxTarget.id;
+            document.getElementById('reply-bar').style.display = 'block';
+            document.getElementById('reply-target-name').innerText = activeCtxTarget.name;
+            input.focus();
+        }
+
+        function cancelReply() {
+            activeReplyId = null;
+            document.getElementById('reply-bar').style.display = 'none';
+        }
+
+        function handleVoteKick() {
+            if(!activeCtxTarget) return;
+            if(confirm(`Initiate VOTE KICK against ${activeCtxTarget.name}?`)) {
+                socket.emit('vote-kick', activeCtxTarget.userId);
             }
         }
-        if(data.image) { content += `<img src="${data.image}" class="media-msg" onclick="this.classList.toggle('unblurred')">`; addToSidebar(data.image, null, false); }
-        if(data.video) { content += `<video src="${data.video}" class="media-msg" onclick="this.classList.toggle('unblurred')" loop muted></video>`; addToSidebar(null, null, false); }
 
-        div.innerHTML += `<div style="margin-top:5px;">${content}</div>`;
-        document.getElementById('feed').appendChild(div);
-        window.scrollTo(0, document.body.scrollHeight);
-    });
+        function toggleMediaSidebar() {
+            document.getElementById('media-sidebar').classList.toggle('open');
+        }
 
-    // --- HELPERS ---
-    function addToSidebar(src, link, yt) {
-        if(!src) return;
-        const i = document.createElement('img'); i.className = 'sidebar-thumb'; i.src = src;
-        i.onclick = yt ? ()=>window.open(link) : ()=>{};
-        document.getElementById('sidebar-content').prepend(i);
-    }
-    
-    function renderUserList() {
-        const l = document.getElementById('users-list-content'); l.innerHTML = '';
-        Object.keys(discoveredUsers).forEach(u => {
-            if(u === myId) return;
-            l.innerHTML += `<div class="user-row"><span class="user-dot" style="background:${discoveredUsers[u].color}"></span> ${discoveredUsers[u].name}</div>`;
-        });
-    }
+        function addToMediaSidebar(src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'sidebar-item';
+            img.onclick = () => window.open(src);
+            document.getElementById('media-sidebar').prepend(img);
+        }
 
-    function renderBlocks() {
-        const l = document.getElementById('userBlockListContainer'); l.innerHTML = '';
-        Object.keys(discoveredUsers).forEach(uid => {
-            if(uid === myId) return;
-            const b = blockedIds.has(uid);
-            const d = document.createElement('div');
-            d.style.cssText = "padding:8px; display:flex; justify-content:space-between; color:white; font-size:12px; cursor:pointer;";
-            d.innerHTML = `<span>${discoveredUsers[uid].name}</span> <span style="color:${b?'red':'#888'}">${b?'Unblock':'Block'}</span>`;
-            d.onclick = () => { if(b) blockedIds.delete(uid); else blockedIds.add(uid); renderBlocks(); };
-            l.appendChild(d);
-        });
-    }
+        function scrollToMsg(id) {
+            const el = document.getElementById(`msg-${id}`);
+            if(el) {
+                el.scrollIntoView({behavior:'smooth'});
+                el.style.transform = 'scale(1.02)';
+                setTimeout(()=>el.style.transform='scale(1)', 500);
+            } else {
+                showToast("Message expired or lost.");
+            }
+        }
 
-    function renderBanned() {
-        const l = document.getElementById('bannedUsersList'); l.innerHTML = '';
-        Object.keys(bannedUsers).forEach(uid => {
-             l.innerHTML += `<div style="color:var(--red); font-size:11px; cursor:pointer;" onclick="sendMsg('CMD:UNBAN:${uid}', null, null, true); delete bannedUsers['${uid}']; renderBanned();">UNBAN ${bannedUsers[uid].name}</div>`;
-        });
-    }
+        // Timestamps updater
+        setInterval(() => {
+            document.querySelectorAll('.msg-timestamp').forEach(el => {
+                const ts = parseInt(el.getAttribute('data-ts'));
+                const diff = Math.floor((Date.now() - ts) / 1000);
+                if(diff < 60) el.innerText = "Just now";
+                else if(diff < 180) el.innerText = "A few mins ago";
+                else el.innerText = "A while ago";
+            });
+        }, 60000);
 
-    function enforceBanUI(m) {
-        document.getElementById('ban-overlay').style.display = 'flex';
-        document.getElementById('ban-timer-display').innerText = m;
-        document.getElementById('wizsInput').disabled = true;
-        const i = setInterval(() => {
-            const left = Math.ceil((parseInt(localStorage.getItem('wizBanEnd')) - Date.now())/60000);
-            document.getElementById('ban-timer-display').innerText = left;
-            if(left <= 0) { localStorage.removeItem('wizBanEnd'); document.getElementById('ban-overlay').style.display='none'; document.getElementById('wizsInput').disabled=false; clearInterval(i); }
-        }, 30000);
-    }
-
-    function cancelReply() { activeReply = null; document.getElementById('reply-bar').style.display = 'none'; }
-    document.getElementById('wizsInput').onkeydown = e => { if(e.key==='Enter') sendMsg(e.target.value); };
-    document.getElementById('mediaInput').onchange = e => { const r=new FileReader(); r.onload=()=>sendMsg("",r.result,e.target.files[0].type.includes('video')?'video':'image'); r.readAsDataURL(e.target.files[0]); };
-    
-    socket.on('user-count', c => document.getElementById('count-display').innerText = c + " Online");
-    socket.on('timer-update', s => {
-        document.getElementById('reset-timer-real').innerText = `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
-        if(s<=0 && !localStorage.getItem('wizBanEnd')) { document.getElementById('lockdown-overlay').style.display = 'flex'; document.getElementById('wizsInput').disabled=true; }
-    });
-</script>
+    </script>
 </body>
+</html>
 </html>
