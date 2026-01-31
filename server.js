@@ -1,83 +1,127 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
-
+const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server);
 
-// 1. KEEP 10MB LIMIT (From your original code)
-const io = new Server(server, { 
-    maxHttpBufferSize: 1e7 
-});
+app.use(express.static('public'));
 
-// 2. SERVE FROM ROOT FOLDER (Fixes "Cannot GET /" error)
-app.use(express.static(__dirname));
+// --- STATE ---
+let users = {};
+let messages = [];
+let mediaGallery = [];
+let kickVotes = {}; // { targetId: [voterId, voterId] }
+const WIPE_INTERVAL = 15 * 60 * 1000; // 15 Minutes
 
-let userCount = 0;
-let timeLeft = 900; // 15 minutes
+// --- 15 MINUTE WIPER ---
+let wipeTimer = setTimeout(wipeData, WIPE_INTERVAL);
+let nextWipeTime = Date.now() + WIPE_INTERVAL;
 
-// --- TIMER LOGIC ---
-setInterval(() => {
-    timeLeft--;
+function wipeData() {
+    console.log("--- SYSTEM WIPE ---");
+    users = {};
+    messages = [];
+    mediaGallery = [];
+    kickVotes = {};
+    io.emit('system-wipe');
     
-    // Sync timer with everyone
-    io.emit('timer-update', timeLeft);
+    // Reset Timer
+    nextWipeTime = Date.now() + WIPE_INTERVAL;
+    wipeTimer = setTimeout(wipeData, WIPE_INTERVAL);
+}
 
-    // Reset when time is up
-    if (timeLeft <= 0) {
-        timeLeft = 900;
-        io.emit('force-wipe'); // Triggers frontend clear
-        io.emit('receive-msg', {
-            msgId: 'sys-' + Date.now(),
-            name: 'SYSTEM',
-            color: '#ff4d4d',
-            text: '⚠️ DATA WIPE COMPLETE.',
-            isSystem: true
-        });
-    }
+// Send time remaining to new users
+setInterval(() => {
+    io.emit('timer-update', (nextWipeTime - Date.now()));
 }, 1000);
 
 io.on('connection', (socket) => {
-    userCount++;
-    const userId = socket.id;
+    console.log('User connected:', socket.id);
+    
+    // Initialize User
+    users[socket.id] = { 
+        id: socket.id, 
+        name: 'Anon', 
+        color: '#00ffcc',
+        warnings: 0,
+        mutedUntil: 0 
+    };
 
-    // Send initial data to the new user
-    io.emit('user-count', userCount);
-    socket.emit('assign-id', userId);
-    socket.emit('timer-update', timeLeft);
+    io.emit('user-count', Object.keys(users).length);
 
-    console.log(`User connected: ${userId}`);
-
-    // --- MESSAGING ---
-    socket.on('send-msg', (data) => {
-        data.userId = userId; // Attach ID for blocking
-        io.emit('receive-msg', data);
+    // Join/Setup Profile
+    socket.on('set-profile', (data) => {
+        if(users[socket.id]) {
+            users[socket.id].name = data.name || users[socket.id].name;
+            users[socket.id].color = data.color || users[socket.id].color;
+            users[socket.id].pfp = data.pfp; // Base64 or null
+            io.emit('user-list', users);
+        }
     });
 
-    // --- NEW: TYPING INDICATORS ---
-    socket.on('typing-start', (data) => {
-        // Send to everyone EXCEPT sender
-        socket.broadcast.emit('typing-update', { isTyping: true, user: data.name });
+    // Handle Messages
+    socket.on('send-message', (data) => {
+        const user = users[socket.id];
+        if (!user || Date.now() < user.mutedUntil) return;
+
+        const msgData = {
+            id: Date.now() + Math.random().toString(16).slice(2),
+            userId: socket.id,
+            name: user.name,
+            color: user.color,
+            pfp: user.pfp,
+            text: data.text,
+            media: data.media, // { type: 'image'|'video', src: base64 }
+            replyTo: data.replyTo,
+            reactions: {},
+            timestamp: Date.now()
+        };
+
+        messages.push(msgData);
+        if (data.media) mediaGallery.push(data.media);
+        
+        io.emit('new-message', msgData);
     });
 
-    socket.on('typing-stop', () => {
-        socket.broadcast.emit('typing-update', { isTyping: false });
+    // Typing Status
+    socket.on('typing', (isTyping) => {
+        socket.broadcast.emit('user-typing', { user: users[socket.id].name, isTyping: isTyping });
     });
 
-    // --- NEW: REACTIONS ---
+    // Reactions
     socket.on('add-reaction', (data) => {
-        io.emit('update-reaction', data);
+        io.emit('update-reaction', data); // Client handles UI update logic
     });
 
-    // --- DISCONNECT ---
+    // Vote Kick Logic
+    socket.on('vote-kick', (targetId) => {
+        if (!kickVotes[targetId]) kickVotes[targetId] = new Set();
+        kickVotes[targetId].add(socket.id);
+
+        const voteCount = kickVotes[targetId].size;
+        const totalUsers = Object.keys(users).length;
+        const required = Math.ceil(totalUsers * 0.66);
+
+        // Notify chat of vote
+        io.emit('system-alert', { 
+            text: `VOTE KICK: ${users[targetId]?.name} (${voteCount}/${required} votes)` 
+        });
+
+        if (voteCount >= required) {
+            io.to(targetId).emit('force-kick');
+            io.emit('system-alert', { text: `${users[targetId]?.name} was kicked.` });
+            delete users[targetId]; // Soft remove
+            delete kickVotes[targetId];
+        }
+    });
+
     socket.on('disconnect', () => {
-        userCount--;
-        io.emit('user-count', userCount);
-        console.log('User disconnected');
+        delete users[socket.id];
+        io.emit('user-count', Object.keys(users).length);
+        io.emit('user-list', users);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`WIZs Server running on http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`NEXUS active on port ${PORT}`));
