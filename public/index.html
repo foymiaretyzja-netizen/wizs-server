@@ -11,10 +11,9 @@
     <style>
         :root {
             --bg-dark: #0a0f14;
-            --bg-panel: rgba(20, 30, 35, 0.85);
+            --bg-panel: rgba(20, 30, 35, 0.95);
             --cyan: #00f2ea;
             --mint: #00ff9d;
-            --text-main: #e0e6ed;
             --border-glow: rgba(0, 242, 234, 0.3);
             --grad-nexus: linear-gradient(180deg, var(--cyan), var(--mint));
             --grad-fire: linear-gradient(180deg, #ff4e50, #f9d423);
@@ -22,10 +21,9 @@
             --font-main: 'Roboto Mono', monospace;
         }
 
-        /* RESET & BASE */
         * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent; }
         body {
-            margin: 0; background: var(--bg-dark); color: var(--text-main);
+            margin: 0; background: var(--bg-dark); color: #e0e6ed;
             font-family: var(--font-main); overflow: hidden; height: 100vh;
             display: flex; flex-direction: column; transition: background 1s ease;
         }
@@ -35,138 +33,150 @@
         body.seashine { background: linear-gradient(to bottom, #001f24, #004d40); --cyan: #00e5ff; --mint: #76ff03; }
         body.astrolight { background: radial-gradient(circle at top, #150020, #000); --cyan: #e056fd; --mint: #686de0; }
 
-        /* UI COMPONENTS */
+        /* UI ELEMENTS */
         .btn {
             background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
             padding: 8px 16px; font-family: var(--font-main); cursor: pointer;
-            transition: 0.3s; font-weight: bold; margin: 5px;
+            transition: 0.3s; font-weight: bold; margin: 5px 0; width: 100%;
         }
         .btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 10px var(--cyan); }
+        .btn-sm { width: auto; display: inline-block; padding: 4px 8px; font-size: 0.8rem; }
         .btn-danger { border-color: #ff4444; color: #ff4444; }
-        .btn-danger:hover { background: #ff4444; color: white; }
-
-        /* MODALS */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000;
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-        }
-        .modal-box {
-            background: var(--bg-panel); border: 1px solid var(--cyan);
-            padding: 30px; width: 90%; max-width: 500px;
-            box-shadow: 0 0 20px var(--border-glow);
-        }
-        .input-group { margin: 15px 0; }
-        .input-group label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.8rem; }
-        input[type="text"], select {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333;
-            color: white; padding: 10px; font-family: var(--font-main); outline: none;
-        }
-        input:focus { border-color: var(--cyan); }
 
         /* TOP BAR */
         #top-bar {
-            height: 50px; background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border-glow);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100;
+            height: 50px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border-glow);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 200;
         }
 
         /* SIDEBARS */
         .sidebar {
-            position: fixed; top: 50px; height: calc(100% - 50px); width: 280px;
+            position: fixed; top: 50px; bottom: 0; width: 300px;
             background: var(--bg-panel); border: 1px solid var(--border-glow);
-            transition: transform 0.3s; z-index: 90; display: flex; flex-direction: column;
+            transition: transform 0.3s ease-in-out; z-index: 150;
+            display: flex; flex-direction: column;
         }
-        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border-glow); border-left: none; }
-        #users-sidebar { right: 0; transform: translateX(100%); border-left: 1px solid var(--border-glow); border-right: none; }
+        #media-sidebar { left: 0; transform: translateX(-100%); border-left: none; }
+        #users-sidebar { right: 0; transform: translateX(100%); border-right: none; }
         .sidebar.active { transform: translateX(0); }
 
         /* CHAT AREA */
-        #chat-main { flex: 1; margin-top: 50px; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
-        
-        .msg-row { display: flex; gap: 10px; margin-bottom: 15px; animation: slideIn 0.3s; }
-        .msg-row.mine { flex-direction: row-reverse; }
-        
-        /* PFP STYLES */
-        .pfp-box {
-            width: 40px; height: 40px; min-width: 40px;
-            background: #222; border: 1px solid #444; border-radius: 0; /* Square */
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: bold; color: #aaa; overflow: hidden;
-            object-fit: cover;
-        }
-        .pfp-img { width: 100%; height: 100%; object-fit: cover; }
+        #chat-main { flex: 1; margin-top: 50px; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
 
-        .msg-content { max-width: 70%; display: flex; flex-direction: column; }
-        .msg-row.mine .msg-content { align-items: flex-end; }
+        /* MESSAGES */
+        .msg-row { display: flex; flex-direction: column; margin-bottom: 20px; animation: fadeIn 0.3s; }
+        .msg-row.mine { align-items: flex-end; }
+        .msg-row.theirs { align-items: flex-start; }
+
+        .msg-meta { font-size: 0.75rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .username { font-weight: bold; }
+        .user-tag { border: 1px solid #555; border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #aaa; }
         
-        .username { font-weight: bold; font-size: 0.8rem; margin-bottom: 2px; }
-        /* GRADIENTS FOR NAMES ONLY */
+        /* PFP */
+        .pfp-square {
+            width: 24px; height: 24px; background: #222; border: 1px solid #555;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; object-fit: cover;
+        }
+        
+        /* GRADIENTS */
         .name-white { color: #fff; }
-        .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
         .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
+        .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
         .name-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
 
         .msg-bubble {
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            padding: 10px; border-radius: 4px; color: #fff; word-break: break-word;
-            position: relative;
+            padding: 12px; border-radius: 4px; color: #fff; max-width: 80%;
+            cursor: pointer; position: relative; transition: border-color 0.2s;
         }
+        .msg-bubble:hover { border-color: var(--mint); }
         .msg-row.mine .msg-bubble { border-color: var(--cyan); background: rgba(0, 242, 234, 0.05); }
 
-        /* REACTION PILLS */
-        .reactions-container { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
-        .reaction-pill {
-            font-size: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid #333;
-            padding: 2px 6px; border-radius: 10px; color: #aaa;
+        /* REPLY BOX */
+        .reply-preview {
+            font-size: 0.7rem; color: #aaa; border-left: 2px solid var(--mint);
+            padding-left: 8px; margin-bottom: 5px; opacity: 0.8;
         }
 
+        /* MEDIA & BLUR */
+        .media-container { margin-top: 8px; max-width: 100%; border: 1px solid #333; overflow: hidden; cursor: pointer; }
+        .blurred { filter: blur(15px); transition: filter 0.3s; }
+        .unblurred { filter: blur(0); }
+        
         /* INPUT AREA */
         #input-area {
             position: fixed; bottom: 0; width: 100%; background: var(--bg-dark);
-            padding: 15px; border-top: 1px solid var(--border-glow); display: flex; gap: 10px; z-index: 101;
+            padding: 15px; border-top: 1px solid var(--border-glow); z-index: 200;
         }
-        #chat-input { flex: 1; border-radius: 4px; }
+        #reply-bar {
+            display: none; background: #111; padding: 5px 10px; font-size: 0.8rem;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #333;
+        }
+        .input-wrapper { display: flex; gap: 10px; align-items: center; }
+        #chat-input {
+            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #444;
+            padding: 12px; color: white; border-radius: 4px; outline: none;
+            font-family: var(--font-main);
+        }
+        #chat-input:focus { border-color: var(--cyan); }
+
+        /* MODALS */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--bg-panel); border: 1px solid var(--cyan);
+            padding: 30px; width: 90%; max-width: 450px;
+            box-shadow: 0 0 30px var(--border-glow);
+        }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; color: var(--cyan); font-size: 0.8rem; margin-bottom: 5px; }
+        .opt-tag { font-size: 0.7rem; color: #666; float: right; }
+        select, input[type="text"] { width: 100%; padding: 10px; background: #000; border: 1px solid #333; color: white; }
 
         /* CONTEXT MENU */
         #ctx-menu {
-            position: absolute; display: none; background: #000; border: 1px solid var(--cyan);
-            z-index: 9999; min-width: 150px;
+            position: absolute; display: none; background: #111; border: 1px solid var(--cyan);
+            z-index: 6000; min-width: 160px; box-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
-        .ctx-item { padding: 10px; cursor: pointer; color: #fff; border-bottom: 1px solid #222; }
+        .ctx-item { padding: 12px; cursor: pointer; color: #ddd; border-bottom: 1px solid #222; font-size: 0.9rem; }
         .ctx-item:hover { background: var(--cyan); color: #000; }
-        .ctx-emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 5px; background: #111; }
-        .emoji-btn { cursor: pointer; padding: 5px; text-align: center; font-size: 1.2rem; }
-        .emoji-btn:hover { background: #333; }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="setup-modal" class="modal" style="display:flex;">
+    <div id="setup-modal" class="modal">
         <div class="modal-box">
-            <h2 style="color:var(--cyan); text-align:center;">&lt;NEXUS INIT&gt;</h2>
-            <div class="input-group"><label>Username</label><input type="text" id="setup-name" maxlength="15"></div>
-            <button class="btn" onclick="enterNexus()" style="width:100%">CONNECT</button>
-        </div>
-    </div>
+            <h2 style="color:var(--cyan); text-align:center; margin-top:0;">&lt;NEXUS SETUP&gt;</h2>
+            <p style="font-size:0.8rem; color:#888; text-align:center; margin-bottom:20px;">
+                Complete anonymity. Data wipes every 15 minutes.
+            </p>
 
-    <div id="settings-modal" class="modal">
-        <div class="modal-box">
-            <h2 style="color:var(--cyan);">SETTINGS</h2>
-            
             <div class="input-group">
-                <label>Username</label>
-                <input type="text" id="set-name" maxlength="15">
+                <label>Username (Required)</label>
+                <input type="text" id="setup-name" maxlength="15" placeholder="Enter alias...">
             </div>
+
             <div class="input-group">
-                <label>Tag (Max 6 chars)</label>
-                <input type="text" id="set-tag" maxlength="6">
+                <label>Tag <span class="opt-tag">(Optional)</span></label>
+                <input type="text" id="setup-tag" maxlength="6" placeholder="e.g. COOL">
             </div>
-            
+
             <div class="input-group">
-                <label>Username Color</label>
-                <select id="set-color">
-                    <option value="white">White</option>
+                <label>Profile Picture <span class="opt-tag">(Optional)</span></label>
+                <input type="file" id="setup-pfp" accept="image/*" style="display:none;">
+                <button class="btn btn-sm" onclick="document.getElementById('setup-pfp').click()">Upload Square PFP</button>
+                <span id="pfp-status" style="font-size:0.7rem; color:#aaa; margin-left:10px;">None selected</span>
+            </div>
+
+            <div class="input-group">
+                <label>Username Color <span class="opt-tag">(Optional)</span></label>
+                <select id="setup-color">
+                    <option value="white">Standard White</option>
                     <option value="sea">Sea Gradient</option>
                     <option value="fire">Fire Gradient</option>
                     <option value="astro">Astro Gradient</option>
@@ -174,112 +184,126 @@
             </div>
 
             <div class="input-group">
-                <label>Theme</label>
-                <select id="set-theme" onchange="applyTheme(this.value)">
-                    <option value="default">Default</option>
+                <label>Theme <span class="opt-tag">(Optional)</span></label>
+                <select id="setup-theme">
+                    <option value="default">Nexus Default</option>
                     <option value="firestone">FireStone</option>
                     <option value="seashine">SeaShine</option>
                     <option value="astrolight">AstroLight</option>
                 </select>
             </div>
 
-            <div class="input-group">
-                <label>Profile Picture (Square)</label>
-                <input type="file" id="set-pfp-upload" accept="image/*">
-                <div style="margin-top:5px;">
-                    <button class="btn" onclick="clearPFP()">Remove PFP</button>
-                    <label style="font-size:0.8rem; margin-left:10px;">
-                        <input type="checkbox" id="show-pfp-toggle" checked onchange="togglePfpVis()"> Show PFPs in Chat
-                    </label>
-                </div>
-            </div>
+            <button class="btn" onclick="enterNexus()">INITIALIZE</button>
+        </div>
+    </div>
 
+    <div id="settings-modal" class="modal" style="display:none;">
+        <div class="modal-box">
+            <h3 style="color:var(--cyan);">SETTINGS</h3>
             <div class="input-group">
-                <label style="color:#ff4444;">Blocked Users (Click to Unblock)</label>
-                <div id="blocked-list" style="max-height:100px; overflow-y:auto; border:1px solid #333; padding:5px;"></div>
-                <button class="btn btn-danger" onclick="unblockAll()" style="font-size:0.7rem;">Unblock All</button>
+                <label>Blocked Users</label>
+                <div id="blocked-list" style="max-height:100px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem;"></div>
+                <button class="btn btn-sm btn-danger" onclick="unblockAll()">Unblock All</button>
             </div>
-
-            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
-                <button class="btn" onclick="closeSettings()">Cancel</button>
-                <button class="btn" onclick="saveSettings()">Save Changes</button>
+            <div class="input-group">
+                <label><input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs in Chat</label>
             </div>
+            <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">CLOSE</button>
         </div>
     </div>
 
     <div id="top-bar">
-        <div style="font-weight:bold; color:var(--cyan); letter-spacing:2px;">&lt;NEXUS&gt;</div>
+        <div style="font-weight:bold; letter-spacing:2px; color:var(--cyan);">&lt;NEXUS&gt;</div>
         <div style="font-size:0.8rem;">
             <span id="timer">15:00</span> | <span id="online-count">0</span> Online
         </div>
         <div>
-            <i class="fa-solid fa-images" onclick="toggleSide('media-sidebar')" style="margin-right:15px; cursor:pointer;"></i>
-            <i class="fa-solid fa-users" onclick="toggleSide('users-sidebar')" style="margin-right:15px; cursor:pointer;"></i>
-            <i class="fa-solid fa-gear" onclick="openSettings()" style="cursor:pointer;"></i>
+            <i class="fa-solid fa-images" style="margin-right:15px; cursor:pointer;" onclick="toggleSide('media-sidebar')"></i>
+            <i class="fa-solid fa-users" style="margin-right:15px; cursor:pointer;" onclick="toggleSide('users-sidebar')"></i>
+            <i class="fa-solid fa-gear" style="cursor:pointer;" onclick="document.getElementById('settings-modal').style.display='flex'; renderBlocked()"></i>
         </div>
     </div>
 
     <div id="media-sidebar" class="sidebar">
-        <div style="padding:10px; border-bottom:1px solid #333; color:var(--cyan);">MEDIA GALLERY</div>
-        <div id="media-grid" style="padding:5px; display:grid; grid-template-columns:1fr 1fr; gap:5px; overflow-y:auto;"></div>
+        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint);">MEDIA STREAM</div>
+        <div id="media-grid" style="padding:10px; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
     </div>
 
     <div id="users-sidebar" class="sidebar">
-        <div style="padding:10px; border-bottom:1px solid #333; color:var(--cyan);">ACTIVE USERS</div>
-        <div id="user-list-container" style="overflow-y:auto;"></div>
+        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint);">ACTIVE USERS</div>
+        <div id="user-list" style="padding:10px; overflow-y:auto;"></div>
     </div>
 
     <div id="chat-main"></div>
 
     <div id="input-area">
-        <label style="cursor:pointer; color:var(--cyan); padding-top:10px;">
-            <i class="fa-solid fa-paperclip"></i>
-            <input type="file" hidden id="chat-media-upload">
-        </label>
-        <input type="text" id="chat-input" placeholder="Transmit..." autocomplete="off">
-        <button class="btn" onclick="sendMessage()">SEND</button>
+        <div id="reply-bar">
+            <span>Replying to <b id="reply-target-name">...</b></span>
+            <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="cancelReply()"></i>
+        </div>
+        <div class="input-wrapper">
+            <label style="cursor:pointer; color:var(--cyan);">
+                <i class="fa-solid fa-paperclip"></i>
+                <input type="file" hidden id="chat-media" accept="image/*,video/*">
+            </label>
+            <input type="text" id="chat-input" placeholder="Transmit..." autocomplete="off">
+            <button class="btn btn-sm" style="width:auto;" onclick="sendMessage()">SEND</button>
+        </div>
     </div>
 
     <div id="ctx-menu">
-        <div class="ctx-emoji-grid">
-            <div class="emoji-btn" onclick="addReaction('❤️')">❤️</div>
-            <div class="emoji-btn" onclick="addReaction('😂')">😂</div>
-            <div class="emoji-btn" onclick="addReaction('🔥')">🔥</div>
-            <div class="emoji-btn" onclick="addReaction('👍')">👍</div>
-            <div class="emoji-btn" onclick="addReaction('💀')">💀</div>
-            <div class="emoji-btn" onclick="addReaction('😡')">😡</div>
-            <div class="emoji-btn" onclick="addReaction('🤡')">🤡</div>
-            <div class="emoji-btn" onclick="addReaction('🎉')">🎉</div>
-        </div>
-        <div class="ctx-item" onclick="initiateKick()">Report (Vote Kick)</div>
-        <div class="ctx-item" onclick="blockUser()" style="color:#ff4444;">Block User</div>
+        <div class="ctx-item" onclick="handleCtx('reply')"><i class="fa-solid fa-reply"></i> Reply</div>
+        <div class="ctx-item" onclick="handleCtx('react')"><i class="fa-regular fa-face-smile"></i> Add Reaction</div>
+        <div class="ctx-item" onclick="handleCtx('block')" style="color:#ff4444;"><i class="fa-solid fa-ban"></i> Block User</div>
+        <div class="ctx-item" onclick="handleCtx('report')" style="color:#ff4444;"><i class="fa-solid fa-flag"></i> Vote Kick</div>
+    </div>
+
+    <div id="emoji-picker" class="ctx-menu" style="display:none; position:absolute; background:#111; border:1px solid var(--cyan); padding:5px; grid-template-columns:repeat(4,1fr); gap:5px; z-index:6001;">
+        <div style="padding:5px; cursor:pointer;" onclick="sendReaction('❤️')">❤️</div>
+        <div style="padding:5px; cursor:pointer;" onclick="sendReaction('😂')">😂</div>
+        <div style="padding:5px; cursor:pointer;" onclick="sendReaction('🔥')">🔥</div>
+        <div style="padding:5px; cursor:pointer;" onclick="sendReaction('👍')">👍</div>
     </div>
 
     <script>
         const socket = io();
         
-        // LOCAL STATE
+        // STATE
         let myId = null;
         let myPfp = null;
+        let currentReply = null; // { id, name, text }
+        let blockedUsers = [];
         let showPfps = true;
-        let blockedUsers = []; // List of IDs
-        let ctxTarget = { msgId: null, userId: null };
+        let ctxData = null; // { msgId, userId, name, text }
 
-        // INITIALIZATION
+        // SETUP
+        document.getElementById('setup-pfp').addEventListener('change', function() {
+            const file = this.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => { 
+                    myPfp = e.target.result;
+                    document.getElementById('pfp-status').innerText = "Image Loaded";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         function enterNexus() {
-            const name = document.getElementById('setup-name').value || 'User' + Math.floor(Math.random()*999);
-            const firstChar = name.charAt(0).toUpperCase();
+            const name = document.getElementById('setup-name').value;
+            if(!name) { alert("Username is required."); return; }
             
-            // Auto generate PFP fallback logic handled server/render side, just send data
-            socket.emit('join-nexus', { name: name, color: 'white', tag: '', pfp: null });
+            const tag = document.getElementById('setup-tag').value;
+            const theme = document.getElementById('setup-theme').value;
+            const color = document.getElementById('setup-color').value;
             
-            // Populate settings for later
-            document.getElementById('set-name').value = name;
+            document.body.className = theme;
             
+            socket.emit('join-nexus', { name, tag, color, pfp: myPfp });
             document.getElementById('setup-modal').style.display = 'none';
         }
 
-        // SOCKET EVENTS
+        // SOCKET LISTENERS
         socket.on('connect', () => myId = socket.id);
         
         socket.on('timer-update', t => {
@@ -288,82 +312,91 @@
             document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
         });
 
-        socket.on('user-update', (users) => {
+        socket.on('user-update', users => {
             document.getElementById('online-count').innerText = users.length;
-            const list = document.getElementById('user-list-container');
+            const list = document.getElementById('user-list');
             list.innerHTML = '';
             users.forEach(u => {
-                // Show PFP in sidebar too
-                let pfpHtml = `<div class="pfp-box" style="width:25px; height:25px; font-size:0.7rem; margin-right:10px;">${u.pfp ? `<img src="${u.pfp}" class="pfp-img">` : u.name[0].toUpperCase()}</div>`;
-                
                 list.innerHTML += `
-                <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center;">
-                    ${pfpHtml}
-                    <div style="flex:1;">
-                        <div style="font-size:0.9rem;">${u.name} ${u.tag ? `[${u.tag}]` : ''}</div>
-                        <div style="font-size:0.7rem; color:${u.active ? 'var(--mint)' : '#555'}">${u.active ? 'Active' : 'Idle'}</div>
-                    </div>
-                </div>`;
+                    <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
+                        <div class="pfp-square">
+                            ${u.pfp ? `<img src="${u.pfp}" style="width:100%;height:100%;object-fit:cover;">` : u.name[0]}
+                        </div>
+                        <div>
+                            <div style="font-size:0.9rem;">${u.name}</div>
+                            <div style="font-size:0.7rem; color:${u.active?'var(--mint)':'#555'}">${u.active?'Active':'Idle'}</div>
+                        </div>
+                    </div>`;
             });
         });
 
-        socket.on('receive-message', (data) => {
-            if (blockedUsers.includes(data.userId)) return;
+        socket.on('receive-message', data => {
+            if(blockedUsers.includes(data.userId)) return;
 
             const chat = document.getElementById('chat-main');
             const isMe = data.userId === myId;
             
-            // PFP Logic
-            let pfpHtml = '';
-            if (showPfps) {
-                if (data.pfp) {
-                    pfpHtml = `<div class="pfp-box"><img src="${data.pfp}" class="pfp-img"></div>`;
-                } else {
-                    pfpHtml = `<div class="pfp-box">${data.name.charAt(0).toUpperCase()}</div>`;
-                }
+            // Layout Order: Name -> Tag -> PFP
+            const pfpHtml = showPfps ? `
+                <div class="pfp-square">
+                    ${data.pfp ? `<img src="${data.pfp}" style="width:100%;height:100%;object-fit:cover;">` : data.name[0]}
+                </div>` : '';
+
+            // Reply Block
+            let replyHtml = '';
+            if(data.replyTo) {
+                replyHtml = `<div class="reply-preview">Replying to ${data.replyTo.name}: ${data.replyTo.text.substring(0,20)}...</div>`;
             }
 
-            // Tag Logic
-            const tagHtml = data.tag ? `<span style="font-size:0.7rem; border:1px solid #555; padding:0 4px; border-radius:4px; margin-left:5px;">${data.tag}</span>` : '';
-
-            // Media Logic
+            // Media & YouTube
+            let contentHtml = data.text;
+            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([a-zA-Z0-9_-]+)/;
+            const ytMatch = data.text.match(ytRegex);
+            
             let mediaHtml = '';
-            if (data.media) {
-                if (data.mediaType.includes('video')) {
-                    mediaHtml = `<video src="${data.media}" controls style="max-width:100%; margin-top:5px; border:1px solid #333;"></video>`;
+            if(ytMatch) {
+                // Wrap iframe in blur container
+                mediaHtml += `
+                <div class="media-container blurred" onclick="toggleBlur(this)">
+                    <iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen style="pointer-events:none;"></iframe>
+                </div>`;
+                addToGallery(`https://img.youtube.com/vi/${ytMatch[1]}/0.jpg`, 'video');
+            }
+
+            if(data.media) {
+                if(data.mediaType.includes('video')) {
+                    mediaHtml += `<div class="media-container blurred" onclick="toggleBlur(this)"><video src="${data.media}" style="width:100%;" loop muted></video></div>`;
                 } else {
-                    mediaHtml = `<img src="${data.media}" style="max-width:100%; margin-top:5px; border:1px solid #333;">`;
+                    mediaHtml += `<div class="media-container blurred" onclick="toggleBlur(this)"><img src="${data.media}" style="width:100%;"></div>`;
                 }
-                addToGallery(data.media, data.mediaType); // Add to sidebar
+                addToGallery(data.media, data.mediaType);
             }
 
             const div = document.createElement('div');
-            div.className = `msg-row ${isMe ? 'mine' : ''}`;
+            div.className = `msg-row ${isMe ? 'mine' : 'theirs'}`;
             div.innerHTML = `
-                ${!isMe ? pfpHtml : ''}
-                <div class="msg-content">
-                    <div class="username name-${data.color}">
-                        ${data.name} ${tagHtml}
-                    </div>
-                    <div class="msg-bubble" oncontextmenu="openCtx(event, '${data.id}', '${data.userId}')">
-                        ${data.text}
-                        ${mediaHtml}
-                    </div>
-                    <div class="reactions-container" id="reacts-${data.id}"></div>
+                <div class="msg-meta">
+                    <span class="username name-${data.color}">${data.name}</span>
+                    ${data.tag ? `<span class="user-tag">${data.tag}</span>` : ''}
+                    ${pfpHtml}
                 </div>
-                ${isMe ? pfpHtml : ''}
+                <div class="msg-bubble" onclick="openMenu(event, '${data.id}', '${data.userId}', '${data.name}', '${data.text.replace(/'/g, "\\'")}')">
+                    ${replyHtml}
+                    <div>${contentHtml}</div>
+                    ${mediaHtml}
+                    <div id="react-${data.id}" style="display:flex; gap:2px; margin-top:5px; font-size:0.8rem;"></div>
+                </div>
             `;
-            
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         });
 
-        socket.on('update-reaction', (data) => {
-            const container = document.getElementById(`reacts-${data.msgId}`);
-            if (container) {
-                container.innerHTML = '';
-                for (const [emoji, count] of Object.entries(data.reactions)) {
-                    container.innerHTML += `<div class="reaction-pill">${emoji} ${count}</div>`;
+        socket.on('update-reaction', data => {
+            const el = document.getElementById(`react-${data.msgId}`);
+            if(el) {
+                el.innerHTML = '';
+                for(let [emoji, count] of Object.entries(data.reactions)) {
+                    el.innerHTML += `<span style="background:#222; padding:2px 5px; border-radius:10px;">${emoji} ${count}</span>`;
                 }
             }
         });
@@ -371,84 +404,101 @@
         socket.on('system-wipe', () => {
             document.getElementById('chat-main').innerHTML = '';
             document.getElementById('media-grid').innerHTML = '';
-            blockedUsers = [];
-            renderBlockedList();
         });
 
-        // SETTINGS & LOGIC
-        function openSettings() {
-            document.getElementById('settings-modal').style.display = 'flex';
-            renderBlockedList();
-        }
-        function closeSettings() {
-            document.getElementById('settings-modal').style.display = 'none';
-        }
-
-        // PFP Upload Handler
-        document.getElementById('set-pfp-upload').addEventListener('change', function() {
-            const file = this.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => myPfp = e.target.result; // Temporarily store
-            reader.readAsDataURL(file);
-        });
-
-        function clearPFP() {
-            myPfp = null;
-            document.getElementById('set-pfp-upload').value = '';
-        }
-
-        function saveSettings() {
-            const name = document.getElementById('set-name').value;
-            const tag = document.getElementById('set-tag').value;
-            const color = document.getElementById('set-color').value;
-            const theme = document.getElementById('set-theme').value;
-
-            applyTheme(theme);
-            
-            socket.emit('update-profile', {
-                name: name,
-                tag: tag,
-                color: color,
-                pfp: myPfp
-            });
-            
-            closeSettings();
-        }
-
-        function applyTheme(theme) {
-            document.body.className = theme;
-        }
-
-        function togglePfpVis() {
-            showPfps = document.getElementById('show-pfp-toggle').checked;
-        }
-
-        // MESSAGING
-        function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value;
-            if (text) {
-                socket.emit('send-message', { text: text });
-                input.value = '';
+        // CLIENT ACTIONS
+        function toggleBlur(el) {
+            if(el.classList.contains('blurred')) {
+                el.classList.remove('blurred');
+                el.classList.add('unblurred');
+                // If video, try to play? No auto-play policy issues usually, user can click controls now
+                const vid = el.querySelector('video');
+                if(vid) { vid.muted = false; vid.controls = true; }
+                const iframe = el.querySelector('iframe');
+                if(iframe) iframe.style.pointerEvents = 'auto';
+            } else {
+                el.classList.add('blurred');
+                el.classList.remove('unblurred');
+                const vid = el.querySelector('video');
+                if(vid) { vid.muted = true; vid.controls = false; }
+                const iframe = el.querySelector('iframe');
+                if(iframe) iframe.style.pointerEvents = 'none';
             }
         }
 
-        // Media Upload
-        document.getElementById('chat-media-upload').addEventListener('change', function() {
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+            
+            socket.emit('send-message', {
+                text: input.value,
+                replyTo: currentReply
+            });
+            input.value = '';
+            cancelReply();
+        }
+
+        // REPLY SYSTEM
+        function cancelReply() {
+            currentReply = null;
+            document.getElementById('reply-bar').style.display = 'none';
+        }
+
+        // MEDIA UPLOAD
+        document.getElementById('chat-media').addEventListener('change', function() {
             const file = this.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                socket.emit('send-message', { text: '', media: e.target.result, mediaType: file.type });
-            };
-            reader.readAsDataURL(file);
-            this.value = '';
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => socket.emit('send-message', { text: '', media: e.target.result, mediaType: file.type });
+                reader.readAsDataURL(file);
+                this.value = '';
+            }
         });
+
+        // MENU SYSTEM
+        function openMenu(e, msgId, userId, name, text) {
+            e.stopPropagation();
+            const menu = document.getElementById('ctx-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            ctxData = { msgId, userId, name, text };
+            
+            const close = () => { menu.style.display = 'none'; document.removeEventListener('click', close); };
+            setTimeout(() => document.addEventListener('click', close), 10);
+        }
+
+        function handleCtx(action) {
+            if(action === 'reply') {
+                currentReply = { id: ctxData.msgId, name: ctxData.name, text: ctxData.text };
+                document.getElementById('reply-target-name').innerText = ctxData.name;
+                document.getElementById('reply-bar').style.display = 'flex';
+                document.getElementById('chat-input').focus();
+            } else if (action === 'block') {
+                blockedUsers.push(ctxData.userId);
+                alert("User blocked.");
+            } else if (action === 'report') {
+                if(confirm("Vote Kick User?")) socket.emit('report-user', ctxData.userId);
+            } else if (action === 'react') {
+                // Show sub menu
+                const p = document.getElementById('emoji-picker');
+                p.style.display = 'grid';
+                p.style.left = (event.pageX) + 'px';
+                p.style.top = (event.pageY) + 'px';
+                
+                const closeP = () => { p.style.display = 'none'; document.removeEventListener('click', closeP); };
+                setTimeout(() => document.addEventListener('click', closeP), 10);
+            }
+        }
+
+        function sendReaction(emoji) {
+            socket.emit('add-reaction', { msgId: ctxData.msgId, emoji });
+        }
 
         // SIDEBARS
         function toggleSide(id) {
-            document.getElementById(id).classList.toggle('active');
+            const el = document.getElementById(id);
+            el.classList.toggle('active');
         }
 
         function addToGallery(src, type) {
@@ -459,57 +509,20 @@
             el.style.aspectRatio = '1/1';
             el.style.objectFit = 'cover';
             el.style.border = '1px solid #333';
-            el.onclick = () => window.open(src); // View full
-            grid.prepend(el); // Newest top
+            el.onclick = () => window.open(src);
+            grid.prepend(el);
         }
-
-        // CONTEXT MENU & BLOCKING
-        function openCtx(e, msgId, userId) {
-            if(userId === myId) return;
-            e.preventDefault();
-            const menu = document.getElementById('ctx-menu');
-            menu.style.display = 'block';
-            menu.style.left = e.pageX + 'px';
-            menu.style.top = e.pageY + 'px';
-            ctxTarget = { msgId, userId };
-            
-            const close = () => { menu.style.display = 'none'; document.removeEventListener('click', close); };
-            setTimeout(() => document.addEventListener('click', close), 10);
-        }
-
-        function addReaction(emoji) {
-            if (ctxTarget.msgId) {
-                socket.emit('add-reaction', { msgId: ctxTarget.msgId, emoji: emoji });
-            }
-        }
-
-        function initiateKick() {
-            if (confirm("Vote to kick this user?")) {
-                socket.emit('report-user', ctxTarget.userId);
-            }
-        }
-
-        function blockUser() {
-            if (!blockedUsers.includes(ctxTarget.userId)) {
-                blockedUsers.push(ctxTarget.userId);
-                alert("User blocked locally. You won't see their messages.");
-            }
-        }
-
-        function unblockAll() {
-            blockedUsers = [];
-            renderBlockedList();
-        }
-
-        function renderBlockedList() {
-            const div = document.getElementById('blocked-list');
-            div.innerHTML = blockedUsers.length === 0 ? '<div style="color:#555; font-size:0.8rem;">None</div>' : '';
+        
+        function renderBlocked() {
+            const list = document.getElementById('blocked-list');
+            list.innerHTML = blockedUsers.length ? '' : 'None';
             blockedUsers.forEach(id => {
-                div.innerHTML += `<div style="font-size:0.8rem; cursor:pointer;" onclick="blockedUsers = blockedUsers.filter(u=>u!='${id}'); renderBlockedList();">ID: ${id.substr(0,5)}... (Click unblock)</div>`;
+                list.innerHTML += `<div>${id.substr(0,8)}...</div>`;
             });
         }
+        function unblockAll() { blockedUsers = []; renderBlocked(); }
+        function togglePfpVis() { showPfps = document.getElementById('toggle-pfp').checked; }
 
-        // Activity Monitor
         document.addEventListener('mousemove', () => socket.emit('activity-ping'));
     </script>
 </body>
