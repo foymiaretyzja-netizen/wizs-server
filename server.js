@@ -14,7 +14,7 @@ let users = {};
 let bannedIPs = {}; 
 let activeVotes = {};
 let messageReactions = {}; 
-let globalTimer = 900; 
+let globalTimer = 900; // 15 Minutes
 
 // --- 15 MINUTE WIPE TIMER ---
 setInterval(() => {
@@ -48,25 +48,35 @@ io.on('connection', (socket) => {
             tag: userData.tag || '',
             pfp: userData.pfp || null, 
             ip: userIP,
-            warnings: 0,
             active: true
         };
         io.emit('user-update', Object.values(users));
-        if (Object.keys(users).length === 1) socket.emit('alone-notice', true);
     });
 
     socket.on('update-profile', (data) => {
         if (users[socket.id]) {
             users[socket.id].name = data.name || users[socket.id].name;
-            users[socket.id].tag = data.tag || users[socket.id].tag;
-            users[socket.id].color = data.color || users[socket.id].color;
-            users[socket.id].pfp = data.pfp; 
+            users[socket.id].tag = data.tag || "";
+            users[socket.id].color = data.color || "white";
+            if (data.pfp !== undefined) users[socket.id].pfp = data.pfp;
             io.emit('user-update', Object.values(users));
         }
     });
 
     socket.on('activity-ping', () => {
         if (users[socket.id]) users[socket.id].active = true;
+    });
+
+    // --- TYPING STATUS ---
+    socket.on('typing', (isTyping) => {
+        const user = users[socket.id];
+        if (user) {
+            // Broadcast to everyone ELSE that this user is typing
+            socket.broadcast.emit('user-typing', { 
+                name: user.name, 
+                isTyping: isTyping 
+            });
+        }
     });
 
     socket.on('send-message', (data) => {
@@ -91,7 +101,7 @@ io.on('connection', (socket) => {
             text: data.text,
             media: data.media,
             mediaType: data.mediaType,
-            replyTo: data.replyTo, // Contains {id, name, text}
+            replyTo: data.replyTo,
             timestamp: Date.now()
         });
     });
@@ -107,10 +117,16 @@ io.on('connection', (socket) => {
         });
     });
 
+    // --- VOTE KICK ---
     socket.on('report-user', (targetId) => {
         if (!users[targetId] || activeVotes[targetId]) return;
         activeVotes[targetId] = { yes: 1, no: 0, voters: [socket.id], target: targetId };
-        socket.broadcast.emit('vote-kick-start', { targetId: targetId, name: users[targetId].name });
+        
+        io.emit('vote-kick-start', { 
+            targetId: targetId, 
+            name: users[targetId].name, // The person being kicked
+            targetName: users[targetId].name 
+        });
     });
 
     socket.on('cast-vote', (data) => {
@@ -122,7 +138,7 @@ io.on('connection', (socket) => {
         else voteSession.no++;
 
         const onlineCount = Object.keys(users).length;
-        const required = Math.ceil(onlineCount * 0.66); // 2/3 majority
+        const required = Math.ceil(onlineCount * 0.51); 
 
         if (voteSession.yes >= required) {
             const targetSocket = io.sockets.sockets.get(data.targetId);
@@ -131,7 +147,7 @@ io.on('connection', (socket) => {
                 targetSocket.disconnect();
             }
             delete activeVotes[data.targetId];
-            io.emit('vote-result', { targetId: data.targetId, result: 'kicked' });
+            io.emit('vote-result', { targetId: data.targetId, result: 'kicked', name: users[data.targetId]?.name || 'User' });
         }
     });
 
