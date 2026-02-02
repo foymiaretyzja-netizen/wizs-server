@@ -9,14 +9,14 @@ const io = new Server(server, { maxHttpBufferSize: 1e8 }); // 100MB limit
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// STATE
+// --- STATE ---
 let users = {};
 let bannedIPs = {}; 
 let activeVotes = {};
-let messageReactions = {}; // { msgId: { '❤️': 2, '😂': 1 } }
+let messageReactions = {}; 
 let globalTimer = 900; 
 
-// TIMER & WIPE
+// --- 15 MINUTE WIPE TIMER ---
 setInterval(() => {
     globalTimer--;
     io.emit('timer-update', globalTimer);
@@ -46,23 +46,21 @@ io.on('connection', (socket) => {
             name: userData.name || 'User',
             color: userData.color || 'white',
             tag: userData.tag || '',
-            pfp: userData.pfp || null, // Base64 string
+            pfp: userData.pfp || null, 
             ip: userIP,
             warnings: 0,
             active: true
         };
         io.emit('user-update', Object.values(users));
-        
         if (Object.keys(users).length === 1) socket.emit('alone-notice', true);
     });
 
-    // UPDATE SETTINGS
     socket.on('update-profile', (data) => {
         if (users[socket.id]) {
             users[socket.id].name = data.name || users[socket.id].name;
             users[socket.id].tag = data.tag || users[socket.id].tag;
             users[socket.id].color = data.color || users[socket.id].color;
-            users[socket.id].pfp = data.pfp; // Can be null or base64
+            users[socket.id].pfp = data.pfp; 
             io.emit('user-update', Object.values(users));
         }
     });
@@ -75,13 +73,13 @@ io.on('connection', (socket) => {
         const user = users[socket.id];
         if (!user) return;
 
-        // SPAM CHECK (Simplified)
+        // Anti-Spam: 500ms hard limit
         const now = Date.now();
-        if (user.lastMsgTime && now - user.lastMsgTime < 500) return; // Hard 500ms limit
+        if (user.lastMsgTime && now - user.lastMsgTime < 500) return; 
         user.lastMsgTime = now;
 
         const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        messageReactions[msgId] = {}; // Init reactions
+        messageReactions[msgId] = {}; 
 
         io.emit('receive-message', {
             id: msgId,
@@ -93,19 +91,14 @@ io.on('connection', (socket) => {
             text: data.text,
             media: data.media,
             mediaType: data.mediaType,
-            replyTo: data.replyTo,
+            replyTo: data.replyTo, // Contains {id, name, text}
             timestamp: Date.now()
         });
     });
 
-    // REACTIONS
     socket.on('add-reaction', (data) => {
-        // data: { msgId, emoji }
         if (!messageReactions[data.msgId]) return;
-        
-        if (!messageReactions[data.msgId][data.emoji]) {
-            messageReactions[data.msgId][data.emoji] = 0;
-        }
+        if (!messageReactions[data.msgId][data.emoji]) messageReactions[data.msgId][data.emoji] = 0;
         messageReactions[data.msgId][data.emoji]++;
         
         io.emit('update-reaction', { 
@@ -129,7 +122,7 @@ io.on('connection', (socket) => {
         else voteSession.no++;
 
         const onlineCount = Object.keys(users).length;
-        const required = Math.ceil(onlineCount * 0.66);
+        const required = Math.ceil(onlineCount * 0.66); // 2/3 majority
 
         if (voteSession.yes >= required) {
             const targetSocket = io.sockets.sockets.get(data.targetId);
