@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* --- CORE VARIABLES --- */
         :root {
             --bg-dark: #0a0f14;
             --bg-panel: #141e23;
@@ -59,7 +60,7 @@
             --mint: #686de0;
         }
 
-        /* --- UI COMPONENTS --- */
+        /* --- BUTTONS --- */
         .btn {
             background: transparent;
             border: 1px solid var(--cyan);
@@ -134,6 +135,7 @@
         .sidebar.active {
             transform: translateX(0);
         }
+        
         .sidebar-header {
             padding: 15px;
             border-bottom: 1px solid var(--border-glow);
@@ -162,14 +164,10 @@
             animation: fadeIn 0.3s;
             position: relative;
         }
-        .msg-row.mine {
-            align-items: flex-end;
-        }
-        .msg-row.theirs {
-            align-items: flex-start;
-        }
+        .msg-row.mine { align-items: flex-end; }
+        .msg-row.theirs { align-items: flex-start; }
 
-        /* Visual Hierarchy: Always Name -> Tag -> PFP */
+        /* Visual Hierarchy: Name -> Tag -> PFP */
         .msg-meta {
             font-size: 0.75rem;
             margin-bottom: 4px;
@@ -179,10 +177,14 @@
             flex-direction: row; 
         }
 
-        .username {
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
+        /* --- NAME GRADIENTS --- */
+        .username { font-weight: bold; letter-spacing: 0.5px; }
+        .name-white { color: #fff; }
+        .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
+        .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
+        .name-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
+
+        /* --- TAG GRADIENTS --- */
         .user-tag {
             border: 1px solid #555;
             border-radius: 4px;
@@ -190,8 +192,29 @@
             font-size: 0.7rem;
             color: #aaa;
             background: rgba(0,0,0,0.3);
+            font-weight: bold;
         }
-        
+        .tag-white { color: #aaa; border-color: #555; }
+        .tag-sea { 
+            border-color: var(--cyan); 
+            background: var(--grad-nexus); 
+            -webkit-background-clip: text; 
+            color: transparent; 
+        }
+        .tag-fire { 
+            border-color: #ff4e50; 
+            background: var(--grad-fire); 
+            -webkit-background-clip: text; 
+            color: transparent; 
+        }
+        .tag-astro { 
+            border-color: #8a2be2; 
+            background: var(--grad-astro); 
+            -webkit-background-clip: text; 
+            color: transparent; 
+        }
+
+        /* --- PFP --- */
         .pfp-square {
             width: 24px;
             height: 24px;
@@ -205,12 +228,7 @@
             overflow: hidden;
         }
 
-        /* Gradient Text Classes */
-        .name-white { color: #fff; }
-        .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
-        .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
-        .name-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
-
+        /* --- MESSAGE BUBBLES --- */
         .msg-bubble {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
@@ -232,10 +250,10 @@
             background: rgba(0, 242, 234, 0.05);
         }
 
-        /* --- TYPING INDICATOR --- */
+        /* --- TYPING INDICATOR (Raised High) --- */
         #typing-bar {
             position: fixed;
-            bottom: 70px; /* Just above input bar */
+            bottom: 90px; /* Moved up significantly to prevent clipping */
             left: 20px;
             right: 20px;
             color: var(--mint);
@@ -258,28 +276,7 @@
             80%, 100% { content: ''; }
         }
 
-        /* --- SYSTEM MESSAGES --- */
-        .sys-msg {
-            text-align: center;
-            color: var(--cyan);
-            font-size: 0.8rem;
-            margin: 10px 0;
-            border: 1px dashed var(--cyan);
-            padding: 5px;
-            background: rgba(0, 242, 234, 0.05);
-        }
-        .vote-box {
-            background: #220000;
-            border: 1px solid #ff4444;
-            padding: 15px;
-            margin: 15px auto;
-            width: 80%;
-            text-align: center;
-            border-radius: 4px;
-            box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
-        }
-
-        /* --- MEDIA & BLUR --- */
+        /* --- MEDIA STYLES --- */
         .media-container {
             margin-top: 8px;
             max-width: 100%;
@@ -317,16 +314,6 @@
             margin-bottom: 10px;
             border-left: 3px solid var(--mint);
         }
-        .reply-preview {
-            font-size: 0.7rem;
-            color: #aaa;
-            border-left: 2px solid var(--mint);
-            padding-left: 8px;
-            margin-bottom: 5px;
-            opacity: 0.8;
-            font-style: italic;
-        }
-        
         .input-wrapper {
             display: flex;
             gap: 10px;
@@ -381,12 +368,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        .opt-tag {
-            font-size: 0.7rem;
-            color: #666;
-            float: right;
-            text-transform: none;
-        }
         select, input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -395,9 +376,6 @@
             color: white;
             font-family: var(--font-main);
             outline: none;
-        }
-        select:focus, input[type="text"]:focus {
-            border-color: var(--cyan);
         }
 
         /* --- CONTEXT MENUS --- */
@@ -419,10 +397,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: 0.2s;
-        }
-        .ctx-item:last-child {
-            border-bottom: none;
         }
         .ctx-item:hover {
             background: var(--cyan);
@@ -438,17 +412,21 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             z-index: 6001;
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
         }
-        .emoji-opt {
-            padding: 8px;
-            cursor: pointer;
+
+        /* --- BLACK SCREEN DEATH CLASS --- */
+        .kicked-screen {
+            position: fixed;
+            inset: 0;
+            background: black;
+            color: red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            font-weight: bold;
+            font-size: 1.5rem;
             text-align: center;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        .emoji-opt:hover {
-            background: rgba(255,255,255,0.1);
         }
 
         @keyframes fadeIn {
@@ -461,32 +439,40 @@
 
     <div id="setup-modal" class="modal">
         <div class="modal-box">
-            <h2 style="color:var(--cyan); text-align:center; margin-top:0; letter-spacing: 2px;">&lt;NEXUS SETUP&gt;</h2>
-            <p style="font-size:0.8rem; color:#888; text-align:center; margin-bottom:30px;">
-                Secure. Anonymous. Transient.
-            </p>
-
+            <h2 style="color:var(--cyan); text-align:center; letter-spacing: 2px;">&lt;NEXUS SETUP&gt;</h2>
+            
             <div class="input-group">
-                <label>Username (Required)</label>
-                <input type="text" id="setup-name" maxlength="15" placeholder="Enter alias...">
+                <label>Username</label>
+                <input type="text" id="setup-name" maxlength="15" placeholder="Alias...">
+            </div>
+            
+            <div class="input-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Tag (Opt)</label>
+                    <input type="text" id="setup-tag" maxlength="6" placeholder="TAG">
+                </div>
+                <div style="flex:1;">
+                    <label>Tag Color</label>
+                    <select id="setup-tag-color">
+                        <option value="white">White</option>
+                        <option value="sea">Sea Gradient</option>
+                        <option value="fire">Fire Gradient</option>
+                        <option value="astro">Astro Gradient</option>
+                    </select>
+                </div>
             </div>
 
             <div class="input-group">
-                <label>Tag <span class="opt-tag">(Optional)</span></label>
-                <input type="text" id="setup-tag" maxlength="6" placeholder="e.g. COOL">
+                <label>Profile Picture</label>
+                <button class="btn btn-sm" onclick="document.getElementById('setup-pfp').click()">Upload PFP</button>
+                <input type="file" id="setup-pfp" accept="image/*" hidden>
+                <span id="setup-pfp-status" style="font-size:0.7rem; color:#aaa; margin-left:10px;">None</span>
             </div>
 
             <div class="input-group">
-                <label>Profile Picture <span class="opt-tag">(Optional)</span></label>
-                <input type="file" id="setup-pfp" accept="image/*" style="display:none;">
-                <button class="btn btn-sm" onclick="document.getElementById('setup-pfp').click()">Upload Square PFP</button>
-                <span id="setup-pfp-status" style="font-size:0.7rem; color:#aaa; margin-left:10px;">No file selected</span>
-            </div>
-
-            <div class="input-group">
-                <label>Username Color</label>
+                <label>Name Color</label>
                 <select id="setup-color">
-                    <option value="white">Standard White</option>
+                    <option value="white">White</option>
                     <option value="sea">Sea Gradient</option>
                     <option value="fire">Fire Gradient</option>
                     <option value="astro">Astro Gradient</option>
@@ -496,35 +482,46 @@
             <div class="input-group">
                 <label>Theme</label>
                 <select id="setup-theme">
-                    <option value="default">Nexus Default</option>
+                    <option value="default">Default</option>
                     <option value="firestone">FireStone</option>
                     <option value="seashine">SeaShine</option>
                     <option value="astrolight">AstroLight</option>
                 </select>
             </div>
 
-            <button class="btn" style="margin-top:20px;" onclick="enterNexus()">INITIALIZE CONNECTION</button>
+            <button class="btn" style="margin-top:20px;" onclick="enterNexus()">INITIALIZE</button>
         </div>
     </div>
 
     <div id="settings-modal" class="modal" style="display:none;">
         <div class="modal-box">
-            <h3 style="color:var(--cyan); border-bottom:1px solid #333; padding-bottom:10px; margin-top:0;">SETTINGS & CUSTOMIZE</h3>
+            <h3 style="color:var(--cyan); border-bottom:1px solid #333;">SETTINGS</h3>
             
             <div class="input-group">
-                <label>Update Username</label>
+                <label>Username</label>
                 <input type="text" id="set-name" maxlength="15">
             </div>
             
-            <div class="input-group">
-                <label>Update Tag</label>
-                <input type="text" id="set-tag" maxlength="6">
+            <div class="input-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>Tag</label>
+                    <input type="text" id="set-tag" maxlength="6">
+                </div>
+                <div style="flex:1;">
+                    <label>Tag Color</label>
+                    <select id="set-tag-color">
+                        <option value="white">White</option>
+                        <option value="sea">Sea</option>
+                        <option value="fire">Fire</option>
+                        <option value="astro">Astro</option>
+                    </select>
+                </div>
             </div>
 
             <div class="input-group">
-                <label>Update Theme</label>
+                <label>Theme</label>
                 <select id="set-theme">
-                    <option value="default">Nexus Default</option>
+                    <option value="default">Default</option>
                     <option value="firestone">FireStone</option>
                     <option value="seashine">SeaShine</option>
                     <option value="astrolight">AstroLight</option>
@@ -532,54 +529,55 @@
             </div>
 
             <div class="input-group">
-                <label>Update Color</label>
+                <label>Name Color</label>
                 <select id="set-color">
                     <option value="white">White</option>
-                    <option value="sea">Sea Gradient</option>
-                    <option value="fire">Fire Gradient</option>
-                    <option value="astro">Astro Gradient</option>
+                    <option value="sea">Sea</option>
+                    <option value="fire">Fire</option>
+                    <option value="astro">Astro</option>
                 </select>
             </div>
-
+            
             <div class="input-group">
-                <label>New Profile Picture</label>
-                <input type="file" id="set-pfp-upload" accept="image/*" style="display:none;">
-                <button class="btn btn-sm" onclick="document.getElementById('set-pfp-upload').click()">Choose New Image</button>
-                <span id="set-pfp-status" style="font-size:0.7rem; color:#aaa;">No change selected</span>
+                <label>New PFP</label>
+                <button class="btn btn-sm" onclick="document.getElementById('set-pfp-upload').click()">Choose Image</button>
+                <input type="file" id="set-pfp-upload" accept="image/*" hidden>
+                <span id="set-pfp-status" style="font-size:0.7rem; color:#aaa;">No change</span>
             </div>
 
-            <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-
             <div class="input-group">
-                <label style="color:#aaa; cursor:pointer;">
-                    <input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs in Chat
+                <label>
+                    <input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs
                 </label>
             </div>
 
             <div class="input-group">
                 <label>Blocked Users</label>
-                <div id="blocked-list" style="max-height:80px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem; color:#666; margin-bottom:5px;"></div>
+                <div id="blocked-list" style="max-height:80px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem; margin-bottom:5px;"></div>
                 <button class="btn btn-sm btn-danger" onclick="unblockAll()">Unblock All</button>
             </div>
-            
-            <div style="display:flex; gap:10px; margin-top:30px;">
-                <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'" style="border-color:#555; color:#aaa;">CANCEL</button>
-                <button class="btn" onclick="saveSettings()">SAVE CHANGES</button>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">CANCEL</button>
+                <button class="btn" onclick="saveSettings()">SAVE</button>
             </div>
         </div>
     </div>
 
     <div id="top-bar">
         <div style="font-weight:bold; letter-spacing:2px; color:var(--cyan); font-size:1.2rem;">&lt;NEXUS&gt;</div>
+        
         <div style="font-size:0.8rem; color:#aaa;">
-            <i class="fa-regular fa-clock"></i> <span id="timer" style="color:#fff; font-weight:bold;">15:00</span> 
+            <i class="fa-regular fa-clock"></i> 
+            <span id="timer" style="color:#fff; font-weight:bold;">15:00</span> 
             <span style="margin:0 10px;">|</span> 
-            <i class="fa-solid fa-signal"></i> <span id="online-count" style="color:var(--mint);">0</span> Online
+            <span id="online-count" style="color:var(--mint);">0</span> Online
         </div>
-        <div>
-            <i class="fa-solid fa-images" style="margin-right:20px; cursor:pointer; font-size:1.1rem;" onclick="toggleSide('media-sidebar')" title="Media Stream"></i>
-            <i class="fa-solid fa-users" style="margin-right:20px; cursor:pointer; font-size:1.1rem;" onclick="toggleSide('users-sidebar')" title="Active Users"></i>
-            <i class="fa-solid fa-gear" style="cursor:pointer; font-size:1.1rem;" onclick="openSettings()" title="Settings"></i>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="btn btn-sm" onclick="toggleSide('media-sidebar')">MEDIA</button>
+            <button class="btn btn-sm" onclick="toggleSide('users-sidebar')">USERS</button>
+            <i class="fa-solid fa-gear" style="cursor:pointer; font-size:1.2rem; margin-left:10px; color:var(--cyan);" onclick="openSettings()" title="Settings"></i>
         </div>
     </div>
 
@@ -595,9 +593,7 @@
             </div>
     </div>
 
-    <div id="chat-main">
-        </div>
-    
+    <div id="chat-main"></div>
     <div id="typing-bar"></div>
 
     <div id="input-area">
@@ -616,35 +612,28 @@
     </div>
 
     <div id="ctx-menu">
-        <div class="ctx-item" onclick="handleCtx('reply')">
-            <i class="fa-solid fa-reply"></i> Reply
-        </div>
-        <div class="ctx-item" onclick="handleCtx('react')">
-            <i class="fa-regular fa-face-smile"></i> Add Reaction
-        </div>
-        <div class="ctx-item" onclick="handleCtx('block')" style="color:#ff4444;">
-            <i class="fa-solid fa-ban"></i> Block User
-        </div>
-        <div class="ctx-item" onclick="handleCtx('report')" style="color:#ff4444;">
-            <i class="fa-solid fa-flag"></i> Vote Kick
-        </div>
+        <div class="ctx-item" onclick="handleCtx('reply')"><i class="fa-solid fa-reply"></i> Reply</div>
+        <div class="ctx-item" onclick="handleCtx('react')"><i class="fa-regular fa-face-smile"></i> Reaction</div>
+        <div class="ctx-item" onclick="handleCtx('block')" style="color:#ff4444;"><i class="fa-solid fa-ban"></i> Block</div>
+        <div class="ctx-item" onclick="handleCtx('report')" style="color:#ff4444;"><i class="fa-solid fa-flag"></i> Vote Kick</div>
     </div>
-
-    <div id="emoji-picker">
-        <div class="emoji-opt" onclick="sendReaction('❤️')">❤️</div>
-        <div class="emoji-opt" onclick="sendReaction('😂')">😂</div>
-        <div class="emoji-opt" onclick="sendReaction('🔥')">🔥</div>
-        <div class="emoji-opt" onclick="sendReaction('👍')">👍</div>
+    
+    <div id="emoji-picker" style="display:none; position:absolute; background:#111; border:1px solid var(--cyan); padding:8px; grid-template-columns:repeat(4,1fr); gap:8px; z-index:6001;">
+        <div onclick="sendReaction('❤️')" style="cursor:pointer;">❤️</div>
+        <div onclick="sendReaction('😂')" style="cursor:pointer;">😂</div>
+        <div onclick="sendReaction('🔥')" style="cursor:pointer;">🔥</div>
+        <div onclick="sendReaction('👍')" style="cursor:pointer;">👍</div>
     </div>
 
     <script>
         const socket = io();
         
-        // --- GLOBAL VARIABLES ---
+        // GLOBAL STATE
         let myId = null;
         let myData = { 
             name: '', 
             tag: '', 
+            tagColor: 'white', 
             color: 'white', 
             theme: 'default', 
             pfp: null 
@@ -655,7 +644,7 @@
         let ctxData = null; 
         let typingTimeout = null;
 
-        // --- FILE UPLOAD PREVIEWS ---
+        // --- FILE HANDLING ---
         function handlePfpUpload(inputId, statusId, targetVar) {
             document.getElementById(inputId).addEventListener('change', function() {
                 const file = this.files[0];
@@ -663,9 +652,8 @@
                     const reader = new FileReader();
                     reader.onload = e => { 
                         if(targetVar === 'setup') myData.pfp = e.target.result;
-                        if(targetVar === 'setting') window.tempPfp = e.target.result; // Temp store
+                        if(targetVar === 'setting') window.tempPfp = e.target.result;
                         document.getElementById(statusId).innerText = "Image Loaded: " + file.name;
-                        document.getElementById(statusId).style.color = "var(--mint)";
                     };
                     reader.readAsDataURL(file);
                 }
@@ -674,40 +662,30 @@
         handlePfpUpload('setup-pfp', 'setup-pfp-status', 'setup');
         handlePfpUpload('set-pfp-upload', 'set-pfp-status', 'setting');
 
-        // --- INITIALIZATION ---
+        // --- INIT ---
         function enterNexus() {
             const name = document.getElementById('setup-name').value;
-            if(!name) { 
-                alert("Username is required."); 
-                return; 
-            }
+            if(!name) { alert("Username Required"); return; }
             
-            // Save initial state
             myData.name = name;
             myData.tag = document.getElementById('setup-tag').value;
+            myData.tagColor = document.getElementById('setup-tag-color').value;
             myData.theme = document.getElementById('setup-theme').value;
             myData.color = document.getElementById('setup-color').value;
             
-            // Apply Theme
             document.body.className = myData.theme;
-            
-            // Connect
             socket.emit('join-nexus', myData);
             document.getElementById('setup-modal').style.display = 'none';
         }
 
-        // --- SETTINGS LOGIC ---
+        // --- SETTINGS ---
         function openSettings() {
-            // Populate fields
             document.getElementById('set-name').value = myData.name;
             document.getElementById('set-tag').value = myData.tag;
+            document.getElementById('set-tag-color').value = myData.tagColor;
             document.getElementById('set-theme').value = myData.theme;
             document.getElementById('set-color').value = myData.color;
-            document.getElementById('set-pfp-status').innerText = "No change selected";
-            document.getElementById('set-pfp-status').style.color = "#aaa";
-            
-            window.tempPfp = undefined; // Reset temp PFP
-            
+            window.tempPfp = undefined; 
             renderBlocked();
             document.getElementById('settings-modal').style.display = 'flex';
         }
@@ -715,167 +693,135 @@
         function saveSettings() {
             myData.name = document.getElementById('set-name').value;
             myData.tag = document.getElementById('set-tag').value;
+            myData.tagColor = document.getElementById('set-tag-color').value;
             myData.theme = document.getElementById('set-theme').value;
             myData.color = document.getElementById('set-color').value;
             
             let pfpUpdate = window.tempPfp;
             if (pfpUpdate) myData.pfp = pfpUpdate;
 
-            // Apply theme locally
             document.body.className = myData.theme;
-
-            // Sync with Server
-            socket.emit('update-profile', {
-                name: myData.name,
-                tag: myData.tag,
-                color: myData.color,
-                pfp: pfpUpdate
+            
+            socket.emit('update-profile', { 
+                name: myData.name, 
+                tag: myData.tag, 
+                tagColor: myData.tagColor, 
+                color: myData.color, 
+                pfp: pfpUpdate 
             });
-
             document.getElementById('settings-modal').style.display = 'none';
         }
 
         // --- SOCKET LISTENERS ---
-        socket.on('connect', () => {
-            myId = socket.id;
-            console.log("Connected to Nexus:", myId);
-        });
-
+        socket.on('connect', () => { myId = socket.id; });
+        
         socket.on('timer-update', t => {
             const m = Math.floor(t/60);
             const s = t%60;
             document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
         });
+        
+        // --- BLACK SCREEN KICK ---
+        socket.on('force-disconnect', (data) => {
+            document.body.innerHTML = `
+                <div class="kicked-screen">
+                    <div>
+                        CONNECTION TERMINATED.<br><br>
+                        REASON: ${data.reason}
+                    </div>
+                </div>`;
+        });
 
+        // --- VOTE KICK UI ---
+        socket.on('vote-kick-start', (data) => {
+            // IMPORTANT: Hide vote box from the target user
+            if (data.targetId === myId) return;
+
+            const chat = document.getElementById('chat-main');
+            const div = document.createElement('div');
+            div.style.cssText = "background:#220000; border:1px solid #ff4444; padding:15px; margin:15px auto; width:80%; text-align:center; border-radius:5px;";
+            div.innerHTML = `
+                <div style="color:#ff4444; font-weight:bold; margin-bottom:5px;">⚠️ VOTE KICK INITIATED</div>
+                <div style="margin:5px 0;">Target: <b>${data.targetName}</b></div>
+                <div style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Vote required to eject user.</div>
+                <div style="display:flex; justify-content:center; gap:20px;">
+                    <button class="btn btn-sm" style="border-color:var(--mint); color:var(--mint);" onclick="castVote('${data.targetId}', 'yes', this)">YES</button>
+                    <button class="btn btn-sm" style="border-color:#ff4444; color:#ff4444;" onclick="castVote('${data.targetId}', 'no', this)">NO</button>
+                </div>`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        function castVote(tid, val, btn) {
+            socket.emit('cast-vote', { targetId: tid, vote: val });
+            btn.parentNode.innerHTML = `<span style="color:#aaa;">Vote Cast.</span>`;
+        }
+
+        socket.on('vote-result', (data) => {
+            const chat = document.getElementById('chat-main');
+            const div = document.createElement('div');
+            div.style.textAlign = 'center';
+            div.style.color = '#aaa';
+            div.style.fontSize = '0.8rem';
+            div.style.margin = '10px 0';
+            div.innerHTML = `Result: ${data.name} was ${data.result}.`;
+            chat.appendChild(div);
+        });
+
+        // --- USER LIST UPDATE ---
         socket.on('user-update', users => {
             document.getElementById('online-count').innerText = users.length;
             const list = document.getElementById('user-list');
             list.innerHTML = '';
+            
             users.forEach(u => {
                 const isActive = u.active;
+                // Render list item
                 list.innerHTML += `
-                    <div style="margin-bottom:15px; display:flex; align-items:center; gap:10px; opacity:${isActive?1:0.6}">
+                    <div style="margin-bottom:15px; display:flex; align-items:center; gap:10px; opacity:${isActive?1:0.5}; transition:opacity 0.3s;">
                         <div class="pfp-square">
                             ${u.pfp ? `<img src="${u.pfp}" style="width:100%;height:100%;object-fit:cover;">` : u.name[0]}
                         </div>
-                        <div>
-                            <div style="font-size:0.9rem; font-weight:bold;">${u.name} <span style="font-size:0.7rem; color:#888;">${u.tag ? `[${u.tag}]` : ''}</span></div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.9rem; font-weight:bold;">
+                                ${u.name} 
+                                <span class="user-tag tag-${u.tagColor || 'white'}" style="margin-left:5px;">${u.tag}</span>
+                            </div>
                             <div style="font-size:0.7rem; color:${isActive?'var(--mint)':'#555'}">
-                                <i class="fa-solid fa-circle" style="font-size:0.5rem; margin-right:4px;"></i>${isActive?'Active':'Idle'}
+                                <i class="fa-solid fa-circle" style="font-size:0.5rem; margin-right:4px;"></i>
+                                ${isActive ? 'Active' : 'Idle'}
                             </div>
                         </div>
                     </div>`;
             });
         });
 
-        // --- TYPING INDICATOR HANDLER ---
-        const chatInput = document.getElementById('chat-input');
-        chatInput.addEventListener('keydown', (e) => {
-            // Enter sends message
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-            
-            // Emit typing event
-            socket.emit('typing', true);
-            clearTimeout(typingTimeout);
-            
-            // Stop typing after 2 seconds of inactivity
-            typingTimeout = setTimeout(() => {
-                socket.emit('typing', false);
-            }, 2000);
-        });
-
-        socket.on('user-typing', (data) => {
-            const bar = document.getElementById('typing-bar');
-            if (data.isTyping) {
-                bar.innerText = `${data.name} is typing`;
-                bar.classList.add('typing-dots');
-                bar.style.opacity = '1';
-            } else {
-                bar.style.opacity = '0';
-                setTimeout(() => {
-                    bar.innerText = '';
-                    bar.classList.remove('typing-dots');
-                }, 300);
-            }
-        });
-
-        // --- VOTE KICK SYSTEM ---
-        socket.on('vote-kick-start', (data) => {
-            const chat = document.getElementById('chat-main');
-            const div = document.createElement('div');
-            div.className = 'vote-box';
-            div.innerHTML = `
-                <div style="color:#ff4444; font-weight:bold; font-size:1.1rem; margin-bottom:10px;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> VOTE KICK INITIATED
-                </div>
-                <div style="margin:5px 0;">Target: <b>${data.targetName}</b></div>
-                <div style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Majority vote required to eject user.</div>
-                <div style="display:flex; justify-content:center; gap:20px;">
-                    <button class="btn btn-sm" style="border-color:var(--mint); color:var(--mint);" onclick="castVote('${data.targetId}', 'yes')">YES (KICK)</button>
-                    <button class="btn btn-sm" style="border-color:#ff4444; color:#ff4444;" onclick="castVote('${data.targetId}', 'no')">NO</button>
-                </div>
-            `;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        });
-
-        socket.on('vote-result', (data) => {
-            const chat = document.getElementById('chat-main');
-            const div = document.createElement('div');
-            div.className = 'sys-msg';
-            div.innerHTML = `Vote Result: <b>${data.name}</b> was <b>${data.result.toUpperCase()}</b>.`;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        });
-
-        function castVote(targetId, vote) {
-            socket.emit('cast-vote', { targetId, vote });
-            // Optional: Hide buttons or show "Vote Cast" feedback here
-        }
-
-        // --- CHAT MESSAGE RENDERER ---
+        // --- CHAT MESSAGES ---
         socket.on('receive-message', data => {
             if(blockedUsers.includes(data.userId)) return;
-
+            
             const chat = document.getElementById('chat-main');
             const isMe = data.userId === myId;
-            
-            // PFP
             const pfpHtml = showPfps ? `
                 <div class="pfp-square">
                     ${data.pfp ? `<img src="${data.pfp}" style="width:100%;height:100%;object-fit:cover;">` : data.name[0]}
                 </div>` : '';
 
-            // Reply Preview
-            let replyHtml = '';
-            if(data.replyTo) {
-                replyHtml = `
-                    <div class="reply-preview">
-                        Replying to ${data.replyTo.name}: ${data.replyTo.text.substring(0,30)}...
-                    </div>`;
-            }
-
-            // Media & YouTube Processing
-            let contentHtml = data.text;
-            const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([a-zA-Z0-9_-]+)/;
-            const ytMatch = data.text.match(ytRegex);
-            
+            // --- MEDIA PROCESSING ---
             let mediaHtml = '';
             
-            // YouTube Embed
+            // YouTube
+            const ytMatch = data.text.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([a-zA-Z0-9_-]+)/);
             if(ytMatch) {
+                const vidId = ytMatch[1];
                 mediaHtml += `
-                <div class="media-container blurred" onclick="toggleBlur(this)">
-                    <iframe width="100%" height="250" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen style="pointer-events:none;"></iframe>
-                </div>`;
-                // Add to sidebar
-                addToGallery(`https://img.youtube.com/vi/${ytMatch[1]}/0.jpg`, 'video');
+                    <div class="media-container blurred" onclick="toggleBlur(this)">
+                        <iframe width="100%" height="200" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen style="pointer-events:none;"></iframe>
+                    </div>`;
+                addToGallery(`https://img.youtube.com/vi/${vidId}/0.jpg`, 'video');
             }
 
-            // Uploaded Media
+            // File Uploads
             if(data.media) {
                 if(data.mediaType.includes('video')) {
                     mediaHtml += `<div class="media-container blurred" onclick="toggleBlur(this)"><video src="${data.media}" style="width:100%;" loop muted></video></div>`;
@@ -885,185 +831,172 @@
                 addToGallery(data.media, data.mediaType);
             }
 
+            // --- BUILD MESSAGE ---
             const div = document.createElement('div');
             div.className = `msg-row ${isMe ? 'mine' : 'theirs'}`;
             
-            // STRICT VISUAL HIERARCHY: Username -> Tag -> PFP
+            // Tag Logic
+            const tagHtml = data.tag ? `<span class="user-tag tag-${data.tagColor || 'white'}">${data.tag}</span>` : '';
+
             div.innerHTML = `
                 <div class="msg-meta">
                     <span class="username name-${data.color}">${data.name}</span>
-                    ${data.tag ? `<span class="user-tag">${data.tag}</span>` : ''}
+                    ${tagHtml}
                     ${pfpHtml}
                 </div>
                 <div class="msg-bubble" onclick="openMenu(event, '${data.id}', '${data.userId}', '${data.name}', '${data.text.replace(/'/g, "\\'")}')">
-                    ${replyHtml}
-                    <div>${contentHtml}</div>
+                    ${data.replyTo ? `
+                        <div style="font-size:0.7rem; color:#aaa; font-style:italic; border-left:2px solid var(--mint); padding-left:5px; margin-bottom:5px;">
+                            Replying to ${data.replyTo.name}...
+                        </div>` : ''}
+                    <div>${data.text}</div>
                     ${mediaHtml}
-                    <div id="react-${data.id}" style="display:flex; gap:4px; margin-top:5px; font-size:0.8rem; flex-wrap:wrap;"></div>
-                </div>
-            `;
+                    <div id="react-${data.id}" style="display:flex; gap:2px; margin-top:5px; font-size:0.8rem; flex-wrap:wrap;"></div>
+                </div>`;
+            
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         });
 
         socket.on('update-reaction', data => {
             const el = document.getElementById(`react-${data.msgId}`);
-            if(el) {
-                el.innerHTML = '';
+            if(el) { 
+                el.innerHTML = ''; 
                 for(let [emoji, count] of Object.entries(data.reactions)) {
-                    el.innerHTML += `<span style="background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:10px; border:1px solid #333;">${emoji} ${count}</span>`;
+                    el.innerHTML += `<span style="background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:10px;">${emoji} ${count}</span> `; 
                 }
             }
         });
 
         socket.on('system-wipe', () => {
-            document.getElementById('chat-main').innerHTML = '';
+            document.getElementById('chat-main').innerHTML = '<div style="text-align:center; color:var(--cyan); border:1px dashed var(--cyan); padding:10px; margin:20px;">SYSTEM WIPE COMPLETE</div>';
             document.getElementById('media-grid').innerHTML = '';
-            const wipeMsg = document.createElement('div');
-            wipeMsg.className = 'sys-msg';
-            wipeMsg.innerHTML = "SYSTEM WIPE COMPLETE. SECURE SESSION RESTARTED.";
-            document.getElementById('chat-main').appendChild(wipeMsg);
         });
 
-        // --- MEDIA UTILS ---
-        function toggleBlur(el) {
-            if(el.classList.contains('blurred')) {
-                el.classList.remove('blurred');
-                el.classList.add('unblurred');
-                // Enable controls
-                const vid = el.querySelector('video');
-                if(vid) { vid.muted = false; vid.controls = true; }
-                const iframe = el.querySelector('iframe');
-                if(iframe) iframe.style.pointerEvents = 'auto';
-            } else {
-                el.classList.add('blurred');
-                el.classList.remove('unblurred');
-                // Disable controls
-                const vid = el.querySelector('video');
-                if(vid) { vid.muted = true; vid.controls = false; }
-                const iframe = el.querySelector('iframe');
-                if(iframe) iframe.style.pointerEvents = 'none';
+        // --- TYPING & INPUT ---
+        const input = document.getElementById('chat-input');
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                sendMessage(); 
             }
+            
+            socket.emit('typing', true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => socket.emit('typing', false), 2000);
+        });
+
+        socket.on('user-typing', d => {
+            const bar = document.getElementById('typing-bar');
+            if(d.isTyping) { 
+                bar.innerText = `${d.name} is typing`; 
+                bar.classList.add('typing-dots'); 
+                bar.style.opacity = '1'; 
+            } else { 
+                bar.style.opacity = '0'; 
+            }
+        });
+
+        function toggleBlur(el) {
+            el.classList.toggle('blurred'); 
+            el.classList.toggle('unblurred');
+            const v = el.querySelector('video'); 
+            if(v) { v.muted = !v.muted; v.controls = !v.controls; }
+            const i = el.querySelector('iframe'); 
+            if(i) i.style.pointerEvents = i.style.pointerEvents === 'none' ? 'auto' : 'none';
         }
 
-        // --- SENDING LOGIC ---
         function sendMessage() {
-            const input = document.getElementById('chat-input');
             if(!input.value.trim()) return;
-            
-            socket.emit('send-message', {
-                text: input.value,
-                replyTo: currentReply
+            socket.emit('send-message', { 
+                text: input.value, 
+                replyTo: currentReply 
             });
-            input.value = '';
+            input.value = ''; 
             cancelReply();
         }
 
-        function cancelReply() {
-            currentReply = null;
-            document.getElementById('reply-bar').style.display = 'none';
+        function cancelReply() { 
+            currentReply = null; 
+            document.getElementById('reply-bar').style.display = 'none'; 
         }
 
-        // --- FILE ATTACHMENT ---
         document.getElementById('chat-media').addEventListener('change', function() {
             const file = this.files[0];
             if(file) {
-                // Simple feedback that file is sending
-                const input = document.getElementById('chat-input');
-                const oldPlaceholder = input.placeholder;
-                input.placeholder = "Uploading " + file.name + "...";
-                input.disabled = true;
-
-                const reader = new FileReader();
-                reader.onload = e => {
-                    socket.emit('send-message', { 
-                        text: '', 
-                        media: e.target.result, 
-                        mediaType: file.type 
-                    });
-                    input.placeholder = oldPlaceholder;
-                    input.disabled = false;
-                };
-                reader.readAsDataURL(file);
-                this.value = ''; // Reset file input
+                const r = new FileReader();
+                r.onload = e => socket.emit('send-message', { text: '', media: e.target.result, mediaType: file.type });
+                r.readAsDataURL(file); 
+                this.value = '';
             }
         });
 
-        // --- CONTEXT MENU LOGIC ---
-        function openMenu(e, msgId, userId, name, text) {
+        // --- CONTEXT MENU ---
+        function openMenu(e, mid, uid, name, text) {
             e.stopPropagation();
-            const menu = document.getElementById('ctx-menu');
+            const m = document.getElementById('ctx-menu');
+            m.style.display = 'block'; 
             
-            // Position menu at cursor
-            menu.style.display = 'block';
-            menu.style.left = e.pageX + 'px';
-            menu.style.top = e.pageY + 'px';
-            
-            // Adjust if clipping off screen
-            if (e.pageY + menu.offsetHeight > window.innerHeight) {
-                menu.style.top = (e.pageY - menu.offsetHeight) + 'px';
-            }
-            if (e.pageX + menu.offsetWidth > window.innerWidth) {
-                menu.style.left = (e.pageX - menu.offsetWidth) + 'px';
-            }
+            // Boundaries check
+            let x = e.pageX;
+            let y = e.pageY;
+            if (x + 180 > window.innerWidth) x = window.innerWidth - 190;
+            if (y + 150 > window.innerHeight) y = window.innerHeight - 160;
 
-            // Save context
-            ctxData = { msgId, userId, name, text };
+            m.style.left = x + 'px'; 
+            m.style.top = y + 'px';
             
-            // Click anywhere else to close
-            const close = () => { 
-                menu.style.display = 'none'; 
-                document.removeEventListener('click', close); 
-            };
+            ctxData = { msgId: mid, userId: uid, name, text };
+            
+            const close = () => { m.style.display = 'none'; document.removeEventListener('click', close); };
             setTimeout(() => document.addEventListener('click', close), 10);
         }
 
         function handleCtx(action) {
-            if(action === 'reply') {
-                currentReply = { id: ctxData.msgId, name: ctxData.name, text: ctxData.text };
-                document.getElementById('reply-target-name').innerText = ctxData.name;
-                document.getElementById('reply-bar').style.display = 'flex';
-                document.getElementById('chat-input').focus();
-            } else if (action === 'block') {
-                blockedUsers.push(ctxData.userId);
-                alert("User blocked locally.");
-                renderBlocked();
-            } else if (action === 'report') {
-                if(confirm("Initiate a VOTE KICK for " + ctxData.name + "?")) {
-                    socket.emit('report-user', ctxData.userId);
+            if(action === 'reply') { 
+                currentReply = { id: ctxData.msgId, name: ctxData.name, text: ctxData.text }; 
+                document.getElementById('reply-target-name').innerText = ctxData.name; 
+                document.getElementById('reply-bar').style.display = 'flex'; 
+                input.focus(); 
+            }
+            if(action === 'block') { 
+                blockedUsers.push(ctxData.userId); 
+                renderBlocked(); 
+            }
+            if(action === 'report') { 
+                if(confirm("Initiate Vote Kick against " + ctxData.name + "?")) {
+                    socket.emit('report-user', ctxData.userId); 
                 }
-            } else if (action === 'react') {
-                const p = document.getElementById('emoji-picker');
-                p.style.display = 'grid';
-                p.style.left = event.pageX + 'px';
-                p.style.top = event.pageY + 'px';
+            }
+            if(action === 'react') { 
+                const p = document.getElementById('emoji-picker'); 
+                p.style.display = 'grid'; 
+                p.style.left = event.pageX + 'px'; 
+                p.style.top = event.pageY + 'px'; 
                 
-                const closeP = () => { 
-                    p.style.display = 'none'; 
-                    document.removeEventListener('click', closeP); 
-                };
-                setTimeout(() => document.addEventListener('click', closeP), 10);
+                const closeP = () => { p.style.display = 'none'; document.removeEventListener('click', closeP); }; 
+                setTimeout(() => document.addEventListener('click', closeP), 10); 
             }
         }
 
-        function sendReaction(emoji) {
-            socket.emit('add-reaction', { msgId: ctxData.msgId, emoji });
+        function sendReaction(e) { 
+            socket.emit('add-reaction', { msgId: ctxData.msgId, emoji: e }); 
         }
-
-        // --- SIDEBAR LOGIC ---
+        
+        // --- SIDEBAR TOGGLES ---
         function toggleSide(id) {
             const el = document.getElementById(id);
-            const isActive = el.classList.contains('active');
+            const others = document.querySelectorAll('.sidebar');
             
-            // Close all
-            document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('active'));
+            // Close others
+            others.forEach(s => { 
+                if(s.id !== id) s.classList.remove('active'); 
+            });
             
-            // Toggle requested if it wasn't already active
-            if (!isActive) {
-                el.classList.add('active');
-            }
+            el.classList.toggle('active');
         }
 
+        // --- MEDIA GALLERY (UNBLURRED) ---
         function addToGallery(src, type) {
             const grid = document.getElementById('media-grid');
             const el = document.createElement(type.includes('video') ? 'video' : 'img');
@@ -1073,28 +1006,26 @@
             el.style.objectFit = 'cover';
             el.style.border = '1px solid #333';
             el.style.cursor = 'pointer';
+            
+            // IMPORTANT: No blur class here
             el.onclick = () => window.open(src, '_blank');
-            grid.prepend(el); // Add new media to top
-        }
-        
-        // --- SETTINGS UTILS ---
-        function renderBlocked() {
-            const list = document.getElementById('blocked-list');
-            list.innerHTML = blockedUsers.length ? '' : '<div style="font-style:italic;">No blocked users.</div>';
-            blockedUsers.forEach(id => {
-                list.innerHTML += `<div style="border-bottom:1px solid #333; padding:2px;">User ID: ${id.substr(0,8)}...</div>`;
-            });
-        }
-        function unblockAll() { 
-            blockedUsers = []; 
-            renderBlocked(); 
-        }
-        function togglePfpVis() { 
-            showPfps = document.getElementById('toggle-pfp').checked; 
+            grid.prepend(el);
         }
 
-        // Keep connection active
+        // --- SETTINGS UTILS ---
+        function renderBlocked() { 
+            document.getElementById('blocked-list').innerHTML = blockedUsers.length 
+                ? blockedUsers.map(u => `<div>ID: ${u.substr(0,8)}...</div>`).join('')
+                : '<div style="font-style:italic; color:#666;">No blocked users.</div>';
+        }
+        function unblockAll() { blockedUsers = []; renderBlocked(); }
+        function togglePfpVis() { showPfps = document.getElementById('toggle-pfp').checked; }
+
+        // --- ACTIVITY MONITOR ---
         document.addEventListener('mousemove', () => socket.emit('activity-ping'));
+        document.addEventListener('keydown', () => socket.emit('activity-ping'));
+        document.addEventListener('click', () => socket.emit('activity-ping'));
+
     </script>
 </body>
 </html>
