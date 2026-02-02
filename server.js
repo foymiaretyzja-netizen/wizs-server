@@ -31,6 +31,19 @@ setInterval(() => {
     }
 }, 1000);
 
+// --- ACTIVITY MONITOR (20s Timeout) ---
+setInterval(() => {
+    const now = Date.now();
+    let changed = false;
+    for (let id in users) {
+        if (users[id].active && (now - users[id].lastActive > 20000)) {
+            users[id].active = false;
+            changed = true;
+        }
+    }
+    if (changed) io.emit('user-update', Object.values(users));
+}, 5000); // Check every 5 seconds
+
 io.on('connection', (socket) => {
     const userIP = socket.handshake.address;
 
@@ -46,9 +59,11 @@ io.on('connection', (socket) => {
             name: userData.name || 'User',
             color: userData.color || 'white',
             tag: userData.tag || '',
+            tagColor: userData.tagColor || 'white', // New Tag Color
             pfp: userData.pfp || null, 
             ip: userIP,
-            active: true
+            active: true,
+            lastActive: Date.now()
         };
         io.emit('user-update', Object.values(users));
     });
@@ -58,20 +73,26 @@ io.on('connection', (socket) => {
             users[socket.id].name = data.name || users[socket.id].name;
             users[socket.id].tag = data.tag || "";
             users[socket.id].color = data.color || "white";
+            users[socket.id].tagColor = data.tagColor || "white"; // Update Tag Color
             if (data.pfp !== undefined) users[socket.id].pfp = data.pfp;
             io.emit('user-update', Object.values(users));
         }
     });
 
     socket.on('activity-ping', () => {
-        if (users[socket.id]) users[socket.id].active = true;
+        if (users[socket.id]) {
+            users[socket.id].lastActive = Date.now();
+            if (!users[socket.id].active) {
+                users[socket.id].active = true;
+                io.emit('user-update', Object.values(users));
+            }
+        }
     });
 
     // --- TYPING STATUS ---
     socket.on('typing', (isTyping) => {
         const user = users[socket.id];
         if (user) {
-            // Broadcast to everyone ELSE that this user is typing
             socket.broadcast.emit('user-typing', { 
                 name: user.name, 
                 isTyping: isTyping 
@@ -82,6 +103,10 @@ io.on('connection', (socket) => {
     socket.on('send-message', (data) => {
         const user = users[socket.id];
         if (!user) return;
+
+        // Update activity
+        user.lastActive = Date.now();
+        user.active = true;
 
         // Anti-Spam: 500ms hard limit
         const now = Date.now();
@@ -97,6 +122,7 @@ io.on('connection', (socket) => {
             name: user.name,
             color: user.color,
             tag: user.tag,
+            tagColor: user.tagColor, // Send Tag Color
             pfp: user.pfp,
             text: data.text,
             media: data.media,
@@ -120,11 +146,12 @@ io.on('connection', (socket) => {
     // --- VOTE KICK ---
     socket.on('report-user', (targetId) => {
         if (!users[targetId] || activeVotes[targetId]) return;
+        
         activeVotes[targetId] = { yes: 1, no: 0, voters: [socket.id], target: targetId };
         
+        // Broadcast vote start
         io.emit('vote-kick-start', { 
             targetId: targetId, 
-            name: users[targetId].name, // The person being kicked
             targetName: users[targetId].name 
         });
     });
@@ -143,7 +170,7 @@ io.on('connection', (socket) => {
         if (voteSession.yes >= required) {
             const targetSocket = io.sockets.sockets.get(data.targetId);
             if (targetSocket) {
-                targetSocket.emit('force-disconnect', { reason: 'KICKED BY VOTE' });
+                targetSocket.emit('force-disconnect', { reason: 'KICKED' });
                 targetSocket.disconnect();
             }
             delete activeVotes[data.targetId];
