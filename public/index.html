@@ -11,7 +11,7 @@
     <style>
         :root {
             --bg-dark: #0a0f14;
-            --bg-panel: rgba(20, 30, 35, 0.95);
+            --bg-panel: #141e23;
             --cyan: #00f2ea;
             --mint: #00ff9d;
             --border-glow: rgba(0, 242, 234, 0.3);
@@ -22,6 +22,7 @@
         }
 
         * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent; }
+        
         body {
             margin: 0; background: var(--bg-dark); color: #e0e6ed;
             font-family: var(--font-main); overflow: hidden; height: 100vh;
@@ -46,14 +47,15 @@
         /* TOP BAR */
         #top-bar {
             height: 50px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border-glow);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 200;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; 
+            z-index: 2000; position: relative;
         }
 
-        /* SIDEBARS */
+        /* SIDEBARS - FIXED Z-INDEX */
         .sidebar {
             position: fixed; top: 50px; bottom: 0; width: 300px;
             background: var(--bg-panel); border: 1px solid var(--border-glow);
-            transition: transform 0.3s ease-in-out; z-index: 150;
+            transition: transform 0.3s ease-in-out; z-index: 1500;
             display: flex; flex-direction: column;
         }
         #media-sidebar { left: 0; transform: translateX(-100%); border-left: none; }
@@ -72,14 +74,15 @@
         .username { font-weight: bold; }
         .user-tag { border: 1px solid #555; border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #aaa; }
         
-        /* PFP */
+        /* VISUAL ORDER: Name -> Tag -> PFP */
+        .msg-row.mine .msg-meta { flex-direction: row-reverse; }
+
         .pfp-square {
             width: 24px; height: 24px; background: #222; border: 1px solid #555;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.8rem; object-fit: cover;
         }
         
-        /* GRADIENTS */
         .name-white { color: #fff; }
         .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
         .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
@@ -92,6 +95,10 @@
         }
         .msg-bubble:hover { border-color: var(--mint); }
         .msg-row.mine .msg-bubble { border-color: var(--cyan); background: rgba(0, 242, 234, 0.05); }
+
+        /* SYSTEM MESSAGES */
+        .sys-msg { text-align: center; color: var(--cyan); font-size: 0.8rem; margin: 10px 0; border: 1px dashed var(--cyan); padding: 5px; }
+        .vote-box { background: #220000; border: 1px solid #ff4444; padding: 10px; margin: 10px auto; width: 80%; text-align: center; border-radius: 4px; }
 
         /* REPLY BOX */
         .reply-preview {
@@ -107,7 +114,7 @@
         /* INPUT AREA */
         #input-area {
             position: fixed; bottom: 0; width: 100%; background: var(--bg-dark);
-            padding: 15px; border-top: 1px solid var(--border-glow); z-index: 200;
+            padding: 15px; border-top: 1px solid var(--border-glow); z-index: 2000;
         }
         #reply-bar {
             display: none; background: #111; padding: 5px 10px; font-size: 0.8rem;
@@ -130,6 +137,7 @@
             background: var(--bg-panel); border: 1px solid var(--cyan);
             padding: 30px; width: 90%; max-width: 450px;
             box-shadow: 0 0 30px var(--border-glow);
+            max-height: 90vh; overflow-y: auto;
         }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; color: var(--cyan); font-size: 0.8rem; margin-bottom: 5px; }
@@ -170,7 +178,7 @@
                 <label>Profile Picture <span class="opt-tag">(Optional)</span></label>
                 <input type="file" id="setup-pfp" accept="image/*" style="display:none;">
                 <button class="btn btn-sm" onclick="document.getElementById('setup-pfp').click()">Upload Square PFP</button>
-                <span id="pfp-status" style="font-size:0.7rem; color:#aaa; margin-left:10px;">None selected</span>
+                <span id="setup-pfp-status" style="font-size:0.7rem; color:#aaa; margin-left:10px;">None</span>
             </div>
 
             <div class="input-group">
@@ -199,16 +207,61 @@
 
     <div id="settings-modal" class="modal" style="display:none;">
         <div class="modal-box">
-            <h3 style="color:var(--cyan);">SETTINGS</h3>
+            <h3 style="color:var(--cyan); border-bottom:1px solid #333; padding-bottom:10px;">SETTINGS & CUSTOMIZE</h3>
+            
+            <div class="input-group">
+                <label>Update Username</label>
+                <input type="text" id="set-name" maxlength="15">
+            </div>
+            
+            <div class="input-group">
+                <label>Update Tag</label>
+                <input type="text" id="set-tag" maxlength="6">
+            </div>
+
+            <div class="input-group">
+                <label>Update Theme</label>
+                <select id="set-theme">
+                    <option value="default">Nexus Default</option>
+                    <option value="firestone">FireStone</option>
+                    <option value="seashine">SeaShine</option>
+                    <option value="astrolight">AstroLight</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Update Color</label>
+                <select id="set-color">
+                    <option value="white">White</option>
+                    <option value="sea">Sea Gradient</option>
+                    <option value="fire">Fire Gradient</option>
+                    <option value="astro">Astro Gradient</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>New Profile Picture</label>
+                <input type="file" id="set-pfp-upload" accept="image/*" style="display:none;">
+                <button class="btn btn-sm" onclick="document.getElementById('set-pfp-upload').click()">Choose New Image</button>
+                <span id="set-pfp-status" style="font-size:0.7rem; color:#aaa;">No change</span>
+            </div>
+
+            <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+
+            <div class="input-group">
+                <label style="color:#aaa;"><input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs in Chat</label>
+            </div>
+
             <div class="input-group">
                 <label>Blocked Users</label>
-                <div id="blocked-list" style="max-height:100px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem;"></div>
-                <button class="btn btn-sm btn-danger" onclick="unblockAll()">Unblock All</button>
+                <div id="blocked-list" style="max-height:80px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem; color:#666;"></div>
+                <button class="btn btn-sm btn-danger" onclick="unblockAll()" style="margin-top:5px;">Unblock All</button>
             </div>
-            <div class="input-group">
-                <label><input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs in Chat</label>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">CANCEL</button>
+                <button class="btn" onclick="saveSettings()">SAVE CHANGES</button>
             </div>
-            <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">CLOSE</button>
         </div>
     </div>
 
@@ -220,17 +273,17 @@
         <div>
             <i class="fa-solid fa-images" style="margin-right:15px; cursor:pointer;" onclick="toggleSide('media-sidebar')"></i>
             <i class="fa-solid fa-users" style="margin-right:15px; cursor:pointer;" onclick="toggleSide('users-sidebar')"></i>
-            <i class="fa-solid fa-gear" style="cursor:pointer;" onclick="document.getElementById('settings-modal').style.display='flex'; renderBlocked()"></i>
+            <i class="fa-solid fa-gear" style="cursor:pointer;" onclick="openSettings()"></i>
         </div>
     </div>
 
     <div id="media-sidebar" class="sidebar">
-        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint);">MEDIA STREAM</div>
+        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint); background:rgba(0,0,0,0.5);">MEDIA STREAM</div>
         <div id="media-grid" style="padding:10px; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:5px;"></div>
     </div>
 
     <div id="users-sidebar" class="sidebar">
-        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint);">ACTIVE USERS</div>
+        <div style="padding:15px; border-bottom:1px solid var(--border-glow); font-weight:bold; color:var(--mint); background:rgba(0,0,0,0.5);">ACTIVE USERS</div>
         <div id="user-list" style="padding:10px; overflow-y:auto;"></div>
     </div>
 
@@ -268,42 +321,88 @@
     <script>
         const socket = io();
         
-        // STATE
+        // GLOBAL STATE
         let myId = null;
-        let myPfp = null;
-        let currentReply = null; // { id, name, text }
+        let myData = { name: '', tag: '', color: 'white', theme: 'default', pfp: null };
+        let currentReply = null;
         let blockedUsers = [];
         let showPfps = true;
-        let ctxData = null; // { msgId, userId, name, text }
+        let ctxData = null; 
 
-        // SETUP
-        document.getElementById('setup-pfp').addEventListener('change', function() {
-            const file = this.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = e => { 
-                    myPfp = e.target.result;
-                    document.getElementById('pfp-status').innerText = "Image Loaded";
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // --- PFP HANDLING ---
+        function handlePfpUpload(inputId, statusId, targetVar) {
+            document.getElementById(inputId).addEventListener('change', function() {
+                const file = this.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = e => { 
+                        if(targetVar === 'setup') myData.pfp = e.target.result;
+                        if(targetVar === 'setting') window.tempPfp = e.target.result; // Temp store for settings
+                        document.getElementById(statusId).innerText = "Image Loaded";
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        handlePfpUpload('setup-pfp', 'setup-pfp-status', 'setup');
+        handlePfpUpload('set-pfp-upload', 'set-pfp-status', 'setting');
 
+        // --- INIT ---
         function enterNexus() {
             const name = document.getElementById('setup-name').value;
             if(!name) { alert("Username is required."); return; }
             
-            const tag = document.getElementById('setup-tag').value;
-            const theme = document.getElementById('setup-theme').value;
-            const color = document.getElementById('setup-color').value;
+            // Save state
+            myData.name = name;
+            myData.tag = document.getElementById('setup-tag').value;
+            myData.theme = document.getElementById('setup-theme').value;
+            myData.color = document.getElementById('setup-color').value;
             
-            document.body.className = theme;
+            document.body.className = myData.theme;
             
-            socket.emit('join-nexus', { name, tag, color, pfp: myPfp });
+            socket.emit('join-nexus', myData);
             document.getElementById('setup-modal').style.display = 'none';
         }
 
-        // SOCKET LISTENERS
+        // --- SETTINGS LOGIC ---
+        function openSettings() {
+            // Pre-fill inputs with current data
+            document.getElementById('set-name').value = myData.name;
+            document.getElementById('set-tag').value = myData.tag;
+            document.getElementById('set-theme').value = myData.theme;
+            document.getElementById('set-color').value = myData.color;
+            document.getElementById('set-pfp-status').innerText = "No change selected";
+            window.tempPfp = undefined; // Reset temp PFP
+            
+            renderBlocked();
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function saveSettings() {
+            myData.name = document.getElementById('set-name').value;
+            myData.tag = document.getElementById('set-tag').value;
+            myData.theme = document.getElementById('set-theme').value;
+            myData.color = document.getElementById('set-color').value;
+            
+            // If a new PFP was uploaded in settings, update it
+            let pfpUpdate = window.tempPfp;
+            if (pfpUpdate) myData.pfp = pfpUpdate;
+
+            // Apply theme locally
+            document.body.className = myData.theme;
+
+            // Send to server
+            socket.emit('update-profile', {
+                name: myData.name,
+                tag: myData.tag,
+                color: myData.color,
+                pfp: pfpUpdate // sending undefined means "don't change"
+            });
+
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        // --- SOCKET EVENTS ---
         socket.on('connect', () => myId = socket.id);
         
         socket.on('timer-update', t => {
@@ -323,26 +422,58 @@
                             ${u.pfp ? `<img src="${u.pfp}" style="width:100%;height:100%;object-fit:cover;">` : u.name[0]}
                         </div>
                         <div>
-                            <div style="font-size:0.9rem;">${u.name}</div>
+                            <div style="font-size:0.9rem;">${u.name} ${u.tag ? `[${u.tag}]` : ''}</div>
                             <div style="font-size:0.7rem; color:${u.active?'var(--mint)':'#555'}">${u.active?'Active':'Idle'}</div>
                         </div>
                     </div>`;
             });
         });
 
+        // --- VOTE KICK SYSTEM MESSAGES ---
+        socket.on('vote-kick-start', (data) => {
+            const chat = document.getElementById('chat-main');
+            const div = document.createElement('div');
+            div.className = 'vote-box';
+            div.innerHTML = `
+                <div style="color:#ff4444; font-weight:bold;">⚠️ VOTE KICK INITIATED</div>
+                <div style="margin:5px 0;">Target: ${data.targetName}</div>
+                <div style="display:flex; justify-content:center; gap:10px;">
+                    <button class="btn btn-sm" onclick="castVote('${data.targetId}', 'yes')">YES (KICK)</button>
+                    <button class="btn btn-sm" onclick="castVote('${data.targetId}', 'no')">NO</button>
+                </div>
+            `;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        socket.on('vote-result', (data) => {
+            const chat = document.getElementById('chat-main');
+            const div = document.createElement('div');
+            div.className = 'sys-msg';
+            div.innerHTML = `Vote Result: ${data.name} was ${data.result}.`;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        function castVote(targetId, vote) {
+            socket.emit('cast-vote', { targetId, vote });
+            // Visual feedback: remove buttons from that specific vote box parent (optional complexity, kept simple here)
+        }
+
+        // --- MESSAGE HANDLING ---
         socket.on('receive-message', data => {
             if(blockedUsers.includes(data.userId)) return;
 
             const chat = document.getElementById('chat-main');
             const isMe = data.userId === myId;
             
-            // Layout Order: Name -> Tag -> PFP
+            // PFP Logic
             const pfpHtml = showPfps ? `
                 <div class="pfp-square">
                     ${data.pfp ? `<img src="${data.pfp}" style="width:100%;height:100%;object-fit:cover;">` : data.name[0]}
                 </div>` : '';
 
-            // Reply Block
+            // Reply Logic
             let replyHtml = '';
             if(data.replyTo) {
                 replyHtml = `<div class="reply-preview">Replying to ${data.replyTo.name}: ${data.replyTo.text.substring(0,20)}...</div>`;
@@ -350,12 +481,12 @@
 
             // Media & YouTube
             let contentHtml = data.text;
+            // Regex for YouTube
             const ytRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?([a-zA-Z0-9_-]+)/;
             const ytMatch = data.text.match(ytRegex);
             
             let mediaHtml = '';
             if(ytMatch) {
-                // Wrap iframe in blur container
                 mediaHtml += `
                 <div class="media-container blurred" onclick="toggleBlur(this)">
                     <iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen style="pointer-events:none;"></iframe>
@@ -374,6 +505,7 @@
 
             const div = document.createElement('div');
             div.className = `msg-row ${isMe ? 'mine' : 'theirs'}`;
+            // Structure: Name -> Tag -> PFP
             div.innerHTML = `
                 <div class="msg-meta">
                     <span class="username name-${data.color}">${data.name}</span>
@@ -406,12 +538,11 @@
             document.getElementById('media-grid').innerHTML = '';
         });
 
-        // CLIENT ACTIONS
+        // --- UTILS ---
         function toggleBlur(el) {
             if(el.classList.contains('blurred')) {
                 el.classList.remove('blurred');
                 el.classList.add('unblurred');
-                // If video, try to play? No auto-play policy issues usually, user can click controls now
                 const vid = el.querySelector('video');
                 if(vid) { vid.muted = false; vid.controls = true; }
                 const iframe = el.querySelector('iframe');
@@ -438,13 +569,11 @@
             cancelReply();
         }
 
-        // REPLY SYSTEM
         function cancelReply() {
             currentReply = null;
             document.getElementById('reply-bar').style.display = 'none';
         }
 
-        // MEDIA UPLOAD
         document.getElementById('chat-media').addEventListener('change', function() {
             const file = this.files[0];
             if(file) {
@@ -455,7 +584,7 @@
             }
         });
 
-        // MENU SYSTEM
+        // --- MENU SYSTEM ---
         function openMenu(e, msgId, userId, name, text) {
             e.stopPropagation();
             const menu = document.getElementById('ctx-menu');
@@ -476,16 +605,15 @@
                 document.getElementById('chat-input').focus();
             } else if (action === 'block') {
                 blockedUsers.push(ctxData.userId);
-                alert("User blocked.");
+                alert("User blocked locally.");
+                renderBlocked();
             } else if (action === 'report') {
-                if(confirm("Vote Kick User?")) socket.emit('report-user', ctxData.userId);
+                if(confirm("Initiate a vote kick for this user?")) socket.emit('report-user', ctxData.userId);
             } else if (action === 'react') {
-                // Show sub menu
                 const p = document.getElementById('emoji-picker');
                 p.style.display = 'grid';
                 p.style.left = (event.pageX) + 'px';
                 p.style.top = (event.pageY) + 'px';
-                
                 const closeP = () => { p.style.display = 'none'; document.removeEventListener('click', closeP); };
                 setTimeout(() => document.addEventListener('click', closeP), 10);
             }
@@ -495,9 +623,13 @@
             socket.emit('add-reaction', { msgId: ctxData.msgId, emoji });
         }
 
-        // SIDEBARS
+        // --- SIDEBARS ---
         function toggleSide(id) {
             const el = document.getElementById(id);
+            // Close others first for cleaner UI
+            document.querySelectorAll('.sidebar').forEach(s => {
+                if(s.id !== id) s.classList.remove('active');
+            });
             el.classList.toggle('active');
         }
 
