@@ -60,6 +60,80 @@
             --mint: #686de0;
         }
 
+        /* --- BACKGROUND EFFECTS CONTAINER --- */
+        #bg-effects {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        /* Effect: Embers (FireStone) */
+        .ember {
+            position: absolute;
+            bottom: -10px;
+            width: 4px;
+            height: 4px;
+            background: orange;
+            border-radius: 50%;
+            opacity: 0;
+            animation: riseUp linear infinite;
+        }
+        @keyframes riseUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100vh); }
+        }
+
+        /* Effect: Bubbles (SeaShine) */
+        .bubble {
+            position: absolute;
+            bottom: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05);
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0); opacity: 0.5; }
+            100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
+        }
+        
+        /* Effect: Sun Rays (SeaShine) */
+        .sun-ray {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-conic-gradient(from 0deg, rgba(255,255,255,0.03) 0deg 10deg, transparent 10deg 20deg);
+            animation: rotateRay 60s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes rotateRay { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Effect: Stars & Meteors (AstroLight) */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite alternate;
+        }
+        .meteor {
+            position: absolute;
+            width: 100px;
+            height: 1px;
+            background: linear-gradient(90deg, white, transparent);
+            transform: rotate(-45deg);
+            opacity: 0;
+            animation: shoot 2s linear infinite;
+        }
+        @keyframes twinkle { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes shoot { 
+            0% { transform: translate(0, 0) rotate(-45deg); opacity: 1; } 
+            100% { transform: translate(-500px, 500px) rotate(-45deg); opacity: 0; } 
+        }
+
         /* --- BUTTONS --- */
         .btn {
             background: transparent;
@@ -109,40 +183,54 @@
             backdrop-filter: blur(5px);
         }
 
-        /* --- SIDEBARS --- */
+        /* --- SIDEBAR SYSTEM (REWORKED) --- */
+        #backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1400;
+            display: none;
+            backdrop-filter: blur(2px);
+        }
+        #backdrop.active { display: block; }
+
         .sidebar {
             position: fixed;
             top: 50px;
             bottom: 0;
             width: 300px;
             background: var(--bg-panel);
-            border: 1px solid var(--border-glow);
-            transition: transform 0.3s ease-in-out;
+            border: 1px solid var(--cyan);
             z-index: 1500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
+        
+        /* Default Closed Positions */
         #media-sidebar {
-            left: 0;
-            transform: translateX(-100%);
+            left: -320px; /* Hidden off-screen left */
+            border-right: 1px solid var(--cyan);
             border-left: none;
         }
         #users-sidebar {
-            right: 0;
-            transform: translateX(100%);
+            right: -320px; /* Hidden off-screen right */
+            border-left: 1px solid var(--cyan);
             border-right: none;
         }
-        .sidebar.active {
-            transform: translateX(0);
-        }
+        
+        /* Open States */
+        #media-sidebar.open { left: 0; }
+        #users-sidebar.open { right: 0; }
         
         .sidebar-header {
             padding: 15px;
-            border-bottom: 1px solid var(--border-glow);
-            font-weight: bold;
-            color: var(--mint);
             background: rgba(0,0,0,0.5);
+            color: var(--mint);
             text-align: center;
+            font-weight: bold;
+            border-bottom: 1px solid var(--cyan);
             letter-spacing: 1px;
         }
 
@@ -152,7 +240,9 @@
             margin-top: 50px;
             overflow-y: auto;
             padding: 20px;
-            padding-bottom: 100px; /* Space for input area */
+            padding-bottom: 100px;
+            position: relative;
+            z-index: 10;
             scroll-behavior: smooth;
         }
 
@@ -162,29 +252,26 @@
             flex-direction: column;
             margin-bottom: 20px;
             animation: fadeIn 0.3s;
-            position: relative;
         }
         .msg-row.mine { align-items: flex-end; }
         .msg-row.theirs { align-items: flex-start; }
 
-        /* Visual Hierarchy: Name -> Tag -> PFP */
         .msg-meta {
             font-size: 0.75rem;
             margin-bottom: 4px;
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-direction: row; 
         }
 
-        /* --- NAME GRADIENTS --- */
+        /* Gradients */
         .username { font-weight: bold; letter-spacing: 0.5px; }
         .name-white { color: #fff; }
         .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
         .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
         .name-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
 
-        /* --- TAG GRADIENTS --- */
+        /* Tag Gradients */
         .user-tag {
             border: 1px solid #555;
             border-radius: 4px;
@@ -195,26 +282,10 @@
             font-weight: bold;
         }
         .tag-white { color: #aaa; border-color: #555; }
-        .tag-sea { 
-            border-color: var(--cyan); 
-            background: var(--grad-nexus); 
-            -webkit-background-clip: text; 
-            color: transparent; 
-        }
-        .tag-fire { 
-            border-color: #ff4e50; 
-            background: var(--grad-fire); 
-            -webkit-background-clip: text; 
-            color: transparent; 
-        }
-        .tag-astro { 
-            border-color: #8a2be2; 
-            background: var(--grad-astro); 
-            -webkit-background-clip: text; 
-            color: transparent; 
-        }
+        .tag-sea { border-color: var(--cyan); background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
+        .tag-fire { border-color: #ff4e50; background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
+        .tag-astro { border-color: #8a2be2; background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
 
-        /* --- PFP --- */
         .pfp-square {
             width: 24px;
             height: 24px;
@@ -228,7 +299,6 @@
             overflow: hidden;
         }
 
-        /* --- MESSAGE BUBBLES --- */
         .msg-bubble {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
@@ -250,10 +320,10 @@
             background: rgba(0, 242, 234, 0.05);
         }
 
-        /* --- TYPING INDICATOR (Raised High) --- */
+        /* --- TYPING INDICATOR --- */
         #typing-bar {
             position: fixed;
-            bottom: 90px; /* Moved up significantly to prevent clipping */
+            bottom: 90px;
             left: 20px;
             right: 20px;
             color: var(--mint);
@@ -437,6 +507,8 @@
 </head>
 <body>
 
+    <div id="bg-effects"></div>
+
     <div id="setup-modal" class="modal">
         <div class="modal-box">
             <h2 style="color:var(--cyan); text-align:center; letter-spacing: 2px;">&lt;NEXUS SETUP&gt;</h2>
@@ -546,12 +618,6 @@
             </div>
 
             <div class="input-group">
-                <label>
-                    <input type="checkbox" id="toggle-pfp" checked onchange="togglePfpVis()"> Show PFPs
-                </label>
-            </div>
-
-            <div class="input-group">
                 <label>Blocked Users</label>
                 <div id="blocked-list" style="max-height:80px; overflow-y:auto; border:1px solid #333; padding:5px; font-size:0.8rem; margin-bottom:5px;"></div>
                 <button class="btn btn-sm btn-danger" onclick="unblockAll()">Unblock All</button>
@@ -575,11 +641,13 @@
         </div>
         
         <div style="display:flex; gap:10px; align-items:center;">
-            <button class="btn btn-sm" onclick="toggleSide('media-sidebar')">MEDIA</button>
-            <button class="btn btn-sm" onclick="toggleSide('users-sidebar')">USERS</button>
+            <button class="btn btn-sm" onclick="toggleSidebar('media-sidebar')">MEDIA</button>
+            <button class="btn btn-sm" onclick="toggleSidebar('users-sidebar')">USERS</button>
             <i class="fa-solid fa-gear" style="cursor:pointer; font-size:1.2rem; margin-left:10px; color:var(--cyan);" onclick="openSettings()" title="Settings"></i>
         </div>
     </div>
+
+    <div id="backdrop" onclick="closeSidebars()"></div>
 
     <div id="media-sidebar" class="sidebar">
         <div class="sidebar-header">MEDIA STREAM</div>
@@ -644,6 +712,88 @@
         let ctxData = null; 
         let typingTimeout = null;
 
+        // --- BACKGROUND EFFECTS ENGINE ---
+        function renderEffects(theme) {
+            const container = document.getElementById('bg-effects');
+            container.innerHTML = ''; // Clear previous
+            
+            if (theme === 'firestone') {
+                for(let i=0; i<40; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'ember';
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.animationDuration = (2 + Math.random() * 3) + 's';
+                    el.style.animationDelay = Math.random() * 5 + 's';
+                    container.appendChild(el);
+                }
+            } else if (theme === 'seashine') {
+                // Sun Rays
+                const ray = document.createElement('div');
+                ray.className = 'sun-ray';
+                container.appendChild(ray);
+                // Bubbles
+                for(let i=0; i<25; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'bubble';
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.width = (5 + Math.random() * 10) + 'px';
+                    el.style.height = el.style.width;
+                    el.style.animationDuration = (4 + Math.random() * 4) + 's';
+                    el.style.animationDelay = Math.random() * 5 + 's';
+                    container.appendChild(el);
+                }
+            } else if (theme === 'astrolight') {
+                // Stars
+                for(let i=0; i<80; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'star';
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.top = Math.random() * 100 + 'vh';
+                    el.style.width = Math.random() > 0.9 ? '3px' : '1px';
+                    el.style.height = el.style.width;
+                    el.style.animationDuration = (1 + Math.random()) + 's';
+                    el.style.animationDelay = Math.random() * 2 + 's';
+                    container.appendChild(el);
+                }
+                // Meteors
+                for(let i=0; i<3; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'meteor';
+                    el.style.left = (Math.random() * 50 + 50) + 'vw'; // Right side
+                    el.style.top = (Math.random() * 50) + 'vh';
+                    el.style.animationDuration = (2 + Math.random() * 3) + 's';
+                    el.style.animationDelay = Math.random() * 10 + 's';
+                    container.appendChild(el);
+                }
+            }
+        }
+
+        // --- NEW SIDEBAR LOGIC ---
+        function toggleSidebar(id) {
+            const el = document.getElementById(id);
+            const backdrop = document.getElementById('backdrop');
+            
+            // Close other sidebar first
+            if(id === 'media-sidebar') document.getElementById('users-sidebar').classList.remove('open');
+            else document.getElementById('media-sidebar').classList.remove('open');
+            
+            // Toggle requested
+            const isOpen = el.classList.contains('open');
+            if (isOpen) {
+                el.classList.remove('open');
+                backdrop.classList.remove('active');
+            } else {
+                el.classList.add('open');
+                backdrop.classList.add('active');
+            }
+        }
+
+        function closeSidebars() {
+            document.getElementById('media-sidebar').classList.remove('open');
+            document.getElementById('users-sidebar').classList.remove('open');
+            document.getElementById('backdrop').classList.remove('active');
+        }
+
         // --- FILE HANDLING ---
         function handlePfpUpload(inputId, statusId, targetVar) {
             document.getElementById(inputId).addEventListener('change', function() {
@@ -674,6 +824,8 @@
             myData.color = document.getElementById('setup-color').value;
             
             document.body.className = myData.theme;
+            renderEffects(myData.theme); // Initialize particles
+            
             socket.emit('join-nexus', myData);
             document.getElementById('setup-modal').style.display = 'none';
         }
@@ -701,6 +853,7 @@
             if (pfpUpdate) myData.pfp = pfpUpdate;
 
             document.body.className = myData.theme;
+            renderEffects(myData.theme); // Update particles
             
             socket.emit('update-profile', { 
                 name: myData.name, 
@@ -983,19 +1136,6 @@
             socket.emit('add-reaction', { msgId: ctxData.msgId, emoji: e }); 
         }
         
-        // --- SIDEBAR TOGGLES ---
-        function toggleSide(id) {
-            const el = document.getElementById(id);
-            const others = document.querySelectorAll('.sidebar');
-            
-            // Close others
-            others.forEach(s => { 
-                if(s.id !== id) s.classList.remove('active'); 
-            });
-            
-            el.classList.toggle('active');
-        }
-
         // --- MEDIA GALLERY (UNBLURRED) ---
         function addToGallery(src, type) {
             const grid = document.getElementById('media-grid');
@@ -1019,7 +1159,6 @@
                 : '<div style="font-style:italic; color:#666;">No blocked users.</div>';
         }
         function unblockAll() { blockedUsers = []; renderBlocked(); }
-        function togglePfpVis() { showPfps = document.getElementById('toggle-pfp').checked; }
 
         // --- ACTIVITY MONITOR ---
         document.addEventListener('mousemove', () => socket.emit('activity-ping'));
