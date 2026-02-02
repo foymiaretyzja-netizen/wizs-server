@@ -1,626 +1,516 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS</title>
-<script src="/socket.io/socket.io.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0f14;
+            --bg-panel: rgba(20, 30, 35, 0.85);
+            --cyan: #00f2ea;
+            --mint: #00ff9d;
+            --text-main: #e0e6ed;
+            --border-glow: rgba(0, 242, 234, 0.3);
+            --grad-nexus: linear-gradient(180deg, var(--cyan), var(--mint));
+            --grad-fire: linear-gradient(180deg, #ff4e50, #f9d423);
+            --grad-astro: linear-gradient(180deg, #8a2be2, #4b0082);
+            --font-main: 'Roboto Mono', monospace;
+        }
 
-<style>
-:root {
---bg-dark: #0a0f14;
---bg-panel: rgba(20, 30, 35, 0.7);
---cyan: #00f2ea;
---mint: #00ff9d;
---seafoam: #5fffa0;
---text-main: #e0e6ed;
---border-glow: rgba(0, 242, 234, 0.3);
+        /* RESET & BASE */
+        * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent; }
+        body {
+            margin: 0; background: var(--bg-dark); color: var(--text-main);
+            font-family: var(--font-main); overflow: hidden; height: 100vh;
+            display: flex; flex-direction: column; transition: background 1s ease;
+        }
 
---grad-nexus: linear-gradient(180deg, var(--cyan), var(--mint));
---grad-fire: linear-gradient(180deg, #ff4e50, #f9d423);
---grad-astro: linear-gradient(180deg, #8a2be2, #4b0082);
---font-main: 'Roboto Mono', monospace;
-}
+        /* THEMES */
+        body.firestone { background: radial-gradient(circle at center, #1a0505, #000); --cyan: #ff4500; --mint: #ffae00; }
+        body.seashine { background: linear-gradient(to bottom, #001f24, #004d40); --cyan: #00e5ff; --mint: #76ff03; }
+        body.astrolight { background: radial-gradient(circle at top, #150020, #000); --cyan: #e056fd; --mint: #686de0; }
 
-/* --- GLOBAL & RESET --- */
-* { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--cyan) transparent; }
-body {
-margin: 0; background: var(--bg-dark); color: var(--text-main);
-font-family: var(--font-main); overflow: hidden; height: 100vh;
-display: flex; flex-direction: column;
-transition: background 1s ease;
-}
+        /* UI COMPONENTS */
+        .btn {
+            background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
+            padding: 8px 16px; font-family: var(--font-main); cursor: pointer;
+            transition: 0.3s; font-weight: bold; margin: 5px;
+        }
+        .btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 10px var(--cyan); }
+        .btn-danger { border-color: #ff4444; color: #ff4444; }
+        .btn-danger:hover { background: #ff4444; color: white; }
 
-/* --- THEMES --- */
-body.firestone { background: radial-gradient(circle at center, #1a0505, #000); --cyan: #ff4500; --mint: #ffae00; --border-glow: rgba(255,69,0,0.5); }
-body.seashine { background: linear-gradient(to bottom, #001f24, #004d40); --cyan: #00e5ff; --mint: #76ff03; }
-body.astrolight { background: radial-gradient(circle at top, #150020, #000); --cyan: #e056fd; --mint: #686de0; }
+        /* MODALS */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            background: var(--bg-panel); border: 1px solid var(--cyan);
+            padding: 30px; width: 90%; max-width: 500px;
+            box-shadow: 0 0 20px var(--border-glow);
+        }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.8rem; }
+        input[type="text"], select {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333;
+            color: white; padding: 10px; font-family: var(--font-main); outline: none;
+        }
+        input:focus { border-color: var(--cyan); }
 
-/* --- ANIMATIONS --- */
-@keyframes pulseGlow { 0% { text-shadow: 0 0 10px var(--cyan); } 50% { text-shadow: 0 0 30px var(--mint); } 100% { text-shadow: 0 0 10px var(--cyan); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* TOP BAR */
+        #top-bar {
+            height: 50px; background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border-glow);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100;
+        }
 
-/* --- INTRO --- */
-#intro-screen {
-position: fixed; inset: 0; background: #000; z-index: 9999;
-display: flex; justify-content: center; align-items: center;
-}
-.nexus-logo {
-font-size: 4rem; font-weight: 700;
-background: var(--grad-nexus); -webkit-background-clip: text; color: transparent;
-animation: fadeIn 2s ease-in, pulseGlow 3s infinite;
-}
+        /* SIDEBARS */
+        .sidebar {
+            position: fixed; top: 50px; height: calc(100% - 50px); width: 280px;
+            background: var(--bg-panel); border: 1px solid var(--border-glow);
+            transition: transform 0.3s; z-index: 90; display: flex; flex-direction: column;
+        }
+        #media-sidebar { left: 0; transform: translateX(-100%); border-right: 1px solid var(--border-glow); border-left: none; }
+        #users-sidebar { right: 0; transform: translateX(100%); border-left: 1px solid var(--border-glow); border-right: none; }
+        .sidebar.active { transform: translateX(0); }
 
-/* --- TUTORIAL & SETUP --- */
-.modal {
-position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000;
-display: none; align-items: center; justify-content: center;
-backdrop-filter: blur(10px);
-}
-.modal-box {
-background: var(--bg-panel); border: 1px solid var(--cyan);
-padding: 30px; border-radius: 4px; max-width: 500px; width: 90%;
-box-shadow: 0 0 20px var(--border-glow); text-align: center;
-}
-.input-group { margin: 15px 0; text-align: left; }
-input[type="text"], select {
-width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333;
-color: var(--cyan); padding: 10px; font-family: var(--font-main); outline: none;
-transition: border 0.3s;
-}
-input:focus { border-color: var(--mint); }
-.btn {
-background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
-padding: 10px 20px; font-family: var(--font-main); cursor: pointer;
-margin-top: 10px; transition: all 0.3s; font-weight: bold;
-}
-.btn:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px var(--cyan); }
+        /* CHAT AREA */
+        #chat-main { flex: 1; margin-top: 50px; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+        
+        .msg-row { display: flex; gap: 10px; margin-bottom: 15px; animation: slideIn 0.3s; }
+        .msg-row.mine { flex-direction: row-reverse; }
+        
+        /* PFP STYLES */
+        .pfp-box {
+            width: 40px; height: 40px; min-width: 40px;
+            background: #222; border: 1px solid #444; border-radius: 0; /* Square */
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: bold; color: #aaa; overflow: hidden;
+            object-fit: cover;
+        }
+        .pfp-img { width: 100%; height: 100%; object-fit: cover; }
 
-/* --- UI LAYOUT --- */
-#app-container { display: flex; height: 100%; opacity: 0; transition: opacity 1s; }
+        .msg-content { max-width: 70%; display: flex; flex-direction: column; }
+        .msg-row.mine .msg-content { align-items: flex-end; }
+        
+        .username { font-weight: bold; font-size: 0.8rem; margin-bottom: 2px; }
+        /* GRADIENTS FOR NAMES ONLY */
+        .name-white { color: #fff; }
+        .name-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; }
+        .name-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; }
+        .name-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; }
 
-/* TOP BAR */
-#top-bar {
-position: fixed; top: 0; left: 0; width: 100%; height: 50px;
-background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border-glow);
-backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 20px;
-justify-content: space-between; z-index: 100;
-}
-.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-.dot-green { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
-.dot-red { background: #ff0000; box-shadow: 0 0 5px #ff0000; }
-.dot-orange { background: orange; }
+        .msg-bubble {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px; border-radius: 4px; color: #fff; word-break: break-word;
+            position: relative;
+        }
+        .msg-row.mine .msg-bubble { border-color: var(--cyan); background: rgba(0, 242, 234, 0.05); }
 
-/* SIDEBARS */
-.sidebar {
-width: 300px; background: var(--bg-panel); border-right: 1px solid var(--border-glow);
-display: flex; flex-direction: column; transition: transform 0.3s;
-position: fixed; height: 100%; top: 50px; z-index: 90;
-}
-#users-sidebar { right: 0; border-right: none; border-left: 1px solid var(--border-glow); transform: translateX(100%); }
-#media-sidebar { left: 0; transform: translateX(-100%); }
-.sidebar.active { transform: translateX(0); }
+        /* REACTION PILLS */
+        .reactions-container { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+        .reaction-pill {
+            font-size: 0.75rem; background: rgba(0,0,0,0.5); border: 1px solid #333;
+            padding: 2px 6px; border-radius: 10px; color: #aaa;
+        }
 
-.user-item {
-padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);
-display: flex; justify-content: space-between; align-items: center;
-}
-.user-active-dot { width: 6px; height: 6px; border-radius: 50%; background: #555; transition: background 0.3s; }
-.is-active { background: var(--mint); box-shadow: 0 0 5px var(--mint); }
+        /* INPUT AREA */
+        #input-area {
+            position: fixed; bottom: 0; width: 100%; background: var(--bg-dark);
+            padding: 15px; border-top: 1px solid var(--border-glow); display: flex; gap: 10px; z-index: 101;
+        }
+        #chat-input { flex: 1; border-radius: 4px; }
 
-/* CHAT AREA */
-#chat-main { flex: 1; display: flex; flex-direction: column; margin-top: 50px; position: relative; }
-#messages-area {
-flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px;
-display: flex; flex-direction: column; gap: 15px;
-}
+        /* CONTEXT MENU */
+        #ctx-menu {
+            position: absolute; display: none; background: #000; border: 1px solid var(--cyan);
+            z-index: 9999; min-width: 150px;
+        }
+        .ctx-item { padding: 10px; cursor: pointer; color: #fff; border-bottom: 1px solid #222; }
+        .ctx-item:hover { background: var(--cyan); color: #000; }
+        .ctx-emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 5px; background: #111; }
+        .emoji-btn { cursor: pointer; padding: 5px; text-align: center; font-size: 1.2rem; }
+        .emoji-btn:hover { background: #333; }
 
-/* MESSAGES */
-.msg-container { display: flex; flex-direction: column; max-width: 70%; animation: slideDown 0.3s ease; position: relative; }
-.msg-container.mine { align-self: flex-end; align-items: flex-end; }
-.msg-container.theirs { align-self: flex-start; align-items: flex-start; }
-
-.msg-header { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-.user-tag { font-size: 0.65rem; padding: 2px 6px; border: 1px solid var(--cyan); border-radius: 10px; color: var(--cyan); }
-
-.msg-bubble {
-background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-padding: 12px; border-radius: 8px; color: #fff; position: relative;
-backdrop-filter: blur(5px); transition: all 0.2s; word-break: break-word;
-}
-.msg-container.mine .msg-bubble { border-color: var(--cyan); background: rgba(0, 242, 234, 0.05); }
-.msg-container:hover .msg-bubble { border-color: var(--mint); }
-
-.msg-text { font-size: 0.95rem; line-height: 1.5; }
-
-/* GRADIENT TEXT OPTIONS */
-.text-fire { background: var(--grad-fire); -webkit-background-clip: text; color: transparent; font-weight: bold; }
-.text-sea { background: var(--grad-nexus); -webkit-background-clip: text; color: transparent; font-weight: bold; }
-.text-astro { background: var(--grad-astro); -webkit-background-clip: text; color: transparent; font-weight: bold; }
-
-/* MEDIA */
-.media-content {
-max-width: 100%; border-radius: 4px; margin-top: 5px; cursor: pointer;
-filter: blur(15px); transition: filter 0.3s; border: 1px solid #333;
-}
-.media-content.revealed { filter: blur(0); }
-
-/* INPUT AREA */
-#input-area {
-position: fixed; bottom: 0; left: 0; width: 100%;
-background: var(--bg-dark); padding: 15px;
-border-top: 1px solid var(--border-glow); z-index: 101;
-display: flex; flex-direction: column; gap: 5px;
-}
-
-/* Typing Indicator */
-#typing-indicator { font-size: 0.7rem; color: var(--cyan); height: 15px; opacity: 0; transition: opacity 0.3s; margin-left: 10px; }
-
-/* Reply Bar */
-#reply-context {
-display: none; background: rgba(0,0,0,0.5); border-left: 2px solid var(--mint);
-padding: 5px 10px; font-size: 0.8rem; color: #aaa; justify-content: space-between;
-}
-
-.input-bar-wrapper { display: flex; gap: 10px; align-items: center; position: relative; }
-#chat-input {
-flex: 1; background: rgba(255,255,255,0.05); border: 1px solid #444;
-padding: 12px; color: white; border-radius: 4px; font-family: var(--font-main);
-outline: none; transition: box-shadow 0.3s;
-}
-#chat-input:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 242, 234, 0.1); }
-
-/* MENTIONS LIST */
-#mention-list {
-position: absolute; bottom: 60px; left: 50px; background: var(--bg-panel);
-border: 1px solid var(--cyan); display: none; flex-direction: column;
-max-height: 150px; overflow-y: auto; z-index: 200;
-}
-.mention-item { padding: 8px 15px; cursor: pointer; color: var(--text-main); }
-.mention-item:hover { background: var(--cyan); color: #000; }
-
-/* CONTEXT MENU (Custom) */
-#ctx-menu {
-position: absolute; display: none; background: #000; border: 1px solid var(--cyan);
-z-index: 500; min-width: 120px; box-shadow: 0 0 10px rgba(0,0,0,0.8);
-}
-.ctx-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #222; font-size: 0.8rem; }
-.ctx-item:hover { background: var(--cyan); color: #000; }
-
-/* NOTIFICATIONS / TOASTS */
-.toast {
-position: fixed; top: 70px; right: 20px; background: rgba(0,0,0,0.9);
-border-left: 4px solid var(--cyan); color: white; padding: 15px;
-animation: slideDown 0.5s; z-index: 6000; max-width: 300px;
-}
-
-/* SCROLL BUTTON */
-#scroll-btn {
-position: fixed; bottom: 80px; right: 20px; background: var(--mint); color: #000;
-width: 40px; height: 40px; border-radius: 50%; display: none;
-align-items: center; justify-content: center; cursor: pointer; z-index: 102;
-}
-</style>
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
-<div id="intro-screen">
-<div class="nexus-logo">&lt;NEXUS&gt;</div>
-</div>
-
-<div id="setup-modal" class="modal">
-<div class="modal-box">
-<h2 style="color:var(--cyan);">&lt;NEXUS SETUP&gt;</h2>
-<p style="font-size:0.8rem; color:#aaa;">Anonymous. Encrypted. Wiped every 15 mins.</p>
-
-<div class="input-group">
-<label>Identify</label>
-<input type="text" id="setup-name" placeholder="Username (Optional)" maxlength="15">
-</div>
-<div class="input-group">
-<label>Tag (Max 6 chars)</label>
-<input type="text" id="setup-tag" placeholder="e.g. COOL" maxlength="6">
-</div>
-
-<div class="input-group">
-<label>Visual Frequency (Theme)</label>
-<select id="setup-theme">
-<option value="default">Default (Dark/Cyan)</option>
-<option value="firestone">FireStone (Magma)</option>
-<option value="seashine">SeaShine (Oceanic)</option>
-<option value="astrolight">AstroLight (Cosmic)</option>
-</select>
-</div>
-
-<div class="input-group">
-<label>Text Gradient</label>
-<select id="setup-color">
-<option value="white">Standard White</option>
-<option value="text-sea">Sea Gradient</option>
-<option value="text-fire">Fire Gradient</option>
-<option value="text-astro">Astro Gradient</option>
-</select>
-</div>
-
-<button class="btn" onclick="enterNexus()">INITIALIZE LINK</button>
-</div>
-</div>
-
-<div id="app-container">
-<div id="top-bar">
-<div style="font-weight:bold; letter-spacing:2px; color:var(--cyan);">&lt;NEXUS&gt;</div>
-<div style="font-size:0.8rem;">
-<span id="timer-display">15:00</span> |
-<span class="status-dot dot-green" id="conn-status"></span>
-<span id="online-count">0 Online</span>
-</div>
-<div>
-<i class="fa-solid fa-images" style="cursor:pointer; margin-right:15px; color:var(--text-main);" onclick="toggleSide('media-sidebar')"></i>
-<i class="fa-solid fa-users" style="cursor:pointer; color:var(--text-main);" onclick="toggleSide('users-sidebar')"></i>
-</div>
-</div>
-
-<div id="media-sidebar" class="sidebar">
-<div style="padding:15px; border-bottom:1px solid var(--border-glow);">MEDIA GRID</div>
-<div id="media-grid" style="padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:5px; overflow-y:auto;"></div>
-</div>
-
-<div id="users-sidebar" class="sidebar">
-<div style="padding:15px; border-bottom:1px solid var(--border-glow);">ACTIVE USERS</div>
-<div id="user-list"></div>
-</div>
-
-<div id="chat-main">
-<div id="messages-area"></div>
-</div>
-
-<div id="input-area">
-<div id="typing-indicator">Someone is typing...</div>
-<div id="reply-context">
-<span>Replying to <b id="reply-target">...</b></span>
-<i class="fa-solid fa-xmark" style="cursor:pointer" onclick="cancelReply()"></i>
-</div>
-<div id="mention-list"></div>
-
-<div class="input-bar-wrapper">
-<label style="cursor:pointer; color:var(--cyan);">
-<i class="fa-solid fa-folder-open"></i>
-<input type="file" id="media-upload" hidden accept="image/*,video/*">
-</label>
-<input type="text" id="chat-input" placeholder="Transmit message..." autocomplete="off">
-<button class="btn" style="margin:0; padding:10px;" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-</div>
-</div>
-</div>
-
-<div id="vote-overlay" class="toast" style="display:none; top:20px; right:50%; transform:translateX(50%); width:300px; text-align:center;">
-<h3 style="color:var(--mint); margin:0;">VOTE KICK INITIATED</h3>
-<p>Kick <span id="vote-target-name">User</span>?</p>
-<div style="display:flex; justify-content:center; gap:10px;">
-<button class="btn" style="border-color:#ff4444; color:#ff4444;" onclick="castVote('yes')">YES</button>
-<button class="btn" onclick="castVote('no')">NO</button>
-</div>
-</div>
-
-<div id="ctx-menu">
-<div class="ctx-item" onclick="handleCtx('reply')">Reply</div>
-<div class="ctx-item" onclick="handleCtx('report')">Report (Vote Kick)</div>
-</div>
-
-<div id="scroll-btn" onclick="scrollToBottom()"><i class="fa-solid fa-arrow-down"></i></div>
-
-<script>
-const socket = io();
-
-// STATE
-let myId = null;
-let myName = 'User';
-let myColorClass = 'white';
-let myTag = '';
-let replyId = null;
-let canSendMedia = true;
-let isAlone = false;
-let currentVoteTarget = null;
-
-// SETUP SEQUENCE
-window.onload = () => {
-setTimeout(() => {
-document.querySelector('.nexus-logo').style.animation = 'none';
-document.getElementById('intro-screen').style.opacity = '0';
-setTimeout(() => {
-document.getElementById('intro-screen').style.display = 'none';
-document.getElementById('setup-modal').style.display = 'flex';
-}, 1000);
-}, 2500);
-};
-
-function enterNexus() {
-myName = document.getElementById('setup-name').value || 'User-' + Math.floor(Math.random()*1000);
-myTag = document.getElementById('setup-tag').value || '';
-const theme = document.getElementById('setup-theme').value;
-myColorClass = document.getElementById('setup-color').value;
-
-document.body.className = theme;
-
-socket.emit('join-nexus', { name: myName, tag: myTag, color: myColorClass });
-
-document.getElementById('setup-modal').style.display = 'none';
-document.getElementById('app-container').style.opacity = '1';
-}
-
-// SOCKET LISTENERS
-socket.on('connect', () => {
-myId = socket.id;
-document.getElementById('conn-status').className = 'status-dot dot-green';
-});
-
-socket.on('disconnect', () => document.getElementById('conn-status').className = 'status-dot dot-red');
-
-socket.on('alone-notice', () => {
-addSystemMsg(`NO ONE IS ONLINE. COPY URL TO INVITE: ${window.location.href}`);
-});
-
-socket.on('user-update', (users) => {
-document.getElementById('online-count').innerText = users.length + " Online";
-renderUserList(users);
-});
-
-socket.on('timer-update', (seconds) => {
-const m = Math.floor(seconds / 60);
-const s = seconds % 60;
-document.getElementById('timer-display').innerText = `${m}:${s.toString().padStart(2, '0')}`;
-});
-
-socket.on('system-wipe', () => {
-document.getElementById('messages-area').innerHTML = '';
-document.getElementById('media-grid').innerHTML = '';
-addSystemMsg("SYSTEM WIPE COMPLETE. SECURITY RESET.");
-});
-
-socket.on('spam-warning', (count) => {
-addSystemMsg(`WARNING: STOP SPAMMING (${count}/5)`);
-document.getElementById('chat-input').disabled = true;
-setTimeout(() => document.getElementById('chat-input').disabled = false, 3000);
-});
-
-socket.on('muted', (duration) => {
-addSystemMsg("YOU HAVE BEEN MUTED FOR 1 MINUTE.");
-document.getElementById('input-area').style.display = 'none';
-setTimeout(() => document.getElementById('input-area').style.display = 'flex', duration);
-});
-
-socket.on('force-disconnect', (data) => {
-document.body.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; background:black; color:red;"><h1>CONNECTION TERMINATED</h1><p>REASON: ${data.reason}</p></div>`;
-});
-
-// MESSAGING
-socket.on('receive-message', (data) => {
-const isMe = data.userId === myId;
-const container = document.createElement('div');
-container.className = `msg-container ${isMe ? 'mine' : 'theirs'}`;
-container.id = data.id;
-
-// Format Time
-const date = new Date(data.timestamp);
-const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-let content = '';
-
-// Reply Context
-if (data.replyTo) {
-content += `<div style="font-size:0.7rem; color:#aaa; border-left:2px solid var(--mint); padding-left:5px; margin-bottom:5px;">Replying to msg...</div>`;
-}
-
-// Text content (with regex for links/youtube)
-if (data.text) {
-let txt = data.text;
-// Simple Youtube Embed
-const ytMatch = txt.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/);
-if (ytMatch && ytMatch[1]) {
-txt = txt.replace(ytMatch[0], `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytMatch[1].split('&')[0]}" frameborder="0" style="margin-top:5px;"></iframe>`);
-}
-content += `<div class="msg-text ${data.color === 'white' ? '' : data.color}">${txt}</div>`;
-}
-
-// Media
-if (data.media) {
-const tag = data.mediaType.includes('video') ? 'video loop muted' : 'img';
-content += `<${tag} src="${data.media}" class="media-content" onclick="this.classList.toggle('revealed')"></${tag}>`;
-addToMediaGrid(data.media, data.mediaType);
-}
-
-container.innerHTML = `
-<div class="msg-header">
-<span>${data.name}</span>
-${data.tag ? `<span class="user-tag">${data.tag}</span>` : ''}
-<span>${timeStr}</span>
-</div>
-<div class="msg-bubble" onclick="openCtx(event, '${data.id}', '${data.name}', '${data.userId}')">
-${content}
-</div>
-`;
-
-const area = document.getElementById('messages-area');
-const isNearBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 100;
-
-area.appendChild(container);
-
-if (isMe || isNearBottom) {
-scrollToBottom();
-} else {
-document.getElementById('scroll-btn').style.display = 'flex';
-}
-});
-
-// VOTE KICK UI
-socket.on('vote-kick-start', (data) => {
-currentVoteTarget = data.targetId;
-document.getElementById('vote-target-name').innerText = data.name;
-document.getElementById('vote-overlay').style.display = 'block';
-});
-
-socket.on('vote-result', (data) => {
-document.getElementById('vote-overlay').style.display = 'none';
-currentVoteTarget = null;
-if(data.result === 'kicked') addSystemMsg("A user has been kicked by majority vote.");
-});
-
-// CLIENT LOGIC
-const input = document.getElementById('chat-input');
-
-input.addEventListener('keydown', (e) => {
-if (e.key === 'Enter') sendMessage();
-// Typing logic here if needed
-});
-
-// Mentions (@)
-input.addEventListener('input', (e) => {
-const val = e.target.value;
-if (val.includes('@')) {
-const query = val.split('@').pop().toLowerCase();
-// Show mention list logic would go here, simplified for brevity
-}
-});
-
-function sendMessage() {
-const text = input.value;
-if (!text) return;
-
-socket.emit('send-message', {
-text: text,
-replyTo: replyId
-});
-
-input.value = '';
-cancelReply();
-}
-
-// Media Handling
-document.getElementById('media-upload').addEventListener('change', function() {
-if (!canSendMedia) {
-addSystemMsg("Media Cooldown Active (5s)");
-return;
-}
-
-const file = this.files[0];
-if (!file) return;
-
-if (file.size > 5000000) { // 5MB limit check client side
-addSystemMsg("File too large. Max 5MB.");
-return;
-}
-
-const reader = new FileReader();
-reader.onload = (e) => {
-socket.emit('send-message', {
-media: e.target.result,
-mediaType: file.type
-});
-canSendMedia = false;
-setTimeout(() => canSendMedia = true, 5000);
-};
-reader.readAsDataURL(file);
-this.value = ''; // reset
-});
-
-function renderUserList(users) {
-const list = document.getElementById('user-list');
-list.innerHTML = '';
-users.forEach(u => {
-list.innerHTML += `
-<div class="user-item">
-<span>${u.name} ${u.tag ? `[${u.tag}]` : ''}</span>
-<div class="user-active-dot ${u.active ? 'is-active' : ''}"></div>
-</div>`;
-});
-}
-
-function addToMediaGrid(src, type) {
-const grid = document.getElementById('media-grid');
-const el = document.createElement(type.includes('video') ? 'video' : 'img');
-el.src = src;
-el.style.width = "100%";
-el.style.aspectRatio = "1/1";
-el.style.objectFit = "cover";
-el.style.border = "1px solid #333";
-el.onclick = () => window.open(src);
-grid.appendChild(el);
-}
-
-function addSystemMsg(text) {
-const div = document.createElement('div');
-div.style.textAlign = 'center';
-div.style.color = 'var(--mint)';
-div.style.fontSize = '0.75rem';
-div.style.margin = '10px 0';
-div.innerText = `<SYSTEM>: ${text}`;
-document.getElementById('messages-area').appendChild(div);
-scrollToBottom();
-}
-
-function scrollToBottom() {
-const area = document.getElementById('messages-area');
-area.scrollTop = area.scrollHeight;
-document.getElementById('scroll-btn').style.display = 'none';
-}
-
-// Context Menu Logic
-let ctxTargetMsg = null;
-let ctxTargetUser = null;
-
-function openCtx(e, msgId, userName, userId) {
-if(userId === myId) return; // Cant report self
-e.preventDefault();
-const menu = document.getElementById('ctx-menu');
-menu.style.display = 'block';
-menu.style.left = e.pageX + 'px';
-menu.style.top = e.pageY + 'px';
-
-ctxTargetMsg = msgId;
-ctxTargetUser = userId;
-
-// Close on click elsewhere
-const close = () => { menu.style.display = 'none'; document.removeEventListener('click', close); };
-setTimeout(() => document.addEventListener('click', close), 10);
-}
-
-function handleCtx(action) {
-if (action === 'reply') {
-replyId = ctxTargetMsg;
-document.getElementById('reply-context').style.display = 'flex';
-document.getElementById('reply-target').innerText = 'Selected Message';
-document.getElementById('chat-input').focus();
-} else if (action === 'report') {
-if(confirm("Initiate Vote Kick against this user?")) {
-socket.emit('report-user', ctxTargetUser);
-}
-}
-}
-
-function cancelReply() {
-replyId = null;
-document.getElementById('reply-context').style.display = 'none';
-}
-
-function castVote(val) {
-if(currentVoteTarget) {
-socket.emit('cast-vote', { targetId: currentVoteTarget, vote: val });
-document.getElementById('vote-overlay').style.display = 'none';
-}
-}
-
-function toggleSide(id) {
-const el = document.getElementById(id);
-el.classList.toggle('active');
-}
-
-// Activity Monitor
-document.addEventListener('mousemove', () => socket.emit('activity-ping'));
-document.addEventListener('keydown', () => socket.emit('activity-ping'));
-
-</script>
+    <div id="setup-modal" class="modal" style="display:flex;">
+        <div class="modal-box">
+            <h2 style="color:var(--cyan); text-align:center;">&lt;NEXUS INIT&gt;</h2>
+            <div class="input-group"><label>Username</label><input type="text" id="setup-name" maxlength="15"></div>
+            <button class="btn" onclick="enterNexus()" style="width:100%">CONNECT</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-box">
+            <h2 style="color:var(--cyan);">SETTINGS</h2>
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="set-name" maxlength="15">
+            </div>
+            <div class="input-group">
+                <label>Tag (Max 6 chars)</label>
+                <input type="text" id="set-tag" maxlength="6">
+            </div>
+            
+            <div class="input-group">
+                <label>Username Color</label>
+                <select id="set-color">
+                    <option value="white">White</option>
+                    <option value="sea">Sea Gradient</option>
+                    <option value="fire">Fire Gradient</option>
+                    <option value="astro">Astro Gradient</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Theme</label>
+                <select id="set-theme" onchange="applyTheme(this.value)">
+                    <option value="default">Default</option>
+                    <option value="firestone">FireStone</option>
+                    <option value="seashine">SeaShine</option>
+                    <option value="astrolight">AstroLight</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Profile Picture (Square)</label>
+                <input type="file" id="set-pfp-upload" accept="image/*">
+                <div style="margin-top:5px;">
+                    <button class="btn" onclick="clearPFP()">Remove PFP</button>
+                    <label style="font-size:0.8rem; margin-left:10px;">
+                        <input type="checkbox" id="show-pfp-toggle" checked onchange="togglePfpVis()"> Show PFPs in Chat
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label style="color:#ff4444;">Blocked Users (Click to Unblock)</label>
+                <div id="blocked-list" style="max-height:100px; overflow-y:auto; border:1px solid #333; padding:5px;"></div>
+                <button class="btn btn-danger" onclick="unblockAll()" style="font-size:0.7rem;">Unblock All</button>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                <button class="btn" onclick="closeSettings()">Cancel</button>
+                <button class="btn" onclick="saveSettings()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="top-bar">
+        <div style="font-weight:bold; color:var(--cyan); letter-spacing:2px;">&lt;NEXUS&gt;</div>
+        <div style="font-size:0.8rem;">
+            <span id="timer">15:00</span> | <span id="online-count">0</span> Online
+        </div>
+        <div>
+            <i class="fa-solid fa-images" onclick="toggleSide('media-sidebar')" style="margin-right:15px; cursor:pointer;"></i>
+            <i class="fa-solid fa-users" onclick="toggleSide('users-sidebar')" style="margin-right:15px; cursor:pointer;"></i>
+            <i class="fa-solid fa-gear" onclick="openSettings()" style="cursor:pointer;"></i>
+        </div>
+    </div>
+
+    <div id="media-sidebar" class="sidebar">
+        <div style="padding:10px; border-bottom:1px solid #333; color:var(--cyan);">MEDIA GALLERY</div>
+        <div id="media-grid" style="padding:5px; display:grid; grid-template-columns:1fr 1fr; gap:5px; overflow-y:auto;"></div>
+    </div>
+
+    <div id="users-sidebar" class="sidebar">
+        <div style="padding:10px; border-bottom:1px solid #333; color:var(--cyan);">ACTIVE USERS</div>
+        <div id="user-list-container" style="overflow-y:auto;"></div>
+    </div>
+
+    <div id="chat-main"></div>
+
+    <div id="input-area">
+        <label style="cursor:pointer; color:var(--cyan); padding-top:10px;">
+            <i class="fa-solid fa-paperclip"></i>
+            <input type="file" hidden id="chat-media-upload">
+        </label>
+        <input type="text" id="chat-input" placeholder="Transmit..." autocomplete="off">
+        <button class="btn" onclick="sendMessage()">SEND</button>
+    </div>
+
+    <div id="ctx-menu">
+        <div class="ctx-emoji-grid">
+            <div class="emoji-btn" onclick="addReaction('❤️')">❤️</div>
+            <div class="emoji-btn" onclick="addReaction('😂')">😂</div>
+            <div class="emoji-btn" onclick="addReaction('🔥')">🔥</div>
+            <div class="emoji-btn" onclick="addReaction('👍')">👍</div>
+            <div class="emoji-btn" onclick="addReaction('💀')">💀</div>
+            <div class="emoji-btn" onclick="addReaction('😡')">😡</div>
+            <div class="emoji-btn" onclick="addReaction('🤡')">🤡</div>
+            <div class="emoji-btn" onclick="addReaction('🎉')">🎉</div>
+        </div>
+        <div class="ctx-item" onclick="initiateKick()">Report (Vote Kick)</div>
+        <div class="ctx-item" onclick="blockUser()" style="color:#ff4444;">Block User</div>
+    </div>
+
+    <script>
+        const socket = io();
+        
+        // LOCAL STATE
+        let myId = null;
+        let myPfp = null;
+        let showPfps = true;
+        let blockedUsers = []; // List of IDs
+        let ctxTarget = { msgId: null, userId: null };
+
+        // INITIALIZATION
+        function enterNexus() {
+            const name = document.getElementById('setup-name').value || 'User' + Math.floor(Math.random()*999);
+            const firstChar = name.charAt(0).toUpperCase();
+            
+            // Auto generate PFP fallback logic handled server/render side, just send data
+            socket.emit('join-nexus', { name: name, color: 'white', tag: '', pfp: null });
+            
+            // Populate settings for later
+            document.getElementById('set-name').value = name;
+            
+            document.getElementById('setup-modal').style.display = 'none';
+        }
+
+        // SOCKET EVENTS
+        socket.on('connect', () => myId = socket.id);
+        
+        socket.on('timer-update', t => {
+            const m = Math.floor(t/60);
+            const s = t%60;
+            document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
+        });
+
+        socket.on('user-update', (users) => {
+            document.getElementById('online-count').innerText = users.length;
+            const list = document.getElementById('user-list-container');
+            list.innerHTML = '';
+            users.forEach(u => {
+                // Show PFP in sidebar too
+                let pfpHtml = `<div class="pfp-box" style="width:25px; height:25px; font-size:0.7rem; margin-right:10px;">${u.pfp ? `<img src="${u.pfp}" class="pfp-img">` : u.name[0].toUpperCase()}</div>`;
+                
+                list.innerHTML += `
+                <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center;">
+                    ${pfpHtml}
+                    <div style="flex:1;">
+                        <div style="font-size:0.9rem;">${u.name} ${u.tag ? `[${u.tag}]` : ''}</div>
+                        <div style="font-size:0.7rem; color:${u.active ? 'var(--mint)' : '#555'}">${u.active ? 'Active' : 'Idle'}</div>
+                    </div>
+                </div>`;
+            });
+        });
+
+        socket.on('receive-message', (data) => {
+            if (blockedUsers.includes(data.userId)) return;
+
+            const chat = document.getElementById('chat-main');
+            const isMe = data.userId === myId;
+            
+            // PFP Logic
+            let pfpHtml = '';
+            if (showPfps) {
+                if (data.pfp) {
+                    pfpHtml = `<div class="pfp-box"><img src="${data.pfp}" class="pfp-img"></div>`;
+                } else {
+                    pfpHtml = `<div class="pfp-box">${data.name.charAt(0).toUpperCase()}</div>`;
+                }
+            }
+
+            // Tag Logic
+            const tagHtml = data.tag ? `<span style="font-size:0.7rem; border:1px solid #555; padding:0 4px; border-radius:4px; margin-left:5px;">${data.tag}</span>` : '';
+
+            // Media Logic
+            let mediaHtml = '';
+            if (data.media) {
+                if (data.mediaType.includes('video')) {
+                    mediaHtml = `<video src="${data.media}" controls style="max-width:100%; margin-top:5px; border:1px solid #333;"></video>`;
+                } else {
+                    mediaHtml = `<img src="${data.media}" style="max-width:100%; margin-top:5px; border:1px solid #333;">`;
+                }
+                addToGallery(data.media, data.mediaType); // Add to sidebar
+            }
+
+            const div = document.createElement('div');
+            div.className = `msg-row ${isMe ? 'mine' : ''}`;
+            div.innerHTML = `
+                ${!isMe ? pfpHtml : ''}
+                <div class="msg-content">
+                    <div class="username name-${data.color}">
+                        ${data.name} ${tagHtml}
+                    </div>
+                    <div class="msg-bubble" oncontextmenu="openCtx(event, '${data.id}', '${data.userId}')">
+                        ${data.text}
+                        ${mediaHtml}
+                    </div>
+                    <div class="reactions-container" id="reacts-${data.id}"></div>
+                </div>
+                ${isMe ? pfpHtml : ''}
+            `;
+            
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        socket.on('update-reaction', (data) => {
+            const container = document.getElementById(`reacts-${data.msgId}`);
+            if (container) {
+                container.innerHTML = '';
+                for (const [emoji, count] of Object.entries(data.reactions)) {
+                    container.innerHTML += `<div class="reaction-pill">${emoji} ${count}</div>`;
+                }
+            }
+        });
+
+        socket.on('system-wipe', () => {
+            document.getElementById('chat-main').innerHTML = '';
+            document.getElementById('media-grid').innerHTML = '';
+            blockedUsers = [];
+            renderBlockedList();
+        });
+
+        // SETTINGS & LOGIC
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'flex';
+            renderBlockedList();
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        // PFP Upload Handler
+        document.getElementById('set-pfp-upload').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => myPfp = e.target.result; // Temporarily store
+            reader.readAsDataURL(file);
+        });
+
+        function clearPFP() {
+            myPfp = null;
+            document.getElementById('set-pfp-upload').value = '';
+        }
+
+        function saveSettings() {
+            const name = document.getElementById('set-name').value;
+            const tag = document.getElementById('set-tag').value;
+            const color = document.getElementById('set-color').value;
+            const theme = document.getElementById('set-theme').value;
+
+            applyTheme(theme);
+            
+            socket.emit('update-profile', {
+                name: name,
+                tag: tag,
+                color: color,
+                pfp: myPfp
+            });
+            
+            closeSettings();
+        }
+
+        function applyTheme(theme) {
+            document.body.className = theme;
+        }
+
+        function togglePfpVis() {
+            showPfps = document.getElementById('show-pfp-toggle').checked;
+        }
+
+        // MESSAGING
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value;
+            if (text) {
+                socket.emit('send-message', { text: text });
+                input.value = '';
+            }
+        }
+
+        // Media Upload
+        document.getElementById('chat-media-upload').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                socket.emit('send-message', { text: '', media: e.target.result, mediaType: file.type });
+            };
+            reader.readAsDataURL(file);
+            this.value = '';
+        });
+
+        // SIDEBARS
+        function toggleSide(id) {
+            document.getElementById(id).classList.toggle('active');
+        }
+
+        function addToGallery(src, type) {
+            const grid = document.getElementById('media-grid');
+            const el = document.createElement(type.includes('video') ? 'video' : 'img');
+            el.src = src;
+            el.style.width = '100%';
+            el.style.aspectRatio = '1/1';
+            el.style.objectFit = 'cover';
+            el.style.border = '1px solid #333';
+            el.onclick = () => window.open(src); // View full
+            grid.prepend(el); // Newest top
+        }
+
+        // CONTEXT MENU & BLOCKING
+        function openCtx(e, msgId, userId) {
+            if(userId === myId) return;
+            e.preventDefault();
+            const menu = document.getElementById('ctx-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            ctxTarget = { msgId, userId };
+            
+            const close = () => { menu.style.display = 'none'; document.removeEventListener('click', close); };
+            setTimeout(() => document.addEventListener('click', close), 10);
+        }
+
+        function addReaction(emoji) {
+            if (ctxTarget.msgId) {
+                socket.emit('add-reaction', { msgId: ctxTarget.msgId, emoji: emoji });
+            }
+        }
+
+        function initiateKick() {
+            if (confirm("Vote to kick this user?")) {
+                socket.emit('report-user', ctxTarget.userId);
+            }
+        }
+
+        function blockUser() {
+            if (!blockedUsers.includes(ctxTarget.userId)) {
+                blockedUsers.push(ctxTarget.userId);
+                alert("User blocked locally. You won't see their messages.");
+            }
+        }
+
+        function unblockAll() {
+            blockedUsers = [];
+            renderBlockedList();
+        }
+
+        function renderBlockedList() {
+            const div = document.getElementById('blocked-list');
+            div.innerHTML = blockedUsers.length === 0 ? '<div style="color:#555; font-size:0.8rem;">None</div>' : '';
+            blockedUsers.forEach(id => {
+                div.innerHTML += `<div style="font-size:0.8rem; cursor:pointer;" onclick="blockedUsers = blockedUsers.filter(u=>u!='${id}'); renderBlockedList();">ID: ${id.substr(0,5)}... (Click unblock)</div>`;
+            });
+        }
+
+        // Activity Monitor
+        document.addEventListener('mousemove', () => socket.emit('activity-ping'));
+    </script>
 </body>
 </html>
