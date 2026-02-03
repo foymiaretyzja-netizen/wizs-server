@@ -1,255 +1,225 @@
 const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io');
+const { Server } = require("socket.io");
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { 
-    maxHttpBufferSize: 1e8 // 100MB upload limit
+const io = new Server(server, {
+    maxHttpBufferSize: 1e8 // 100MB Upload Limit
 });
+
+// --- STATE MANAGEMENT ---
+let users = {}; 
+let messageHistory = [];
+let activeVotes = {}; // Tracks ongoing vote kicks: { targetId: { initiator, votes: Set() } }
+let bannedIPs = new Set(); // Server-side IP block list
+
+// --- CONFIGURATION ---
+const WIPE_INTERVAL = 900; // 15 Minutes
+let wipeTimer = WIPE_INTERVAL;
+let wipeIntervalID;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- GLOBAL STATE ---
-let users = {};
-let bannedIPs = {}; 
-let activeVotes = {};     // Tracks ongoing vote kicks
-let messageReactions = {}; 
-let globalTimer = 900;    // 15 Minutes in seconds
-
-// --- 1. THE 15-MINUTE SYSTEM WIPE ---
-setInterval(() => {
-    globalTimer--;
-    io.emit('timer-update', globalTimer);
+// --- SYSTEM WIPE LOOP ---
+function startWipeTimer() {
+    clearInterval(wipeIntervalID);
+    wipeTimer = WIPE_INTERVAL;
     
-    if (globalTimer <= 0) {
-        // RESET EVERYTHING
-        users = {};
-        activeVotes = {};
-        messageReactions = {};
-        io.emit('system-wipe');
-        
-        // Reset Timer
-        globalTimer = 900;
-        console.log("--- SYSTEM WIPE COMPLETE ---");
-    }
-}, 1000);
+    wipeIntervalID = setInterval(() => {
+        wipeTimer--;
+        io.emit('timerUpdate', wipeTimer); // Sync timer with clients
 
-// --- 2. ACTIVITY MONITOR (IDLE CHECK) ---
-// Checks every 5 seconds. If user hasn't acted in 20s, mark as Idle.
-setInterval(() => {
-    const now = Date.now();
-    let hasChanged = false;
-
-    for (let id in users) {
-        if (users[id].active) {
-            // 20 Seconds Timeout
-            if (now - users[id].lastActive > 20000) {
-                users[id].active = false;
-                hasChanged = true;
-            }
+        if (wipeTimer <= 0) {
+            performSystemWipe();
         }
-    }
+    }, 1000);
+}
 
-    if (hasChanged) {
-        io.emit('user-update', Object.values(users));
-    }
-}, 5000);
+function performSystemWipe() {
+    console.log("--- SYSTEM WIPE ---");
+    users = {};
+    messageHistory = [];
+    activeVotes = {};
+    bannedIPs.clear(); // Unban everyone after wipe
+    io.emit('systemWipe'); // Tell clients to reset
+    wipeTimer = WIPE_INTERVAL;
+}
 
-// --- SOCKET CONNECTION HANDLER ---
+startWipeTimer();
+
+// --- CONNECTION HANDLER ---
 io.on('connection', (socket) => {
-    const userIP = socket.handshake.address;
+    const clientIP = socket.handshake.address;
 
-    // Check IP Ban
-    if (bannedIPs[userIP] && bannedIPs[userIP] > Date.now()) {
-        socket.emit('force-disconnect', { reason: 'IP_BANNED' });
-        socket.disconnect();
+    // 1. IP Ban Check
+    if (bannedIPs.has(clientIP)) {
+        console.log(`Blocked connection from banned IP: ${clientIP}`);
+        socket.disconnect(true);
         return;
     }
 
-    console.log(`User Connected: ${socket.id}`);
+    console.log(`User connected: ${socket.id}`);
+    
+    // 2. Initialize User
+    users[socket.id] = {
+        id: socket.id,
+        username: `User-${socket.id.substr(0, 4)}`,
+        tag: 'Guest',
+        pfp: null,
+        isAdmin: false,
+        nameColor: 'default',
+        lastMessageTime: 0
+    };
 
-    // --- JOIN EVENT ---
-    socket.on('join-nexus', (userData) => {
-        users[socket.id] = {
-            id: socket.id,
-            name: userData.name || 'Anonymous',
-            tag: userData.tag || '',
-            tagColor: userData.tagColor || 'white',
-            color: userData.color || 'white',
-            pfp: userData.pfp || null,
-            ip: userIP,
-            active: true,
-            lastActive: Date.now(),
-            lastMsgTime: 0
-        };
+    // 3. Sync State
+    socket.emit('history', messageHistory);
+    socket.emit('timerUpdate', wipeTimer);
+    io.emit('userList', Object.values(users));
 
-        // Broadcast new user list to everyone
-        io.emit('user-update', Object.values(users));
-    });
-
-    // --- UPDATE PROFILE (Live Settings) ---
-    socket.on('update-profile', (data) => {
-        if (users[socket.id]) {
-            users[socket.id].name = data.name || users[socket.id].name;
-            users[socket.id].tag = data.tag || "";
-            users[socket.id].tagColor = data.tagColor || "white";
-            users[socket.id].color = data.color || "white";
-            
-            if (data.pfp !== undefined) {
-                users[socket.id].pfp = data.pfp;
-            }
-            
-            users[socket.id].lastActive = Date.now();
-            users[socket.id].active = true;
-            
-            io.emit('user-update', Object.values(users));
+    // --- PROFILE UPDATES ---
+    socket.on('updateProfile', (data) => {
+        if(users[socket.id]) {
+            users[socket.id] = { ...users[socket.id], ...data };
+            io.emit('userList', Object.values(users));
         }
     });
 
-    // --- ACTIVITY PING ---
-    // Client sends this on mousemove/keypress to stay "Active"
-    socket.on('activity-ping', () => {
-        if (users[socket.id]) {
-            users[socket.id].lastActive = Date.now();
-            
-            // If they were idle, mark them active again and update everyone
-            if (!users[socket.id].active) {
-                users[socket.id].active = true;
-                io.emit('user-update', Object.values(users));
-            }
-        }
-    });
-
-    // --- TYPING INDICATOR ---
-    socket.on('typing', (isTyping) => {
-        const user = users[socket.id];
-        if (user) {
-            socket.broadcast.emit('user-typing', { 
-                name: user.name, 
-                isTyping: isTyping 
-            });
-        }
-    });
-
-    // --- MESSAGE HANDLING ---
-    socket.on('send-message', (data) => {
+    // --- CHAT MESSAGES ---
+    socket.on('chatMessage', (msgData) => {
         const user = users[socket.id];
         if (!user) return;
 
-        // Reset Activity
-        user.lastActive = Date.now();
-        user.active = true;
-
         // Anti-Spam (500ms)
         const now = Date.now();
-        if (user.lastMsgTime && now - user.lastMsgTime < 500) {
-            return; // Ignore spam
-        }
-        user.lastMsgTime = now;
+        if (now - user.lastMessageTime < 500) return;
+        user.lastMessageTime = now;
 
-        // Create Message Object
-        const msgId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        messageReactions[msgId] = {}; 
-
-        const messageData = {
-            id: msgId,
-            userId: socket.id,
-            name: user.name,
-            color: user.color,
-            tag: user.tag,
-            tagColor: user.tagColor,
-            pfp: user.pfp,
-            text: data.text,
-            media: data.media,
-            mediaType: data.mediaType,
-            replyTo: data.replyTo,
-            timestamp: Date.now()
+        const fullMessage = {
+            id: Date.now() + Math.random(),
+            text: msgData.text,
+            type: msgData.type || 'text',
+            fileUrl: msgData.fileUrl || null,
+            replyTo: msgData.replyTo || null,
+            user: { ...user }, // Snapshot of user details
+            timestamp: now,
+            reactions: {}
         };
 
-        io.emit('receive-message', messageData);
+        messageHistory.push(fullMessage);
+        if (messageHistory.length > 100) messageHistory.shift();
+        io.emit('message', fullMessage);
     });
 
     // --- REACTIONS ---
-    socket.on('add-reaction', (data) => {
-        if (!messageReactions[data.msgId]) return;
-        
-        if (!messageReactions[data.msgId][data.emoji]) {
-            messageReactions[data.msgId][data.emoji] = 0;
+    socket.on('react', ({ messageId, emoji }) => {
+        const msg = messageHistory.find(m => m.id === messageId);
+        if (msg) {
+            if (!msg.reactions[emoji]) msg.reactions[emoji] = 0;
+            msg.reactions[emoji]++;
+            io.emit('updateReaction', { messageId, reactions: msg.reactions });
         }
-        messageReactions[data.msgId][data.emoji]++;
-        
-        io.emit('update-reaction', { 
-            msgId: data.msgId, 
-            reactions: messageReactions[data.msgId] 
-        });
     });
 
-    // --- VOTE KICK SYSTEM ---
-    socket.on('report-user', (targetId) => {
-        // Prevent abuse: cannot vote if target invalid or vote already active
+    // --- TYPING STATUS ---
+    socket.on('typing', (isTyping) => {
+        socket.broadcast.emit('typing', { username: users[socket.id].username, isTyping });
+    });
+
+    // ================================
+    //      MODERATION & VOTING
+    // ================================
+
+    // 1. Start Stealth Vote Kick
+    socket.on('startVoteKick', (targetId) => {
         if (!users[targetId] || activeVotes[targetId]) return;
-        
-        activeVotes[targetId] = { 
-            yes: 1, 
-            no: 0, 
-            voters: [socket.id], 
-            target: targetId 
-        };
-        
-        console.log(`Vote started against ${users[targetId].name}`);
 
-        // Notify Clients (Client hides this if targetId == their ID)
-        io.emit('vote-kick-start', { 
-            targetId: targetId, 
-            targetName: users[targetId].name 
+        // Create Vote Instance
+        activeVotes[targetId] = {
+            initiator: socket.id,
+            targetName: users[targetId].username,
+            votes: new Set([socket.id]) // Initiator auto-votes yes
+        };
+
+        // Notify everyone EXCEPT the target (Stealth Mode)
+        const targetSocket = io.sockets.sockets.get(targetId);
+        socket.broadcast.emit('voteKickStarted', { 
+            targetId, 
+            targetName: users[targetId].username 
+        });
+        
+        // If target exists, they don't get the event.
+        // We manually send the event to the initiator to confirm start
+        socket.emit('voteKickStarted', { 
+            targetId, 
+            targetName: users[targetId].username 
         });
     });
 
-    socket.on('cast-vote', (data) => {
-        const voteSession = activeVotes[data.targetId];
-        
-        // Validation: Vote exists? User already voted?
-        if (!voteSession || voteSession.voters.includes(socket.id)) return;
-        
-        voteSession.voters.push(socket.id);
-        
-        if (data.vote === 'yes') voteSession.yes++;
-        else voteSession.no++;
+    // 2. Cast Vote
+    socket.on('castVote', (targetId) => {
+        if (!activeVotes[targetId]) return;
 
-        // Calculate Majority (51%)
-        const onlineCount = Object.keys(users).length;
-        const required = Math.ceil(onlineCount * 0.51); 
-
-        if (voteSession.yes >= required) {
-            const targetSocket = io.sockets.sockets.get(data.targetId);
-            
-            // KICK THE USER
+        activeVotes[targetId].votes.add(socket.id);
+        const voteCount = activeVotes[targetId].votes.size;
+        const totalUsers = Object.keys(users).length;
+        
+        // Check for Majority (51%)
+        if (voteCount > totalUsers / 2) {
+            const targetSocket = io.sockets.sockets.get(targetId);
             if (targetSocket) {
-                targetSocket.emit('force-disconnect', { reason: 'KICKED_BY_VOTE' });
-                targetSocket.disconnect();
+                targetSocket.disconnect(true); // "Black Screen" effect
+                delete activeVotes[targetId];
+                io.emit('adminAction', { type: 'kick', username: users[targetId]?.username });
+                io.emit('systemAlert', { message: `${users[targetId]?.username} was voted off the island.` });
             }
-            
-            // End Vote
-            delete activeVotes[data.targetId];
-            io.emit('vote-result', { 
-                targetId: data.targetId, 
-                result: 'kicked', 
-                name: users[data.targetId]?.name || 'User' 
-            });
         }
+    });
+
+    // 3. ADMIN: Direct Kick
+    socket.on('adminKick', (targetId) => {
+        // In real app, verify admin token here
+        const targetSocket = io.sockets.sockets.get(targetId);
+        if (targetSocket) {
+            targetSocket.disconnect(true);
+            io.emit('adminAction', { type: 'kick', username: users[targetId]?.username });
+        }
+    });
+
+    // 4. ADMIN: Ban (Kick + IP Block)
+    socket.on('adminBan', (targetId) => {
+        const targetSocket = io.sockets.sockets.get(targetId);
+        if (targetSocket) {
+            const ip = targetSocket.handshake.address;
+            bannedIPs.add(ip); // Add to blocklist
+            targetSocket.disconnect(true); // Disconnect
+            io.emit('adminAction', { type: 'ban', username: users[targetId]?.username });
+        }
+    });
+
+    // 5. ADMIN: Warn
+    socket.on('adminWarn', (data) => {
+        io.emit('systemAlert', { message: `ADMIN: ${data.message}` });
     });
 
     // --- DISCONNECT ---
     socket.on('disconnect', () => {
-        if (users[socket.id]) {
-            console.log(`User Left: ${users[socket.id].name}`);
-            delete users[socket.id];
-            io.emit('user-update', Object.values(users));
+        // Remove active votes targeting this user
+        if (activeVotes[socket.id]) delete activeVotes[socket.id];
+        
+        // Remove votes cast BY this user
+        for (const targetId in activeVotes) {
+            activeVotes[targetId].votes.delete(socket.id);
         }
+
+        delete users[socket.id];
+        io.emit('userList', Object.values(users));
+        console.log(`User disconnected: ${socket.id}`);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`NEXUS Online on port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`NEXUS Server running on port ${PORT}`);
+});
